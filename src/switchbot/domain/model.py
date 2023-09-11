@@ -1,6 +1,10 @@
+from typing import List
+from . import commands, events
+
+
 class SwitchBotDevice:
     def __init__(self, **kwargs):
-        pass
+        self.events = []  # type: List[events.Event]
 
 
 class SwitchBotDeviceStatus:

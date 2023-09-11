@@ -1,4 +1,7 @@
+class Command:
+    pass
 
-class SwitchBotDevCmd:
+
+class SwitchBotDevCmd(Command):
     dev_id: str
     pass
