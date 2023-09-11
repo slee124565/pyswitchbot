@@ -1,8 +1,15 @@
 import click
 import dotenv
+import logging
 import os
 
+from switchbot import bootstrap
+from switchbot.domain import commands
+
+logger = logging.getLogger(__name__)
 dotenv.load_dotenv()
+logger.info('switchbot cli process')
+bus = bootstrap.bootstrap()
 
 
 # 主命令
@@ -16,7 +23,10 @@ def switchbotcli():
 @switchbotcli.group(help="Manage authentication.")
 def auth():
     """Commands for SwitchBot user authentication."""
-    pass
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    cmd = commands.CheckAuthToken(secret=secret, token=token)
+    bus.handle(cmd)
 
 
 # @auth.command()

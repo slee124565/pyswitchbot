@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+
+
 class Command:
     pass
 
@@ -5,3 +8,9 @@ class Command:
 class SwitchBotDevCmd(Command):
     dev_id: str
     pass
+
+
+@dataclass
+class CheckAuthToken(Command):
+    secret: str
+    token: str
