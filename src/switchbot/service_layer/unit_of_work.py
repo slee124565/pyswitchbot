@@ -12,3 +12,6 @@ class AbstractUnitOfWork(abc.ABC):
             while dev.events:
                 yield dev.events.pop(0)
 
+
+class ApiUnitOfWork(AbstractUnitOfWork):
+    pass
