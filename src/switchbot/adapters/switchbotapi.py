@@ -22,19 +22,11 @@ class SwitchBotAPIServerError(Exception):
 
 
 class AbstractSwitchBotApiServer(abc.ABC):
-    def __init__(self, secret, token):
-        self.secret = secret
-        self.token = token
+    def __init__(self):
         self.api_uri = SWITCHBOT_API_URI
         self.seen = set()  # type:Set[model.SwitchBotDevice]
 
-    def _get(self, endpoint: str, params: dict = None):
-        raise NotImplementedError
-
-    def _post(self, endpoint: str, data: dict):
-        raise NotImplementedError
-
-    def get_dev_list(self) -> List[model.SwitchBotDevice]:
+    def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
         raise NotImplementedError
 
     def get_dev_status(self, dev_id: str) -> model.SwitchBotDeviceStatus:
@@ -61,13 +53,16 @@ class AbstractSwitchBotApiServer(abc.ABC):
     def delete_webhook_config(self):
         raise NotImplementedError
 
-    def _get_auth_headers(self, nonce=None):
+
+class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
+    @staticmethod
+    def _get_auth_headers(secret: str, token: str, nonce=None):
         # Declare empty header dictionary
         headers = {}
         # open token
-        token = self.token
+        # token = token
         # secret key
-        secret = self.secret
+        # secret = secret
         # nonce
         nonce = uuid.uuid4() if not nonce else nonce
         t = int(round(time.time() * 1000))
@@ -92,11 +87,9 @@ class AbstractSwitchBotApiServer(abc.ABC):
         logger.debug(f'API headers {json.dumps(headers)}')
         return headers
 
-
-class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
-    def _get(self, endpoint: str, params: dict = None):
+    def _get(self, endpoint: str, secret: str, token: str, params: dict = None):
         try:
-            headers = self._get_auth_headers()
+            headers = self._get_auth_headers(secret, token)
             if params:
                 resp = requests.get(
                     url=f'{self.api_uri}{endpoint}',
@@ -112,13 +105,14 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             if resp.status_code != HTTPStatus.OK:
                 resp.raise_for_status()
 
-            return resp.json()
+            # print(f'{resp.status_code}, {resp.json()}')
+            return resp.json().get('body')
         except Exception as err:
-            raise SwitchBotAPIServerError(err)
+            raise SwitchBotAPIServerError
 
-    def _post(self, endpoint: str, data: dict):
+    def _post(self, endpoint: str, secret: str, token: str, data: dict):
         try:
-            headers = self._get_auth_headers()
+            headers = self._get_auth_headers(secret, token)
             resp = requests.post(
                 url=f'{self.api_uri}{endpoint}',
                 headers=headers,
@@ -129,24 +123,27 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
 
             return resp.json()
         except Exception as err:
-            raise SwitchBotAPIServerError(err)
+            raise SwitchBotAPIServerError
 
-    def get_dev_list(self) -> List[model.SwitchBotDevice]:
-        resp_body = self._get(endpoint='/v1.1/devices')
+    def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
+        resp_body = self._get(
+            endpoint='/v1.1/devices',
+            secret=secret,
+            token=token
+        )
+        print(f'{resp_body}')
         _dev_list = []
-        for _data in resp_body.get('deviceList', []):
+        for _data in resp_body.get('deviceList'):
             assert isinstance(_data, dict)
             _data.update({'deviceBaseType': 'deviceList'})
             _dev_list.append(model.SwitchBotDevice(**_data))
-        for _data in resp_body.get('infraredRemoteList', []):
+        for _data in resp_body.get('infraredRemoteList'):
             assert isinstance(_data, dict)
             _data.update({'deviceBaseType': 'infraredRemoteList'})
             _dev_list.append(model.SwitchBotDevice(**_data))
-
         return _dev_list
 
     def get_dev_status(self, dev_id: str) -> model.SwitchBotDeviceStatus:
         resp_body = self._get(endpoint=f'GET https://api.switch-bot.com/v1.1/devices/{dev_id}/status')
         assert isinstance(resp_body, dict)
         return model.SwitchBotDeviceStatus(**resp_body)
-

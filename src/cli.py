@@ -2,9 +2,10 @@ import click
 import dotenv
 import logging
 import os
-
+import json
 from switchbot import bootstrap
 from switchbot.domain import commands
+from switchbot.adapters import switchbotapi
 
 logger = logging.getLogger(__name__)
 dotenv.load_dotenv()
@@ -23,10 +24,7 @@ def switchbotcli():
 @switchbotcli.group(help="Manage authentication.")
 def auth():
     """Commands for SwitchBot user authentication."""
-    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
-    token = os.getenv('SWITCHBOTAPI_TOKEN')
-    cmd = commands.CheckAuthToken(secret=secret, token=token)
-    bus.handle(cmd)
+    pass
 
 
 # @auth.command()
@@ -62,7 +60,11 @@ def list(envfile):
 @auth.command()
 def check():
     """Check authentication status."""
-    click.echo("Checking authentication status.")
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    cmd = commands.CheckAuthToken(secret=secret, token=token)
+    bus.handle(cmd)
+    click.echo('OK')
 
 
 # 'device' 子命令集
@@ -77,6 +79,10 @@ def device():
 def listall(save):
     """List all devices."""
     click.echo(f"Listing all devices. Save: {save}")
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    cmd = commands.GetDeviceList(secret=secret, token=token)
+    click.echo(json.dumps(bus.handle(cmd), indent=2))
 
 
 @device.command()

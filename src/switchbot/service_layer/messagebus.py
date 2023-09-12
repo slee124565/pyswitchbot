@@ -2,9 +2,9 @@
 from switchbot.domain import commands, events
 import logging
 from typing import Callable, Dict, List, Union, Type, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from . import unit_of_work
+# if TYPE_CHECKING:
+#     from . import unit_of_work
+from . import unit_of_work
 logger = logging.getLogger(__name__)
 
 Message = Union[commands.Command, events.Event]

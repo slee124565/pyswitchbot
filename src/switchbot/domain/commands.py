@@ -14,3 +14,9 @@ class SwitchBotDevCmd(Command):
 class CheckAuthToken(Command):
     secret: str
     token: str
+
+
+@dataclass
+class GetDeviceList(Command):
+    secret: str
+    token: str
