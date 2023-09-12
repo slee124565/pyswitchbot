@@ -1,17 +1,17 @@
 import click
-import dotenv
 import logging
 import logging.config as logging_config
 import os
 import json
-from switchbot import bootstrap, views, config
+from switchbot import bootstrap, views
+from switchbot import config
 from switchbot.domain import commands
 
 logging_config.dictConfig(config.logging_config)
 logger = logging.getLogger(__name__)
-dotenv.load_dotenv()
-logger.info('switchbot cli process')
+# logger.info('switchbot cli process')
 bus = bootstrap.bootstrap()
+env_secret, env_token = config.get_switchbot_key_pair()
 
 
 # 主命令
@@ -59,10 +59,10 @@ def list(envfile):
 
 
 @auth.command()
-def check():
+@click.option('--secret', default=env_secret, help='Your secret key for authentication.')
+@click.option('--token', default=env_token, help='Your token for authentication.')
+def check(secret, token):
     """Check authentication status."""
-    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
-    token = os.getenv('SWITCHBOTAPI_TOKEN')
     cmd = commands.CheckAuthToken(secret=secret, token=token)
     bus.handle(cmd)
     click.echo('OK')
