@@ -1,3 +1,15 @@
+import os
+import dotenv
+
+dotenv.load_dotenv()
+
+
+def get_switchbot_key_pair():
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    return secret, token
+
+
 logging_config = {
     "version": 1,
     "disable_existing_loggers": False,
