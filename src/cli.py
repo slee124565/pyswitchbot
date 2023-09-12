@@ -3,9 +3,9 @@ import dotenv
 import logging
 import os
 import json
-from switchbot import bootstrap
+from switchbot import bootstrap, views
+from switchbot.service_layer import unit_of_work
 from switchbot.domain import commands
-from switchbot.adapters import switchbotapi
 
 logger = logging.getLogger(__name__)
 dotenv.load_dotenv()
@@ -81,8 +81,14 @@ def listall(save):
     click.echo(f"Listing all devices. Save: {save}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    cmd = commands.GetDeviceList(secret=secret, token=token)
-    click.echo(json.dumps(bus.handle(cmd), indent=2))
+    # cmd = commands.GetDeviceList(secret=secret, token=token)
+    click.echo(
+        json.dumps(
+            views.get_device_list(
+                secret=secret,
+                token=token,
+                uow=bus.uow
+            ), indent=2, ensure_ascii=False))
 
 
 @device.command()

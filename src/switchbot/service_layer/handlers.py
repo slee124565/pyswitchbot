@@ -10,11 +10,12 @@ def get_device_list(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        dev_list = uow.devices.get_dev_list(
+        devices = uow.devices.get_dev_list(
             secret=cmd.secret,
             token=cmd.token
         )
-    return dev_list
+
+    return devices
 
 
 def check_auth_token(

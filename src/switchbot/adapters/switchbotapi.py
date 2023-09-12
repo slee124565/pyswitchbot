@@ -131,16 +131,15 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             secret=secret,
             token=token
         )
-        print(f'{resp_body}')
+        # print(f'{resp_body}')
         _dev_list = []
         for _data in resp_body.get('deviceList'):
             assert isinstance(_data, dict)
-            _data.update({'deviceBaseType': 'deviceList'})
             _dev_list.append(model.SwitchBotDevice(**_data))
         for _data in resp_body.get('infraredRemoteList'):
-            assert isinstance(_data, dict)
-            _data.update({'deviceBaseType': 'infraredRemoteList'})
-            _dev_list.append(model.SwitchBotDevice(**_data))
+            # assert isinstance(_data, dict)
+            # _dev_list.append(model.SwitchBotDevice(**_data))
+            raise NotImplementedError
         return _dev_list
 
     def get_dev_status(self, dev_id: str) -> model.SwitchBotDeviceStatus:
