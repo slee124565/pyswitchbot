@@ -105,7 +105,7 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             if resp.status_code != HTTPStatus.OK:
                 resp.raise_for_status()
 
-            # print(f'{resp.status_code}, {resp.json()}')
+            logger.debug(f'{resp.status_code}, {resp.json()}')
             return resp.json().get('body')
         except Exception as err:
             raise SwitchBotAPIServerError
@@ -121,7 +121,8 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             if resp.status_code != HTTPStatus.OK:
                 resp.raise_for_status()
 
-            return resp.json()
+            logger.debug(f'{resp.status_code}, {resp.json()}')
+            return resp.json().get('body')
         except Exception as err:
             raise SwitchBotAPIServerError
 
@@ -131,7 +132,6 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             secret=secret,
             token=token
         )
-        # print(f'{resp_body}')
         _dev_list = []
         for _data in resp_body.get('deviceList'):
             assert isinstance(_data, dict)

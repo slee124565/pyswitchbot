@@ -1,12 +1,13 @@
 import click
 import dotenv
 import logging
+import logging.config as logging_config
 import os
 import json
-from switchbot import bootstrap, views
-from switchbot.service_layer import unit_of_work
+from switchbot import bootstrap, views, config
 from switchbot.domain import commands
 
+logging_config.dictConfig(config.logging_config)
 logger = logging.getLogger(__name__)
 dotenv.load_dotenv()
 logger.info('switchbot cli process')
