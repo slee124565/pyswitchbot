@@ -89,22 +89,51 @@ def listall(save):
                 secret=secret,
                 token=token,
                 uow=bus.uow
-            ), indent=2, ensure_ascii=False))
+            ), indent=2, ensure_ascii=False
+        )
+    )
 
 
 @device.command()
-@click.argument('devID')
-def query(devID):
+@click.argument('dev_id')
+def query(dev_id):
     """Query device by ID."""
-    click.echo(f"Querying device {devID}")
+    click.echo(f"Querying device status {dev_id}")
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    click.echo(
+        json.dumps(
+            views.get_device_status(
+                secret=secret,
+                token=token,
+                dev_id=dev_id,
+                uow=bus.uow
+            )
+            , indent=2, ensure_ascii=False
+        )
+    )
 
 
 @device.command()
-@click.argument('devID')
-@click.option('--option', help="Additional options for command.")
-def cmd(devID, option):
+@click.argument('command')
+@click.argument('dev_id')
+@click.option('--cmd_type', default='command', help="SwitchBot API commandType.")
+@click.option('--cmd_param', default='default', help="SwitchBot API commandParameter.")
+def cmd(command, dev_id, cmd_type, cmd_param):
     """Send a command to device."""
-    click.echo(f"Sending command to device {devID} with option {option}")
+    click.echo(f"Sending command {command} to device {dev_id} with type:{cmd_type}, param:{cmd_param}")
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    _cmd = commands.SendDeviceCtrlCmd(
+        secret=secret,
+        token=token,
+        dev_id=dev_id,
+        cmd_type=cmd_type,
+        cmd_value=command,
+        cmd_param=cmd_param
+    )
+    bus.handle(_cmd)
+    click.echo(f'Command sent')
 
 
 # 'scene' 子命令集

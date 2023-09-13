@@ -1,3 +1,4 @@
+from typing import Union
 from dataclasses import dataclass
 
 
@@ -5,9 +6,21 @@ class Command:
     pass
 
 
-class SwitchBotDevCmd(Command):
+@dataclass
+class SendDeviceCtrlCmd(Command):
+    secret: str
+    token: str
     dev_id: str
-    pass
+    cmd_type: str
+    cmd_value: str
+    cmd_param: Union[str, dict]
+
+
+@dataclass
+class SwitchBotDevCommand(Command):
+    commandType: str
+    command: str
+    parameter: Union[str, dict]
 
 
 @dataclass

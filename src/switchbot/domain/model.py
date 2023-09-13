@@ -1,3 +1,4 @@
+import json
 from typing import List
 from dataclasses import dataclass
 from . import commands, events
@@ -16,6 +17,10 @@ class SwitchBotDevice:
 
 
 class SwitchBotDeviceStatus:
+    kwargs: dict
 
     def __init__(self, **kwargs):
-        pass
+        self.kwargs = kwargs
+
+    def __repr__(self):
+        return f'DevStatus({json.dumps(self.kwargs)})'

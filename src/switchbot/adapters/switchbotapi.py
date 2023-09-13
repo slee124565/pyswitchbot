@@ -8,8 +8,9 @@ import uuid
 import os
 import logging
 import requests
-from typing import List, Set
+from typing import List, Set, Union
 from http import HTTPStatus
+from dataclasses import asdict
 from switchbot.domain import model
 from switchbot.domain import commands
 
@@ -29,10 +30,11 @@ class AbstractSwitchBotApiServer(abc.ABC):
     def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
         raise NotImplementedError
 
-    def get_dev_status(self, dev_id: str) -> model.SwitchBotDeviceStatus:
+    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotDeviceStatus:
         raise NotImplementedError
 
-    def send_dev_ctrl_cmd(self, dev_cmd: commands.SwitchBotDevCmd):
+    def send_dev_ctrl_cmd(self, secret: str, token: str, dev_id: str, cmd_type: str, cmd_value: str,
+                          cmd_param: Union[str, dict]):
         raise NotImplementedError
 
     def get_scene_list(self):
@@ -110,18 +112,20 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
         except Exception as err:
             raise SwitchBotAPIServerError
 
-    def _post(self, endpoint: str, secret: str, token: str, data: dict):
+    def _post(self, secret: str, token: str, endpoint: str, data: dict):
         try:
             headers = self._get_auth_headers(secret, token)
+            logger.debug(f'API payload: {data}')
             resp = requests.post(
                 url=f'{self.api_uri}{endpoint}',
                 headers=headers,
-                data=data
+                json=data
             )
+            logger.debug(f'POST response {resp.status_code}, {resp.content}')
+
             if resp.status_code != HTTPStatus.OK:
                 resp.raise_for_status()
 
-            logger.debug(f'{resp.status_code}, {resp.json()}')
             return resp.json().get('body')
         except Exception as err:
             raise SwitchBotAPIServerError
@@ -142,7 +146,21 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             raise NotImplementedError
         return _dev_list
 
-    def get_dev_status(self, dev_id: str) -> model.SwitchBotDeviceStatus:
-        resp_body = self._get(endpoint=f'GET https://api.switch-bot.com/v1.1/devices/{dev_id}/status')
-        assert isinstance(resp_body, dict)
+    def send_dev_ctrl_cmd(self, secret: str, token: str, dev_id: str, cmd_type: str, cmd_value: str,
+                          cmd_param: Union[str, dict]):
+        _cmd = commands.SwitchBotDevCommand(cmd_type, cmd_value, cmd_param)
+        resp_body = self._post(
+            secret=secret,
+            token=token,
+            endpoint=f'/v1.1/devices/{dev_id}/commands',
+            data=asdict(_cmd)
+        )
+        return resp_body.values() if isinstance(resp_body, dict) else resp_body
+
+    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotDeviceStatus:
+        resp_body = self._get(
+            endpoint=f'/v1.1/devices/{dev_id}/status',
+            secret=secret,
+            token=token
+        )
         return model.SwitchBotDeviceStatus(**resp_body)

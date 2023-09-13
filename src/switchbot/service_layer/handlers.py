@@ -5,17 +5,30 @@ from switchbot.domain import commands, events, model
 from . import unit_of_work
 
 
+def send_dev_ctrl_cmd(
+        cmd: commands.SendDeviceCtrlCmd,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    with uow:
+        uow.devices.send_dev_ctrl_cmd(
+            secret=cmd.secret,
+            token=cmd.token,
+            dev_id=cmd.dev_id,
+            cmd_type=cmd.cmd_type,
+            cmd_value=cmd.cmd_value,
+            cmd_param=cmd.cmd_param
+        )
+
+
 def get_device_list(
         cmd: commands.CheckAuthToken,
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        devices = uow.devices.get_dev_list(
+        uow.devices.get_dev_list(
             secret=cmd.secret,
             token=cmd.token
         )
-
-    return devices
 
 
 def check_auth_token(
@@ -37,7 +50,8 @@ EVENT_HANDLERS = {
 
 COMMAND_HANDLERS = {
     commands.CheckAuthToken: check_auth_token,
-    commands.GetDeviceList: get_device_list
+    commands.GetDeviceList: get_device_list,
+    commands.SendDeviceCtrlCmd: send_dev_ctrl_cmd,
     # commands.Allocate: allocate,
     # commands.CreateBatch: add_batch,
     # commands.ChangeBatchQuantity: change_batch_quantity,
