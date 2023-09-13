@@ -1,6 +1,6 @@
 import json
-from typing import List
-from dataclasses import dataclass
+from typing import Optional
+from dataclasses import dataclass, field
 from . import commands, events
 
 
@@ -24,3 +24,18 @@ class SwitchBotDeviceStatus:
 
     def __repr__(self):
         return f'DevStatus({json.dumps(self.kwargs)})'
+
+
+@dataclass
+class SwitchBotScene:
+    sceneId: str
+    sceneName: str
+
+
+@dataclass
+class SwitchBotWebhook:
+    url: str
+    createTime: int | None
+    lastUpdateTime: int | None
+    deviceList: str | None
+    enable: bool | None

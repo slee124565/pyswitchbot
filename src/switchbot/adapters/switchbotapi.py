@@ -37,22 +37,25 @@ class AbstractSwitchBotApiServer(abc.ABC):
                           cmd_param: Union[str, dict]):
         raise NotImplementedError
 
-    def get_scene_list(self):
+    def get_scene_list(self, secret: str, token: str) -> List[model.SwitchBotScene]:
         raise NotImplementedError
 
-    def exec_scene(self, scene_id):
+    def exec_scene(self, secret: str, token: str, scene_id: str):
         raise NotImplementedError
 
-    def config_webhook(self, uri):
+    def create_webhook_config(self, secret: str, token: str, url: str):
         raise NotImplementedError
 
-    def get_webhook_config(self):
+    def read_webhook_config(self, secret: str, token: str, url: str):
         raise NotImplementedError
 
-    def update_webhook_config(self, uri):
+    def read_webhook_config_list(self, secret: str, token: str, url_list: List[str]):
         raise NotImplementedError
 
-    def delete_webhook_config(self):
+    def update_webhook_config(self, secret: str, token: str, uri: str, enable: bool):
+        raise NotImplementedError
+
+    def delete_webhook_config(self, secret: str, token: str, url: str):
         raise NotImplementedError
 
 
