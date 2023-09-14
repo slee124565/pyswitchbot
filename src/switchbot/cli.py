@@ -148,13 +148,33 @@ def scene():
 def listall(save):
     """List all scenes."""
     click.echo(f"Listing all scenes. Save: {save}")
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    click.echo(
+        json.dumps(
+            views.get_scene_list(
+                secret=secret,
+                token=token,
+                uow=bus.uow
+            ), indent=2, ensure_ascii=False
+        )
+    )
 
 
 @scene.command()
-@click.argument('sceneID')
-def start(sceneID):
+@click.argument('scene_id')
+def start(scene_id):
     """Start a scene."""
-    click.echo(f"Starting scene {sceneID}")
+    click.echo(f"Starting scene {scene_id}")
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    _cmd = commands.ExecManualScene(
+        secret=secret,
+        token=token,
+        scene_id=scene_id
+    )
+    bus.handle(_cmd)
+    click.echo(f'Command sent')
 
 
 # 'webhook' 子命令集
@@ -166,16 +186,26 @@ def webhook():
 
 @webhook.command()
 @click.argument('url')
-def save(url):
-    """Save user webhook config on SwitchBot API cloud ."""
+def config(url):
+    """Save user webhook config from SwitchBot API cloud ."""
     click.echo(f"Saving webhook {url}")
 
 
 @webhook.command()
-@click.argument('url')
-def get(url):
-    """Get a webhook."""
-    click.echo(f"Getting webhook {url}")
+def read():
+    """Get user webhook config from SwitchBot API cloud."""
+    click.echo(f"Getting webhook")
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    click.echo(
+        json.dumps(
+            views.read_webhook_config(
+                secret=secret,
+                token=token,
+                uow=bus.uow
+            ), indent=2, ensure_ascii=False
+        )
+    )
 
 
 @webhook.command()

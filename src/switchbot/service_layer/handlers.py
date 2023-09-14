@@ -42,6 +42,18 @@ def check_auth_token(
         )
 
 
+def exec_manual_scene(
+        cmd: commands.ExecManualScene,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    with uow:
+        uow.devices.exec_manual_scene(
+            secret=cmd.secret,
+            token=cmd.token,
+            scene_id=cmd.scene_id
+        )
+
+
 EVENT_HANDLERS = {
     # events.Allocated: [publish_allocated_event, add_allocation_to_read_model],
     # events.Deallocated: [remove_allocation_from_read_model, reallocate],
@@ -52,6 +64,7 @@ COMMAND_HANDLERS = {
     commands.CheckAuthToken: check_auth_token,
     commands.GetDeviceList: get_device_list,
     commands.SendDeviceCtrlCmd: send_dev_ctrl_cmd,
+    commands.ExecManualScene: exec_manual_scene,
     # commands.Allocate: allocate,
     # commands.CreateBatch: add_batch,
     # commands.ChangeBatchQuantity: change_batch_quantity,

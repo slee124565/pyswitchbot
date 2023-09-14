@@ -41,10 +41,10 @@ logging_config = {
         "requests": {
             "level": "INFO"
         },
-        # "switchbot.adapters.switchbotapi": {
-        #     "handlers": ["console"],
-        #     "level": "DEBUG",
-        #     "propagate": False
-        # }
+        "switchbot.adapters.switchbotapi": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False
+        }
     }
 }

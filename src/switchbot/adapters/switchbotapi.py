@@ -22,6 +22,10 @@ class SwitchBotAPIServerError(Exception):
     pass
 
 
+class SwitchBotAPIResponseError(Exception):
+    pass
+
+
 class AbstractSwitchBotApiServer(abc.ABC):
     def __init__(self):
         self.api_uri = SWITCHBOT_API_URI
@@ -40,13 +44,13 @@ class AbstractSwitchBotApiServer(abc.ABC):
     def get_scene_list(self, secret: str, token: str) -> List[model.SwitchBotScene]:
         raise NotImplementedError
 
-    def exec_scene(self, secret: str, token: str, scene_id: str):
+    def exec_manual_scene(self, secret: str, token: str, scene_id: str):
         raise NotImplementedError
 
     def create_webhook_config(self, secret: str, token: str, url: str):
         raise NotImplementedError
 
-    def read_webhook_config(self, secret: str, token: str, url: str):
+    def read_webhook_config(self, secret: str, token: str) -> List[str]:
         raise NotImplementedError
 
     def read_webhook_config_list(self, secret: str, token: str, url_list: List[str]):
@@ -167,3 +171,38 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             token=token
         )
         return model.SwitchBotDeviceStatus(**resp_body)
+
+    def get_scene_list(self, secret: str, token: str) -> List[model.SwitchBotScene]:
+        resp_body = self._get(
+            endpoint=f'/v1.1/scenes',
+            secret=secret,
+            token=token
+        )
+        if not isinstance(resp_body, list):
+            raise SwitchBotAPIResponseError
+        _list = []
+        for _data in resp_body:
+            _scene = model.SwitchBotScene(**_data)
+            _list.append(_scene)
+        return _list
+
+    def exec_manual_scene(self, secret: str, token: str, scene_id: str):
+        resp_body = self._post(
+            endpoint=f'/v1.1/scenes/{scene_id}/execute',
+            secret=secret,
+            token=token,
+            data={}
+        )
+        return resp_body
+
+    def read_webhook_config(self, secret: str, token: str) -> List[str]:
+        resp_body = self._post(
+            endpoint=f'/v1.1/webhook/queryWebhook',
+            secret=secret,
+            token=token,
+            data={"action": "queryUrl"}
+        )
+        if not isinstance(resp_body, dict):
+            raise SwitchBotAPIResponseError
+        _config = resp_body.get('urls', [])
+        return _config

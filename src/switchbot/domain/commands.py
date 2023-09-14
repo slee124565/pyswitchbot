@@ -7,6 +7,13 @@ class Command:
 
 
 @dataclass
+class ExecManualScene(Command):
+    secret: str
+    token: str
+    scene_id: str
+
+
+@dataclass
 class SendDeviceCtrlCmd(Command):
     secret: str
     token: str
