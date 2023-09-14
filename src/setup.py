@@ -9,13 +9,13 @@ def read_files(files):
     return "\n".join(data)
 
 
-long_description = read_files(['README.md', 'CHANGELOG.md'])
+# long_description = read_files(['README.md', 'CHANGELOG.md'])
 
 setup(
     name="pyswitchbot",
     version="0.0.1",
     description="A Python library for OpenWonderLabs SwitchBot API",
-    long_description=long_description,
+    long_description='long_description',
     long_description_content_type="text/markdown",
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -34,7 +34,7 @@ setup(
     python_requires='>=3.11',
     entry_points={
         "console_scripts": [
-            "switchbot=switchbot.cli:switchybotcli",
+            "switchbot=switchbot.cli:switchbotcli",
         ],
     },
 )
