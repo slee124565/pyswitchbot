@@ -5,6 +5,10 @@ from switchbot.domain import commands, events, model
 from . import unit_of_work
 
 
+class InvalidSrcServer(Exception):
+    pass
+
+
 def send_dev_ctrl_cmd(
         cmd: commands.SendDeviceCtrlCmd,
         uow: unit_of_work.AbstractUnitOfWork
@@ -54,6 +58,16 @@ def exec_manual_scene(
         )
 
 
+def report_event(
+        cmd: commands.ReportEvent,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    with uow:
+        uow.devices.report_event(
+
+        )
+
+
 EVENT_HANDLERS = {
     # events.Allocated: [publish_allocated_event, add_allocation_to_read_model],
     # events.Deallocated: [remove_allocation_from_read_model, reallocate],
@@ -65,6 +79,7 @@ COMMAND_HANDLERS = {
     commands.GetDeviceList: get_device_list,
     commands.SendDeviceCtrlCmd: send_dev_ctrl_cmd,
     commands.ExecManualScene: exec_manual_scene,
+    commands.ReportEvent: report_event,
     # commands.Allocate: allocate,
     # commands.CreateBatch: add_batch,
     # commands.ChangeBatchQuantity: change_batch_quantity,

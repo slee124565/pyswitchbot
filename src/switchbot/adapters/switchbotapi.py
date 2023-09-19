@@ -62,6 +62,9 @@ class AbstractSwitchBotApiServer(abc.ABC):
     def delete_webhook_config(self, secret: str, token: str, url: str):
         raise NotImplementedError
 
+    def report_event(self, evt_type: str, evt_version: str, evt_context: dict):
+        raise NotImplementedError
+
 
 class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
     @staticmethod

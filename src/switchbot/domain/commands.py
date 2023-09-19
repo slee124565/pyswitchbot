@@ -7,6 +7,13 @@ class Command:
 
 
 @dataclass
+class ReportEvent(Command):
+    eventType: str
+    eventVersion: str
+    context: dict
+
+
+@dataclass
 class ExecManualScene(Command):
     secret: str
     token: str
