@@ -7,6 +7,27 @@ class Command:
 
 
 @dataclass
+class DeleteWebhook(Command):
+    secret: str
+    token: str
+    url: str
+
+
+@dataclass
+class UpdateWebhook(Command):
+    secret: str
+    token: str
+    url: str
+
+
+@dataclass
+class ConfigWebhook(Command):
+    secret: str
+    token: str
+    url: str
+
+
+@dataclass
 class ReportEvent(Command):
     eventType: str
     eventVersion: str

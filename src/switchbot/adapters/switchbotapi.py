@@ -56,14 +56,14 @@ class AbstractSwitchBotApiServer(abc.ABC):
     def read_webhook_config_list(self, secret: str, token: str, url_list: List[str]):
         raise NotImplementedError
 
-    def update_webhook_config(self, secret: str, token: str, uri: str, enable: bool):
+    def update_webhook_config(self, secret: str, token: str, url: str, enable: bool):
         raise NotImplementedError
 
     def delete_webhook_config(self, secret: str, token: str, url: str):
         raise NotImplementedError
 
-    def report_event(self, evt_type: str, evt_version: str, evt_context: dict):
-        raise NotImplementedError
+    # def report_event(self, evt_type: str, evt_version: str, evt_context: dict):
+    #     raise NotImplementedError
 
 
 class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
@@ -198,6 +198,21 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
         )
         return resp_body
 
+    def create_webhook_config(self, secret: str, token: str, url: str):
+        resp_body = self._post(
+            endpoint=f'/v1.1/webhook/setupWebhook',
+            secret=secret,
+            token=token,
+            data={
+                "action": "setupWebhook",
+                "url": url,
+                "deviceList": "ALL"
+            }
+        )
+        if not isinstance(resp_body, dict):
+            raise SwitchBotAPIResponseError
+        return resp_body
+
     def read_webhook_config(self, secret: str, token: str) -> List[str]:
         resp_body = self._post(
             endpoint=f'/v1.1/webhook/queryWebhook',
@@ -209,3 +224,30 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             raise SwitchBotAPIResponseError
         _config = resp_body.get('urls', [])
         return _config
+
+    def update_webhook_config(self, secret: str, token: str, url: str, enable: bool):
+        resp_body = self._post(
+            endpoint=f'/v1.1/webhook/updateWebhook',
+            secret=secret,
+            token=token,
+            data={
+                "action": "updateWebhook",
+                "config": {
+                    "url": url,
+                    "enable": True
+                }
+            }
+        )
+        return resp_body
+
+    def delete_webhook_config(self, secret: str, token: str, url: str):
+        resp_body = self._post(
+            endpoint=f'/v1.1/webhook/deleteWebhook',
+            secret=secret,
+            token=token,
+            data={
+                "action": "deleteWebhook",
+                "url": url
+            }
+        )
+        return resp_body

@@ -25,14 +25,15 @@ def send_dev_ctrl_cmd(
 
 
 def get_device_list(
-        cmd: commands.CheckAuthToken,
+        cmd: commands.GetDeviceList,
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        uow.devices.get_dev_list(
+        dev_list = uow.devices.get_dev_list(
             secret=cmd.secret,
             token=cmd.token
         )
+    return dev_list
 
 
 def check_auth_token(
@@ -58,14 +59,51 @@ def exec_manual_scene(
         )
 
 
+def config_webhook(
+        cmd: commands.ConfigWebhook,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    with uow:
+        uow.devices.create_webhook_config(
+            secret=cmd.secret,
+            token=cmd.token,
+            url=cmd.url
+        )
+
+
+def update_webhook(
+        cmd: commands.UpdateWebhook,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    with uow:
+        uow.devices.update_webhook_config(
+            secret=cmd.secret,
+            token=cmd.token,
+            url=cmd.url,
+            enable=True
+        )
+
+
+def delete_webhook(cmd: commands.DeleteWebhook,
+                   uow: unit_of_work.AbstractUnitOfWork
+                   ):
+    with uow:
+        uow.devices.delete_webhook_config(
+            secret=cmd.secret,
+            token=cmd.token,
+            url=cmd.url,
+        )
+
+
 def report_event(
         cmd: commands.ReportEvent,
         uow: unit_of_work.AbstractUnitOfWork
 ):
-    with uow:
-        uow.devices.report_event(
-
-        )
+    # with uow:
+    #     uow.devices.report_event(
+    #
+    #     )
+    raise NotImplementedError
 
 
 EVENT_HANDLERS = {
@@ -79,6 +117,9 @@ COMMAND_HANDLERS = {
     commands.GetDeviceList: get_device_list,
     commands.SendDeviceCtrlCmd: send_dev_ctrl_cmd,
     commands.ExecManualScene: exec_manual_scene,
+    commands.ConfigWebhook: config_webhook,
+    commands.UpdateWebhook: update_webhook,
+    commands.DeleteWebhook: delete_webhook,
     commands.ReportEvent: report_event,
     # commands.Allocate: allocate,
     # commands.CreateBatch: add_batch,

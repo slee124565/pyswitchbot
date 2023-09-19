@@ -5,12 +5,15 @@ from typing import Callable, Dict, List, Union, Type, TYPE_CHECKING
 # if TYPE_CHECKING:
 #     from . import unit_of_work
 from . import unit_of_work
+
 logger = logging.getLogger(__name__)
 
 Message = Union[commands.Command, events.Event]
 
 
 class MessageBus:
+    queue: list
+
     def __init__(
             self,
             uow: unit_of_work.AbstractUnitOfWork,

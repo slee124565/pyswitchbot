@@ -186,9 +186,18 @@ def webhook():
 
 @webhook.command()
 @click.argument('url')
-def config(url):
+def create(url):
     """Save user webhook config from SwitchBot API cloud ."""
-    click.echo(f"Saving webhook {url}")
+    click.echo(f"Creating webhook {url}")
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    _cmd = commands.ConfigWebhook(
+        secret=secret,
+        token=token,
+        url=url
+    )
+    bus.handle(_cmd)
+    click.echo(f'Command sent')
 
 
 @webhook.command()
@@ -213,6 +222,15 @@ def read():
 def update(url):
     """Update a webhook."""
     click.echo(f"Updating webhook {url}")
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    _cmd = commands.UpdateWebhook(
+        secret=secret,
+        token=token,
+        url=url
+    )
+    bus.handle(_cmd)
+    click.echo(f'Command sent')
 
 
 @webhook.command()
@@ -220,6 +238,15 @@ def update(url):
 def delete(url):
     """Delete a webhook."""
     click.echo(f"Deleting webhook {url}")
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    _cmd = commands.DeleteWebhook(
+        secret=secret,
+        token=token,
+        url=url
+    )
+    bus.handle(_cmd)
+    click.echo(f'Command sent')
 
 
 # 程序入口

@@ -21,5 +21,16 @@ def report_event():
         return jsonify({}), HTTPStatus.UNAUTHORIZED
 
 
+@app.route('/report_event_2', methods=['POST'])
+def report_event():
+    try:
+        _event = request.json
+        cmd = commands.ReportEvent(**_event)
+        bus.handle(cmd)
+        return jsonify({}), HTTPStatus.OK
+    except InvalidSrcServer:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
+
+
 if __name__ == '__main__':
     app.run(debug=True)
