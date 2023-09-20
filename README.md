@@ -1,2 +1,25 @@
-# pyswitchbot
-SwitchBot API Client Library
+# pyswitchbot-openapi
+SwitchBot Open API Client Library
+
+# Install `switchbot` command line tool
+`python setup.py [develop]`
+
+# CLI tool : switchbot
+## Usage
+
+```bash
+switchbot [OPTIONS] COMMAND [ARGS]...
+```
+
+**Description**:  
+SwitchBot Open API CLI tool.
+
+**Options**:  
+- `--help` : Show this message and exit.
+
+**Commands**:
+- `auth` : Manage authentication.
+- `device` : Manage devices.
+- `scene` : Manage scenes.
+- `webhook` : Manage webhooks.
+
