@@ -225,6 +225,18 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
         _config = resp_body.get('urls', [])
         return _config
 
+    def read_webhook_config_list(self, secret: str, token: str, url_list: List[str]):
+        resp_body = self._post(
+            endpoint=f'/v1.1/webhook/queryWebhook',
+            secret=secret,
+            token=token,
+            data={
+                "action": "queryDetails",
+                "urls": url_list
+            }
+        )
+        return resp_body
+
     def update_webhook_config(self, secret: str, token: str, url: str, enable: bool):
         resp_body = self._post(
             endpoint=f'/v1.1/webhook/updateWebhook',

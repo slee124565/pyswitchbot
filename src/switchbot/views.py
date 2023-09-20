@@ -3,6 +3,16 @@ from dataclasses import asdict
 from switchbot.service_layer import unit_of_work
 
 
+def read_webhook_config_detail(secret: str, token: str, url: str, uow: unit_of_work.AbstractUnitOfWork):
+    with uow:
+        _config = uow.devices.read_webhook_config_list(
+            secret=secret,
+            token=token,
+            url_list=[url]
+        )
+    return _config
+
+
 def read_webhook_config(secret: str, token: str, uow: unit_of_work.AbstractUnitOfWork):
     with uow:
         _config = uow.devices.read_webhook_config(

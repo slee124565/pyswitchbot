@@ -219,6 +219,25 @@ def read():
 
 @webhook.command()
 @click.argument('url')
+def read_detail(url):
+    """Get user webhook config from SwitchBot API cloud."""
+    click.echo(f"Getting webhook {url} detail")
+    secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
+    token = os.getenv('SWITCHBOTAPI_TOKEN')
+    click.echo(
+        json.dumps(
+            views.read_webhook_config_detail(
+                secret=secret,
+                token=token,
+                url=url,
+                uow=bus.uow
+            ), indent=2, ensure_ascii=False
+        )
+    )
+
+
+@webhook.command()
+@click.argument('url')
 def update(url):
     """Update a webhook."""
     click.echo(f"Updating webhook {url}")
