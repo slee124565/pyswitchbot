@@ -6,8 +6,6 @@ SwitchBot Open API Client Library
 ```bash
 python setup.py [develop]
 ```
-
-# CLI tool : switchbot
 ## Usage
 
 ```bash
