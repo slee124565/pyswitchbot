@@ -13,13 +13,16 @@ def read_files(files):
     return "\n".join(data)
 
 
-# long_description = read_files(['README.md', 'CHANGELOG.md'])
+long_description = read_files(['README.md'])
+
+with open('requirements.txt') as f:
+    install_requires = f.read().split('\n')
 
 setup(
     name=__title__,
     version=__version__,
     description="A Python library for OpenWonderLabs SwitchBot API",
-    long_description='long_description',
+    long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -29,13 +32,10 @@ setup(
     author=__author__,
     author_email=__email__,
     license="MIT",
-    packages=find_packages(),
-    install_requires=[
-        "click",
-        "python-dotenv",
-        "requests",
-    ],
-    python_requires='>=3.11',
+    packages=find_packages(where='src'),
+    package_dir={'': 'src'},
+    install_requires=install_requires,
+    python_requires='>=3.7',
     entry_points={
         "console_scripts": [
             "switchbot=switchbot.entrypoints.cli:switchbotcli",

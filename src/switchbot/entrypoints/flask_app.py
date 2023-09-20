@@ -10,6 +10,11 @@ app = Flask(__name__)
 bus = bootstrap.bootstrap()
 
 
+@app.route('/fulfillment', method=['POST'])
+def fulfillment():
+    raise NotImplementedError
+
+
 @app.route('/report_event', methods=['POST'])
 def report_event():
     try:
