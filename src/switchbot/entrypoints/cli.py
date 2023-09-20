@@ -17,7 +17,7 @@ env_secret, env_token = config.get_switchbot_key_pair()
 # 主命令
 @click.group()
 def switchbotcli():
-    """SwitchBot API CLI tool."""
+    """SwitchBot Open API CLI tool."""
     pass
 
 
@@ -187,7 +187,7 @@ def webhook():
 @webhook.command()
 @click.argument('url')
 def create(url):
-    """Save user webhook config from SwitchBot API cloud ."""
+    """Save user webhook config from SwitchBot Open API cloud ."""
     click.echo(f"Creating webhook {url}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
@@ -202,7 +202,7 @@ def create(url):
 
 @webhook.command()
 def read():
-    """Get user webhook config from SwitchBot API cloud."""
+    """Get user webhook config from SwitchBot Open API cloud."""
     click.echo(f"Getting webhook")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
@@ -220,7 +220,7 @@ def read():
 @webhook.command()
 @click.argument('url')
 def read_detail(url):
-    """Get user webhook config from SwitchBot API cloud."""
+    """Get user webhook config from SwitchBot Open API cloud."""
     click.echo(f"Getting webhook {url} detail")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')

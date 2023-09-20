@@ -2,7 +2,10 @@
 SwitchBot Open API Client Library
 
 # Install `switchbot` command line tool
-`python setup.py [develop]`
+
+```bash
+python setup.py [develop]
+```
 
 # CLI tool : switchbot
 ## Usage
