@@ -30,7 +30,7 @@ logging_config = {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "standard",
-            "level": "DEBUG"
+            "level": "INFO"
         }
     },
     "root": {
@@ -41,10 +41,10 @@ logging_config = {
         "requests": {
             "level": "INFO"
         },
-        "switchbot.adapters.switchbotapi": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False
-        }
+        # "switchbot.adapters.switchbotapi": {
+        #     "handlers": ["console"],
+        #     "level": "DEBUG",
+        #     "propagate": False
+        # }
     }
 }

@@ -1,8 +1,9 @@
 from setuptools import setup, find_packages
-from switchbot import __title__
-from switchbot import __email__
-from switchbot import __version__
-from switchbot import __author__
+
+__title__ = 'pyswitchbot-openapi'
+__version__ = '0.0.1'
+__author__ = 'Lee Shiueh'
+__email__ = 'lee.shiueh@gmail.com'
 
 
 def read_files(files):
