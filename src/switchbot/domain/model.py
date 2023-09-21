@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from . import commands, events
 
 
+@dataclass
 class SwitchBotDevice:
     deviceId: str
     deviceName: str
@@ -11,12 +12,12 @@ class SwitchBotDevice:
     enableCloudService: bool
     hubDeviceId: str
 
-    def __init__(self, **kwargs):
-        self.deviceId = kwargs.get('deviceId')
-        self.deviceName = kwargs.get('deviceName')
-        self.deviceType = kwargs.get('deviceType')
-        self.enableCloudService = kwargs.get('enableCloudService')
-        self.hubDeviceId = kwargs.get('hubDeviceId')
+    # def __init__(self, **kwargs):
+    #     self.deviceId = kwargs.get('deviceId')
+    #     self.deviceName = kwargs.get('deviceName')
+    #     self.deviceType = kwargs.get('deviceType')
+    #     self.enableCloudService = kwargs.get('enableCloudService')
+    #     self.hubDeviceId = kwargs.get('hubDeviceId')
 
     def __repr__(self):
         return f'Device({self.deviceId}, {self.deviceName}, {self.deviceType})'
