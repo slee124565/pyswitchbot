@@ -1,11 +1,11 @@
 """
 """
 import logging
-import json
+# import json
 from dataclasses import dataclass, asdict
 from typing import List, Dict
 from marshmallow import Schema, fields, post_load
-from .repository import AbstractRepository
+# from .repository import AbstractRepository
 
 logger = logging.getLogger(__name__)
 
@@ -120,26 +120,26 @@ class UserRepoSchema(Schema):
         return UserRepo(**data)
 
 
-class FileRepository(AbstractRepository):
-    _file: str
-    _repo: UserRepo
-
-    def _load(self):
-        with open(self._file) as file:
-            data = json.loads(file.read())
-        user_repo_schema = UserRepoSchema()
-        self._repo = user_repo_schema.load(data)
-        print(self._repo)
-        pass
-
-    def _save(self):
-        with open(self._file, 'w', encoding='utf-8') as file:
-            json.dump(asdict(self._repo), file, ensure_ascii=False, indent=2)
-
-    def __init__(self, repo_file: str = '.repository'):
-        super().__init__()
-        self._file = repo_file
-        self._load()
+# class FileRepository(AbstractRepository):
+#     _file: str
+#     _repo: UserRepo
+#
+#     def _load(self):
+#         with open(self._file) as file:
+#             data = json.loads(file.read())
+#         user_repo_schema = UserRepoSchema()
+#         self._repo = user_repo_schema.load(data)
+#         print(self._repo)
+#         pass
+#
+#     def _save(self):
+#         with open(self._file, 'w', encoding='utf-8') as file:
+#             json.dump(asdict(self._repo), file, ensure_ascii=False, indent=2)
+#
+#     def __init__(self, repo_file: str = '.repository'):
+#         super().__init__()
+#         self._file = repo_file
+#         self._load()
 
 
 # if __name__ == '__main__':

@@ -63,8 +63,11 @@ def list(envfile):
 @click.option('--token', default=env_token, help='Your token for authentication.')
 def check(secret, token):
     """Check authentication status."""
-    cmd = commands.CheckAuthToken(secret=secret, token=token)
-    bus.handle(cmd)
+    views.get_scene_list(
+        secret=secret,
+        token=token,
+        uow=bus.uow
+    )
     click.echo('OK')
 
 
@@ -124,6 +127,15 @@ def cmd(command, dev_id, cmd_type, cmd_param):
     click.echo(f"Sending command {command} to device {dev_id} with type:{cmd_type}, param:{cmd_param}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
+    # views.send_device_ctrl_cmd(
+    #     secret=secret,
+    #     token=token,
+    #     dev_id=dev_id,
+    #     cmd_type=cmd_type,
+    #     cmd_value=command,
+    #     cmd_param=cmd_param,
+    #     uow=bus.uow
+    # )
     _cmd = commands.SendDeviceCtrlCmd(
         secret=secret,
         token=token,

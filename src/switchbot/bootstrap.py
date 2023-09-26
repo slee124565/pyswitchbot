@@ -1,10 +1,12 @@
 """"""
 import inspect
+from switchbot.adapters import switchbotapi
 from switchbot.service_layer import handlers, messagebus, unit_of_work
 
 
 def bootstrap(
-        uow: unit_of_work.AbstractUnitOfWork = unit_of_work.ApiUnitOfWork()
+        uow: unit_of_work.AbstractUnitOfWork =
+        unit_of_work.ApiUnitOfWork(switchbotapi.SwitchBotHttpApiServer())
 ) -> messagebus.MessageBus:
 
     dependencies = {'uow': uow}

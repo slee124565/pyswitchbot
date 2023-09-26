@@ -1,12 +1,13 @@
 # pylint: disable=attribute-defined-outside-init
 from __future__ import annotations
 import abc
-
+from switchbot.adapters import repository
 from switchbot.adapters import switchbotapi
 
 
 class AbstractUnitOfWork(abc.ABC):
-    devices: switchbotapi.AbstractSwitchBotApiServer
+    devices: repository.AbstractRepository
+    iot_api: switchbotapi.AbstractSwitchBotApiServer
 
     def __enter__(self) -> AbstractUnitOfWork:
         return self
@@ -33,8 +34,12 @@ class AbstractUnitOfWork(abc.ABC):
 
 class ApiUnitOfWork(AbstractUnitOfWork):
     
+    def __init__(self, iot_api: switchbotapi.AbstractSwitchBotApiServer):
+        self.iot_api = iot_api
+
     def __enter__(self):
-        self.devices = switchbotapi.SwitchBotHttpApiServer()
+        self.devices = repository.FileRepository()
+        # self.iot_api = switchbotapi.SwitchBotHttpApiServer()
         return super().__enter__()
 
     def __exit__(self, *args):
