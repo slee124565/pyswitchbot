@@ -150,8 +150,7 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
         )
         _dev_list = []
         for _data in resp_body.get('deviceList'):
-            assert isinstance(_data, dict)
-            _dev_list.append(model.SwitchBotDevice(**_data))
+            _dev_list.append(model.SwitchBotDevice.fromdict(_data))
         for _data in resp_body.get('infraredRemoteList'):
             # assert isinstance(_data, dict)
             # _dev_list.append(model.SwitchBotDevice(**_data))

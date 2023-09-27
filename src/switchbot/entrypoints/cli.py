@@ -88,11 +88,11 @@ def listall(save):
     # cmd = commands.GetDeviceList(secret=secret, token=token)
     click.echo(
         json.dumps(
-            views.get_device_list(
+            [dev.sync() for dev in views.get_device_list(
                 secret=secret,
                 token=token,
                 uow=bus.uow
-            ), indent=2, ensure_ascii=False
+            )], indent=2, ensure_ascii=False
         )
     )
 

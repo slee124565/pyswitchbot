@@ -1,7 +1,8 @@
-from typing import Union
+from typing import Union, List
 from dataclasses import asdict
 from switchbot.service_layer import unit_of_work
 from switchbot.adapters import switchbotapi
+from switchbot.domain import model
 
 
 def read_webhook_config_detail(
@@ -40,13 +41,13 @@ def get_scene_list(
 
 def get_device_list(
         secret: str, token: str,
-        uow: unit_of_work.AbstractUnitOfWork):
+        uow: unit_of_work.AbstractUnitOfWork) -> List[model.SwitchBotDevice]:
     with uow:
         dev_list = uow.iot_api.get_dev_list(
             secret=secret,
             token=token
         )
-    return [asdict(dev) for dev in dev_list]
+    return dev_list
 
 
 def get_device_status(
