@@ -57,12 +57,12 @@ class SwitchBotDevice:
     def execute(self, cmd):
         raise NotImplementedError
 
-    def asdict(self):
+    def asdict(self) -> dict:
         data = SwitchBotDeviceSchema().dump(self)
         return {k: v for k, v in data.items() if v is not None}
 
     @classmethod
-    def fromdict(cls, data: dict):
+    def fromdict(cls, data: dict) -> 'SwitchBotDevice':
         return SwitchBotDeviceSchema().load(data)
 
 
@@ -158,10 +158,10 @@ class SwitchBotStatus:
         self.electric_current = electric_current
 
     @classmethod
-    def fromdict(cls, data):
+    def fromdict(cls, data: dict) -> 'SwitchBotStatus':
         return SwitchBotStatusSchema().load(data)
 
-    def asdict(self):
+    def asdict(self) -> dict:
         data = SwitchBotStatusSchema().dump(self)
         return {k: v for k, v in data.items() if v is not None}
 

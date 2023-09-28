@@ -52,14 +52,14 @@ def get_device_list(
 
 def get_device_status(
         secret: str, token: str, dev_id,
-        uow: unit_of_work.AbstractUnitOfWork):
+        uow: unit_of_work.AbstractUnitOfWork) -> model.SwitchBotStatus:
     with uow:
         dev_status = uow.iot_api.get_dev_status(
             secret=secret,
             token=token,
             dev_id=dev_id
         )
-    return dev_status.kwargs
+    return dev_status
 
 
 def send_device_ctrl_cmd(

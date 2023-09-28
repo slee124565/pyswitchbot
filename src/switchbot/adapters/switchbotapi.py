@@ -174,7 +174,7 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             secret=secret,
             token=token
         )
-        return model.SwitchBotStatus(**resp_body)
+        return model.SwitchBotStatus.fromdict(resp_body)
 
     def get_scene_list(self, secret: str, token: str) -> List[model.SwitchBotScene]:
         resp_body = self._get(

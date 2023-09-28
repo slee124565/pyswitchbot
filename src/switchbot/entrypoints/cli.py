@@ -111,7 +111,7 @@ def query(dev_id):
                 token=token,
                 dev_id=dev_id,
                 uow=bus.uow
-            )
+            ).asdict()
             , indent=2, ensure_ascii=False
         )
     )
