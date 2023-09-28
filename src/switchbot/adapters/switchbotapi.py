@@ -34,7 +34,7 @@ class AbstractSwitchBotApiServer(abc.ABC):
     def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
         raise NotImplementedError
 
-    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotDeviceStatus:
+    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotStatus:
         raise NotImplementedError
 
     def send_dev_ctrl_cmd(self, secret: str, token: str, dev_id: str, cmd_type: str, cmd_value: str,
@@ -168,13 +168,13 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
         )
         return resp_body.values() if isinstance(resp_body, dict) else resp_body
 
-    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotDeviceStatus:
+    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotStatus:
         resp_body = self._get(
             endpoint=f'/v1.1/devices/{dev_id}/status',
             secret=secret,
             token=token
         )
-        return model.SwitchBotDeviceStatus(**resp_body)
+        return model.SwitchBotStatus(**resp_body)
 
     def get_scene_list(self, secret: str, token: str) -> List[model.SwitchBotScene]:
         resp_body = self._get(

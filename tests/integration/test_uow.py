@@ -7,7 +7,7 @@ class FakeSwitchBotApiServer(switchbotapi.AbstractSwitchBotApiServer):
     def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
         raise NotImplementedError
 
-    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotDeviceStatus:
+    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotStatus:
         raise NotImplementedError
 
     def send_dev_ctrl_cmd(self, secret: str, token: str, dev_id: str, cmd_type: str, cmd_value: str,
