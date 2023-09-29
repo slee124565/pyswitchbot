@@ -1,17 +1,19 @@
 # pylint: disable=attribute-defined-outside-init
 from __future__ import annotations
 import abc
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.session import Session
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import sessionmaker
+# from sqlalchemy.orm.session import Session
 from switchbot.adapters import repository
-from switchbot.adapters import switchbotapi
-from switchbot import config
+from switchbot.adapters.iot_api_server import AbstractIotApiServer, SwitchBotApiServer, FakeApiServer
+
+
+# from switchbot import config
 
 
 class AbstractUnitOfWork(abc.ABC):
     devices: repository.AbstractRepository
-    iot_api: switchbotapi.AbstractSwitchBotApiServer
+    api_server: AbstractIotApiServer
 
     def __enter__(self) -> AbstractUnitOfWork:
         return self
@@ -39,7 +41,7 @@ class AbstractUnitOfWork(abc.ABC):
 class FakeFileUnitOfWork(AbstractUnitOfWork):
     def __enter__(self):
         self.devices = repository.FileRepository()
-        self.iot_api = switchbotapi.FakeFileIotServer()
+        self.api_server = FakeApiServer()
         return super().__enter__()
 
     def __exit__(self, *args):
@@ -55,7 +57,7 @@ class FakeFileUnitOfWork(AbstractUnitOfWork):
 class CliUnitOfWork(AbstractUnitOfWork):
     def __enter__(self):
         self.devices = repository.FileRepository()
-        self.iot_api = switchbotapi.SwitchBotHttpApiServer()
+        self.api_server = SwitchBotApiServer()
         return super().__enter__()
 
     def __exit__(self, *args):

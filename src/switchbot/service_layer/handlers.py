@@ -1,6 +1,6 @@
 from typing import List, Dict, Callable, Type, TYPE_CHECKING
 from switchbot.domain import commands, events, model
-from switchbot.adapters import switchbotapi
+from switchbot.adapters import iot_api_server
 # if TYPE_CHECKING:
 #     from . import unit_of_work
 from . import unit_of_work
@@ -16,7 +16,7 @@ def send_dev_ctrl_cmd(
 ):
     with uow:
         # dev = uow.devices.get(dev_id=cmd.dev_id)
-        response = uow.iot_api.send_dev_ctrl_cmd(
+        response = uow.api_server.send_dev_ctrl_cmd(
             secret=cmd.secret,
             token=cmd.token,
             dev_id=cmd.dev_id,
@@ -31,7 +31,7 @@ def get_device_list(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        dev_list = uow.iot_api.get_dev_list(
+        dev_list = uow.api_server.get_dev_list(
             secret=cmd.secret,
             token=cmd.token
         )
@@ -42,7 +42,7 @@ def check_auth_token(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        uow.iot_api.get_dev_list(
+        uow.api_server.get_dev_list(
             secret=cmd.secret,
             token=cmd.token
         )
@@ -53,7 +53,7 @@ def exec_manual_scene(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        uow.iot_api.exec_manual_scene(
+        uow.api_server.exec_manual_scene(
             secret=cmd.secret,
             token=cmd.token,
             scene_id=cmd.scene_id
@@ -65,7 +65,7 @@ def config_webhook(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        uow.iot_api.create_webhook_config(
+        uow.api_server.create_webhook_config(
             secret=cmd.secret,
             token=cmd.token,
             url=cmd.url
@@ -77,7 +77,7 @@ def update_webhook(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        uow.iot_api.update_webhook_config(
+        uow.api_server.update_webhook_config(
             secret=cmd.secret,
             token=cmd.token,
             url=cmd.url,
@@ -90,7 +90,7 @@ def delete_webhook(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        uow.iot_api.delete_webhook_config(
+        uow.api_server.delete_webhook_config(
             secret=cmd.secret,
             token=cmd.token,
             url=cmd.url,

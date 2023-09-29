@@ -13,6 +13,7 @@ logging_config.dictConfig(config.logging_config)
 logger = logging.getLogger(__name__)
 # logger.info('switchbot cli process')
 bus = bootstrap.bootstrap(uow=unit_of_work.CliUnitOfWork())
+# bus = bootstrap.bootstrap(uow=unit_of_work.FakeFileUnitOfWork())
 env_secret, env_token = config.get_switchbot_key_pair()
 
 
@@ -53,7 +54,7 @@ def config(secret, token, envfile):
 
 @auth.command()
 @click.option('--envfile', default='.env', help='Your dotenv config file.')
-def list(envfile):
+def listall(envfile):
     """List authentication information."""
     click.echo("Listing all authentication information.")
     with open(envfile) as fh:
@@ -172,10 +173,7 @@ def listall(save):
         uow=bus.uow
     )
     click.echo(
-        json.dumps(
-            [_schema.dump(scene) for scene in _list]
-            , indent=2, ensure_ascii=False
-        )
+        json.dumps([_schema.dump(s) for s in _list], indent=2, ensure_ascii=False)
     )
 
 

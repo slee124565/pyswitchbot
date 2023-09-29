@@ -1,11 +1,11 @@
 from switchbot.config import get_switchbot_key_pair
-from switchbot.adapters.switchbotapi import SwitchBotHttpApiServer
+from switchbot.adapters.iot_api_server import SwitchBotApiServer
 from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus
 
 
 def test_switchbotapi():
     secret, token = get_switchbot_key_pair()
-    switchbotapi = SwitchBotHttpApiServer()
+    switchbotapi = SwitchBotApiServer()
     """測試 get_dev_list API"""
     dev_list = switchbotapi.get_dev_list(secret=secret, token=token)
     assert dev_list

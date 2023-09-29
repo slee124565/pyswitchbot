@@ -1,6 +1,5 @@
 """"""
 import inspect
-from switchbot.adapters import switchbotapi
 from switchbot.service_layer import handlers, messagebus, unit_of_work
 
 

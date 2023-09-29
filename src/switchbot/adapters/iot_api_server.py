@@ -26,7 +26,7 @@ class SwitchBotAPIResponseError(Exception):
     pass
 
 
-class AbstractSwitchBotApiServer(abc.ABC):
+class AbstractIotApiServer(abc.ABC):
     def __init__(self):
         self.api_uri = SWITCHBOT_API_URI
         self.seen = set()  # type:Set[model.SwitchBotDevice]
@@ -66,11 +66,7 @@ class AbstractSwitchBotApiServer(abc.ABC):
     #     raise NotImplementedError
 
 
-class FakeFileIotServer(AbstractSwitchBotApiServer):
-    pass
-
-
-class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
+class SwitchBotApiServer(AbstractIotApiServer):
     @staticmethod
     def _get_auth_headers(secret: str, token: str, nonce=None):
         # Declare empty header dictionary
@@ -124,7 +120,7 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             logger.debug(f'{resp.status_code}, {resp.json()}')
             logger.info(f'{endpoint},{params},{resp.json()}')
             return resp.json().get('body')
-        except Exception as err:
+        except Exception:
             raise SwitchBotAPIServerError
 
     def _post(self, secret: str, token: str, endpoint: str, data: dict):
@@ -143,7 +139,7 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
 
             logger.info(f'{endpoint},{data},{resp.json()}')
             return resp.json().get('body')
-        except Exception as err:
+        except Exception:
             raise SwitchBotAPIServerError
 
     def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
@@ -267,3 +263,88 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             }
         )
         return resp_body
+
+
+class FakeApiServer(AbstractIotApiServer):
+    def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
+        devices = [
+            {
+                "deviceId": "6055F92FCFD2",
+                "deviceName": "小風扇開關",
+                "deviceType": "Plug Mini (US)",
+                "enableCloudService": True,
+                "hubDeviceId": ""
+            },
+            {
+                "deviceId": "6055F930FF22",
+                "deviceName": "風扇開關",
+                "deviceType": "Plug Mini (US)",
+                "enableCloudService": True,
+                "hubDeviceId": ""
+            }
+        ]
+        _schema = SwitchBotDeviceSchema()
+        return [_schema.load(d) for d in devices]
+
+    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotStatus:
+        scenes = [
+            {
+                "deviceId": "6055F92FCFD2",
+                "deviceType": "Plug Mini (US)",
+                "hubDeviceId": "6055F92FCFD2",
+                "power": "off",
+                "version": "V1.4-1.4",
+                "voltage": 112.2,
+                "weight": 0.0,
+                "electricityOfDay": 43,
+                "electricCurrent": 0.0
+            },
+            {
+                "deviceId": "6055F930FF22",
+                "deviceType": "Plug Mini (US)",
+                "hubDeviceId": "6055F930FF22",
+                "power": "on",
+                "version": "V1.4-1.4",
+                "voltage": 112.2,
+                "weight": 35.0,
+                "electricityOfDay": 184,
+                "electricCurrent": 3.09
+            }
+
+        ]
+        _schema = SwitchBotStatusSchema()
+        for d in scenes:
+            if d.get('deviceId') == dev_id:
+                return _schema.load(d)
+
+    def send_dev_ctrl_cmd(self, secret: str, token: str, dev_id: str, cmd_type: str, cmd_value: str,
+                          cmd_param: Union[str, dict]):
+        raise NotImplementedError
+
+    def get_scene_list(self, secret: str, token: str) -> List[model.SwitchBotScene]:
+        scenes = [
+            {
+                "sceneId": "T01-202309291436-01716250",
+                "sceneName": "allOff"
+            }
+        ]
+        _schema = SwitchBotSceneSchema()
+        return [_schema.load(d) for d in scenes]
+
+    def exec_manual_scene(self, secret: str, token: str, scene_id: str):
+        raise NotImplementedError
+
+    def create_webhook_config(self, secret: str, token: str, url: str):
+        raise NotImplementedError
+
+    def read_webhook_config(self, secret: str, token: str) -> List[str]:
+        raise NotImplementedError
+
+    def read_webhook_config_list(self, secret: str, token: str, url_list: List[str]):
+        raise NotImplementedError
+
+    def update_webhook_config(self, secret: str, token: str, url: str, enable: bool):
+        raise NotImplementedError
+
+    def delete_webhook_config(self, secret: str, token: str, url: str):
+        raise NotImplementedError
