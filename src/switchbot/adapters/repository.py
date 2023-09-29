@@ -5,7 +5,6 @@ import logging
 from typing import Set, List
 from dataclasses import asdict
 from switchbot.domain import model
-from .file_repository import UserRepo, UserRepoSchema
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +42,11 @@ class AbstractRepository(abc.ABC):
 
 class FileRepository(AbstractRepository):
     _file: str
-    _repo: UserRepo
+    _repo: {
+        'devices': [],
+        'scenes': [],
+        'webhooks': []
+    }
 
     def _load(self):
         if not os.path.exists(self._file):

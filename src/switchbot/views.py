@@ -29,13 +29,13 @@ def read_webhook_config(
 
 def get_scene_list(
         secret: str, token: str,
-        uow: unit_of_work.AbstractUnitOfWork):
+        uow: unit_of_work.AbstractUnitOfWork) -> List[model.SwitchBotScene]:
     with uow:
         scene_list = uow.iot_api.get_scene_list(
             secret=secret,
             token=token
         )
-    return [asdict(scene) for scene in scene_list]
+    return scene_list
 
 
 def get_device_list(

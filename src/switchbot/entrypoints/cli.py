@@ -6,6 +6,7 @@ import json
 from switchbot import bootstrap, views
 from switchbot import config
 from switchbot.domain import commands
+from switchbot.adapters import json_schema
 from switchbot.service_layer import unit_of_work
 
 logging_config.dictConfig(config.logging_config)
@@ -87,9 +88,10 @@ def listall(save):
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     # cmd = commands.GetDeviceList(secret=secret, token=token)
+    _schema = json_schema.SwitchBotDeviceSchema()
     click.echo(
         json.dumps(
-            [dev.asdict() for dev in views.get_device_list(
+            [_schema.dump(dev) for dev in views.get_device_list(
                 secret=secret,
                 token=token,
                 uow=bus.uow
@@ -105,15 +107,15 @@ def query(dev_id):
     click.echo(f"Querying device status {dev_id}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
+    _schema = json_schema.SwitchBotStatusSchema()
     click.echo(
         json.dumps(
-            views.get_device_status(
+            _schema.dump(views.get_device_status(
                 secret=secret,
                 token=token,
                 dev_id=dev_id,
-                uow=bus.uow
-            ).asdict()
-            , indent=2, ensure_ascii=False
+                uow=bus.uow)
+            ), indent=2, ensure_ascii=False
         )
     )
 
@@ -163,13 +165,16 @@ def listall(save):
     click.echo(f"Listing all scenes. Save: {save}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
+    _schema = json_schema.SwitchBotSceneSchema()
+    _list = views.get_scene_list(
+        secret=secret,
+        token=token,
+        uow=bus.uow
+    )
     click.echo(
         json.dumps(
-            views.get_scene_list(
-                secret=secret,
-                token=token,
-                uow=bus.uow
-            ), indent=2, ensure_ascii=False
+            [_schema.dump(scene) for scene in _list]
+            , indent=2, ensure_ascii=False
         )
     )
 

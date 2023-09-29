@@ -11,8 +11,8 @@ import requests
 from typing import List, Set, Union
 from http import HTTPStatus
 from dataclasses import asdict
-from switchbot.domain import model
-from switchbot.domain import commands
+from switchbot.domain import model, commands
+from switchbot.adapters.json_schema import SwitchBotDeviceSchema, SwitchBotStatusSchema, SwitchBotSceneSchema
 
 logger = logging.getLogger(__name__)
 SWITCHBOT_API_URI = os.getenv('SWITCHBOT_API_URI', 'https://api.switch-bot.com')
@@ -153,8 +153,9 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             token=token
         )
         _dev_list = []
+        _schema = SwitchBotDeviceSchema()
         for _data in resp_body.get('deviceList'):
-            _dev_list.append(model.SwitchBotDevice.fromdict(_data))
+            _dev_list.append(_schema.load(_data))
         for _data in resp_body.get('infraredRemoteList'):
             # assert isinstance(_data, dict)
             # _dev_list.append(model.SwitchBotDevice(**_data))
@@ -178,7 +179,8 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
             secret=secret,
             token=token
         )
-        return model.SwitchBotStatus.fromdict(resp_body)
+        _schema = SwitchBotStatusSchema()
+        return _schema.load(resp_body)
 
     def get_scene_list(self, secret: str, token: str) -> List[model.SwitchBotScene]:
         resp_body = self._get(
@@ -188,11 +190,8 @@ class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
         )
         if not isinstance(resp_body, list):
             raise SwitchBotAPIResponseError
-        _list = []
-        for _data in resp_body:
-            _scene = model.SwitchBotScene(**_data)
-            _list.append(_scene)
-        return _list
+        _schema = SwitchBotSceneSchema()
+        return [_schema.load(data) for data in resp_body]
 
     def exec_manual_scene(self, secret: str, token: str, scene_id: str):
         resp_body = self._post(
