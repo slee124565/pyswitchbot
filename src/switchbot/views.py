@@ -1,7 +1,6 @@
 from typing import Union, List
 from dataclasses import asdict
 from switchbot.service_layer import unit_of_work
-from switchbot.adapters import switchbotapi
 from switchbot.domain import model
 
 

@@ -6,11 +6,12 @@ import json
 from switchbot import bootstrap, views
 from switchbot import config
 from switchbot.domain import commands
+from switchbot.service_layer import unit_of_work
 
 logging_config.dictConfig(config.logging_config)
 logger = logging.getLogger(__name__)
 # logger.info('switchbot cli process')
-bus = bootstrap.bootstrap()
+bus = bootstrap.bootstrap(uow=unit_of_work.CliUnitOfWork())
 env_secret, env_token = config.get_switchbot_key_pair()
 
 

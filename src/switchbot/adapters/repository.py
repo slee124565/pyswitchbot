@@ -73,3 +73,25 @@ class FileRepository(AbstractRepository):
 
     def _list(self, user_id: str) -> List[model.SwitchBotDevice]:
         raise NotImplementedError
+
+
+class SqlAlchemyRepository(AbstractRepository):
+    def __init__(self, session):
+        super().__init__()
+        self.session = session
+
+    # def _add(self, product):
+    #     self.session.add(product)
+    #
+    # def _get(self, sku):
+    #     return self.session.query(model.Product).filter_by(sku=sku).first()
+    #
+    # def _get_by_batchref(self, batchref):
+    #     return (
+    #         self.session.query(model.Product)
+    #         .join(model.Batch)
+    #         .filter(
+    #             orm.batches.c.reference == batchref,
+    #         )
+    #         .first()
+    #     )

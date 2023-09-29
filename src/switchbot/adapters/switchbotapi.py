@@ -66,6 +66,10 @@ class AbstractSwitchBotApiServer(abc.ABC):
     #     raise NotImplementedError
 
 
+class FakeFileIotServer(AbstractSwitchBotApiServer):
+    pass
+
+
 class SwitchBotHttpApiServer(AbstractSwitchBotApiServer):
     @staticmethod
     def _get_auth_headers(secret: str, token: str, nonce=None):

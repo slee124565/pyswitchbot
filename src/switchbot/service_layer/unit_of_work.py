@@ -1,8 +1,12 @@
 # pylint: disable=attribute-defined-outside-init
 from __future__ import annotations
 import abc
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.session import Session
 from switchbot.adapters import repository
 from switchbot.adapters import switchbotapi
+from switchbot import config
 
 
 class AbstractUnitOfWork(abc.ABC):
@@ -32,14 +36,10 @@ class AbstractUnitOfWork(abc.ABC):
         raise NotImplementedError
 
 
-class ApiUnitOfWork(AbstractUnitOfWork):
-    
-    def __init__(self, iot_api: switchbotapi.AbstractSwitchBotApiServer):
-        self.iot_api = iot_api
-
+class FakeFileUnitOfWork(AbstractUnitOfWork):
     def __enter__(self):
         self.devices = repository.FileRepository()
-        # self.iot_api = switchbotapi.SwitchBotHttpApiServer()
+        self.iot_api = switchbotapi.FakeFileIotServer()
         return super().__enter__()
 
     def __exit__(self, *args):
@@ -50,3 +50,46 @@ class ApiUnitOfWork(AbstractUnitOfWork):
 
     def rollback(self):
         pass
+
+
+class CliUnitOfWork(AbstractUnitOfWork):
+    def __enter__(self):
+        self.devices = repository.FileRepository()
+        self.iot_api = switchbotapi.SwitchBotHttpApiServer()
+        return super().__enter__()
+
+    def __exit__(self, *args):
+        super().__exit__(*args)
+
+    def _commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+# DEFAULT_SESSION_FACTORY = sessionmaker(
+#     bind=create_engine(
+#         config.get_postgres_uri(),
+#         isolation_level="REPEATABLE READ",
+#     )
+# )
+#
+#
+# class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
+#     def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
+#         self.session_factory = session_factory
+#
+#     def __enter__(self):
+#         self.session = self.session_factory()  # type: Session
+#         self.products = repository.SqlAlchemyRepository(self.session)
+#         return super().__enter__()
+#
+#     def __exit__(self, *args):
+#         super().__exit__(*args)
+#         self.session.close()
+#
+#     def _commit(self):
+#         self.session.commit()
+#
+#     def rollback(self):
+#         self.session.rollback()

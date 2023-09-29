@@ -47,6 +47,7 @@ class SwitchBotDevice:
         self.blind_tilt_devices_ids = blind_tilt_devices_ids
         self.direction = direction
         self.slide_position = slide_position
+        self.events = []
 
     def __repr__(self):
         return f'Device({self.device_id}, {self.device_name}, {self.device_type})'
