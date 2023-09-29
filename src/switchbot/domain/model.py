@@ -1,10 +1,7 @@
-import json
-from typing import List, Dict
-from dataclasses import dataclass, field
-from marshmallow import Schema, fields, post_load
+import logging
+from dataclasses import dataclass, asdict
 
-
-# from . import commands, events
+logger = logging.getLogger(__name__)
 
 
 class SwitchBotDevice:
@@ -57,46 +54,6 @@ class SwitchBotDevice:
 
     def execute(self, cmd):
         raise NotImplementedError
-
-    # def asdict(self) -> dict:
-    #     data = SwitchBotDeviceSchema().dump(self)
-    #     return {k: v for k, v in data.items() if v is not None}
-    #
-    # @classmethod
-    # def fromdict(cls, data: dict) -> 'SwitchBotDevice':
-    #     return SwitchBotDeviceSchema().load(data)
-
-
-# class SwitchBotDeviceSchema(Schema):
-#     device_id = fields.String(data_key="deviceId")
-#     device_name = fields.String(data_key="deviceName")
-#     device_type = fields.String(data_key="deviceType")
-#     enable_cloud_service = fields.Boolean(data_key="enableCloudService")
-#     hub_device_id = fields.String(data_key="hubDeviceId")
-#     curtain_devices_ids = fields.List(fields.String(), data_key="curtainDevicesIds", load_default=None)
-#     calibrate = fields.Boolean(load_default=None)
-#     group = fields.Boolean(load_default=None)
-#     master = fields.Boolean(load_default=None)
-#     open_direction = fields.String(data_key="openDirection", load_default=None)
-#     lock_devices_ids = fields.List(fields.String(), data_key="lockDevicesIds", load_default=None)
-#     group_name = fields.String(data_key="groupName", load_default=None)
-#     lock_device_id = fields.String(data_key="lockDeviceId", load_default=None)
-#     key_list = fields.Dict(data_key="keyList", load_default=None)
-#     version = fields.Integer(load_default=None)
-#     blind_tilt_devices_ids = fields.List(fields.String(), data_key="blindTiltDevicesIds", load_default=None)
-#     direction = fields.String(load_default=None)
-#     slide_position = fields.Integer(data_key="slidePosition", load_default=None)
-#
-#     @post_load
-#     def make_iot_device(self, data, **kwargs):
-#         return SwitchBotDevice(**data)
-
-
-# class InfraredIoTDevice:
-#     deviceId: str
-#     deviceName: str
-#     remoteType: str
-#     hubDeviceId: str
 
 
 class SwitchBotStatus:
@@ -157,48 +114,7 @@ class SwitchBotStatus:
         self.electricity_of_day = electricity_of_day
         self.electric_current = electric_current
 
-    # @classmethod
-    # def fromdict(cls, data: dict) -> 'SwitchBotStatus':
-    #     return SwitchBotStatusSchema().load(data)
-    #
-    # def asdict(self) -> dict:
-    #     data = SwitchBotStatusSchema().dump(self)
-    #     return {k: v for k, v in data.items() if v is not None}
 
-
-# class SwitchBotStatusSchema(Schema):
-#     device_id = fields.String(data_key='deviceId', required=True)
-#     device_type = fields.String(data_key='deviceType', required=True)
-#     hub_device_id = fields.String(data_key='hubDeviceId', required=True)
-#     power = fields.String(load_default=None)
-#     battery = fields.Integer(load_default=None)
-#     version = fields.String(load_default=None)
-#     device_mode = fields.String(data_key='deviceMode', load_default=None)
-#     calibrate = fields.Boolean(load_default=None)
-#     group = fields.Boolean(load_default=None)
-#     moving = fields.Boolean(load_default=None)
-#     slide_position = fields.String(data_key='slidePosition', load_default=None)
-#     temperature = fields.Float(load_default=None)
-#     humidity = fields.Integer(load_default=None)
-#     lock_state = fields.String(data_key='lockState', load_default=None)
-#     door_state = fields.String(data_key='doorState', load_default=None)
-#     working_status = fields.String(data_key='workingStatus', load_default=None)
-#     online_status = fields.String(data_key='onlineStatus', load_default=None)
-#     move_detected = fields.Boolean(data_key='moveDetected', load_default=None)
-#     brightness = fields.String(load_default=None)
-#     color = fields.String(load_default=None)
-#     color_temperature = fields.Integer(data_key='colorTemperature', load_default=None)
-#     voltage = fields.Float(load_default=None)
-#     weight = fields.Float(load_default=None)
-#     electricity_of_day = fields.Integer(data_key='electricityOfDay', load_default=None)
-#     electric_current = fields.Float(data_key='electricCurrent', load_default=None)
-#
-#     @post_load
-#     def make_iot_state(self, data, **kwargs):
-#         return SwitchBotStatus(**data)
-
-
-@dataclass
 class SwitchBotScene:
     scene_id: str
     scene_name: str
@@ -210,9 +126,6 @@ class SwitchBotScene:
     ):
         self.scene_id = scene_id
         self.scene_name = scene_name
-
-    def __repr__(self):
-        return f'{self.__class__.__name__}({self.scene_id},{self.scene_name})'
 
 
 @dataclass

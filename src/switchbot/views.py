@@ -1,5 +1,5 @@
 from typing import Union, List
-from dataclasses import asdict
+# from dataclasses import asdict
 from switchbot.service_layer import unit_of_work
 from switchbot.domain import model
 

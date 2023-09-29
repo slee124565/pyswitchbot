@@ -33,6 +33,19 @@ def test_switchbot_status_schema():
         "electricCurrent": 0,
         "version": "V1.4-1.4"
     }
+    cmd_resp_status = {
+        'isDelay': False,
+        'rssiQuality': 54,
+        'currentElectricity': 0,
+        'currentTemperature': 73,
+        'onTime': 43,
+        'currentWeight': 20,
+        'currentPower': 0,
+        'isOverload': False,
+        'currentVoltage': 1122,
+        'power': 'off',
+        'isLed': True
+    }
     _schema = SwitchBotStatusSchema()
     obj = _schema.load(data)
     assert isinstance(obj, SwitchBotStatus)
@@ -59,4 +72,3 @@ def test_switchbot_scene_schema():
     assert obj.scene_id == data.get('sceneId')
     assert obj.scene_name == data.get('sceneName')
     assert _schema.dump(obj) == data
-

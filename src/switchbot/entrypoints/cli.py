@@ -7,6 +7,7 @@ from switchbot import bootstrap, views
 from switchbot import config
 from switchbot.domain import commands
 from switchbot.adapters import json_schema
+from switchbot.adapters.iot_api_server import SwitchBotAPIServerError
 from switchbot.service_layer import unit_of_work
 
 logging_config.dictConfig(config.logging_config)
@@ -66,12 +67,15 @@ def listall(envfile):
 @click.option('--token', default=env_token, help='Your token for authentication.')
 def check(secret, token):
     """Check authentication status."""
-    views.get_scene_list(
-        secret=secret,
-        token=token,
-        uow=bus.uow
-    )
-    click.echo('OK')
+    try:
+        with bus.uow:
+            bus.uow.api_server.get_scene_list(
+                secret=secret,
+                token=token,
+            )
+        click.echo('OK')
+    except SwitchBotAPIServerError:
+        click.echo(f'Fail')
 
 
 # 'device' 子命令集
@@ -90,15 +94,15 @@ def listall(save):
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     # cmd = commands.GetDeviceList(secret=secret, token=token)
     _schema = json_schema.SwitchBotDeviceSchema()
-    click.echo(
-        json.dumps(
-            [_schema.dump(dev) for dev in views.get_device_list(
-                secret=secret,
-                token=token,
-                uow=bus.uow
-            )], indent=2, ensure_ascii=False
+    with bus.uow:
+        click.echo(
+            json.dumps(
+                [_schema.dump(dev) for dev in bus.uow.api_server.get_dev_list(
+                    secret=secret,
+                    token=token,
+                )], indent=2, ensure_ascii=False
+            )
         )
-    )
 
 
 @device.command()
@@ -109,16 +113,16 @@ def query(dev_id):
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     _schema = json_schema.SwitchBotStatusSchema()
-    click.echo(
-        json.dumps(
-            _schema.dump(views.get_device_status(
-                secret=secret,
-                token=token,
-                dev_id=dev_id,
-                uow=bus.uow)
-            ), indent=2, ensure_ascii=False
+    with bus.uow:
+        click.echo(
+            json.dumps(
+                _schema.dump(bus.uow.api_server.get_dev_status(
+                    secret=secret,
+                    token=token,
+                    dev_id=dev_id,
+                )), indent=2, ensure_ascii=False
+            )
         )
-    )
 
 
 @device.command()
@@ -131,25 +135,19 @@ def cmd(command, dev_id, cmd_type, cmd_param):
     click.echo(f"Sending command {command} to device {dev_id} with type:{cmd_type}, param:{cmd_param}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    # views.send_device_ctrl_cmd(
-    #     secret=secret,
-    #     token=token,
-    #     dev_id=dev_id,
-    #     cmd_type=cmd_type,
-    #     cmd_value=command,
-    #     cmd_param=cmd_param,
-    #     uow=bus.uow
-    # )
-    _cmd = commands.SendDeviceCtrlCmd(
-        secret=secret,
-        token=token,
-        dev_id=dev_id,
-        cmd_type=cmd_type,
-        cmd_value=command,
-        cmd_param=cmd_param
-    )
-    bus.handle(_cmd)
-    click.echo(f'Command sent')
+    try:
+        with bus.uow:
+            bus.uow.api_server.send_dev_ctrl_cmd(
+                secret=secret,
+                token=token,
+                dev_id=dev_id,
+                cmd_type=cmd_type,
+                cmd_value=command,
+                cmd_param=cmd_param
+            )
+        click.echo(f'OK')
+    except SwitchBotAPIServerError:
+        click.echo(f'Fail')
 
 
 # 'scene' 子命令集
@@ -167,14 +165,17 @@ def listall(save):
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     _schema = json_schema.SwitchBotSceneSchema()
-    _list = views.get_scene_list(
-        secret=secret,
-        token=token,
-        uow=bus.uow
-    )
-    click.echo(
-        json.dumps([_schema.dump(s) for s in _list], indent=2, ensure_ascii=False)
-    )
+    try:
+        with bus.uow:
+            _list = bus.uow.api_server.get_scene_list(
+                secret=secret,
+                token=token,
+            )
+            click.echo(
+                json.dumps([_schema.dump(s) for s in _list], indent=2, ensure_ascii=False)
+            )
+    except SwitchBotAPIServerError:
+        click.echo('Fail')
 
 
 @scene.command()
@@ -184,13 +185,16 @@ def start(scene_id):
     click.echo(f"Starting scene {scene_id}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    _cmd = commands.ExecManualScene(
-        secret=secret,
-        token=token,
-        scene_id=scene_id
-    )
-    bus.handle(_cmd)
-    click.echo(f'Command sent')
+    try:
+        with bus.uow:
+            bus.uow.api_server.exec_manual_scene(
+                secret=secret,
+                token=token,
+                scene_id=scene_id
+            )
+        click.echo(f'OK')
+    except SwitchBotAPIServerError:
+        click.echo('Fail nbhggf  ')
 
 
 # 'webhook' 子命令集
