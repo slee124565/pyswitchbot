@@ -5,7 +5,7 @@ import logging
 from dataclasses import dataclass, asdict
 from typing import List, Dict
 from marshmallow import Schema, fields, post_load, post_dump
-from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
+from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene, SwitchBotUserRepo
 
 logger = logging.getLogger(__name__)
 
@@ -89,32 +89,19 @@ class SwitchBotSceneSchema(Schema):
     def make_scene(self, data, **kwargs):
         return SwitchBotScene(**data)
 
-
-@dataclass
-class SwitchBotUser:
-    id: str
-    devices: List[SwitchBotDevice]
-    scenes: List[SwitchBotScene]
-    webhooks: List[str]
-
-    def __repr__(self):
-        return f'User({self.id}, devices(#{len(self.devices)}), scenes(#{len(self.scenes)}), webhook(#{len(self.webhooks)})'
+# @dataclass
+# class UserRepo:
+#     users: Dict[str, SwitchBotUser]
 
 
-@dataclass
-class UserRepo:
-    users: Dict[str, SwitchBotUser]
-
-
-class UserSchema(Schema):
-    id = fields.Str()
+class SwitchBotUserRepoSchema(Schema):
     devices = fields.List(fields.Nested(SwitchBotDeviceSchema()))
     scenes = fields.List(fields.Nested(SwitchBotSceneSchema()))
     webhooks = fields.List(fields.Str())
 
     @post_load
-    def make_user(self, data, **kwargs):
-        return SwitchBotUser(**data)
+    def make_user_portfolio(self, data, **kwargs):
+        return SwitchBotUserRepo(**data)
 
 # class UserRepoSchema(Schema):
 #     users = fields.Dict(keys=fields.Str(), values=fields.Nested(UserSchema()))

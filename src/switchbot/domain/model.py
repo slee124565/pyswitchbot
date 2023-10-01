@@ -1,5 +1,6 @@
 import logging
-from dataclasses import dataclass, asdict
+from typing import List
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -135,3 +136,11 @@ class SwitchBotWebhook:
     lastUpdateTime: int | None
     deviceList: str | None
     enable: bool | None
+
+
+@dataclass
+class SwitchBotUserRepo:
+    devices: List[SwitchBotDevice]
+    scenes: List[SwitchBotScene]
+    webhooks: List[str]
+
