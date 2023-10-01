@@ -5,58 +5,6 @@ from dataclasses import dataclass
 logger = logging.getLogger(__name__)
 
 
-class SwitchBotDevice:
-    def __init__(
-            self,
-            device_id: str,
-            device_name: str,
-            device_type: str,
-            enable_cloud_service: bool,
-            hub_device_id: str,
-            curtain_devices_ids: list = None,
-            calibrate: bool = None,
-            group: bool = None,
-            master: bool = None,
-            open_direction: str = None,
-            lock_devices_ids: list = None,
-            group_name: str = None,
-            lock_device_id: str = None,
-            key_list: dict = None,
-            version: int = None,
-            blind_tilt_devices_ids: list = None,
-            direction: str = None,
-            slide_position: int = None,
-    ):
-        self.device_id = device_id
-        self.device_name = device_name
-        self.device_type = device_type
-        self.enable_cloud_service = enable_cloud_service
-        self.hub_device_id = hub_device_id
-        self.curtain_devices_ids = curtain_devices_ids
-        self.calibrate = calibrate
-        self.group = group
-        self.master = master
-        self.open_direction = open_direction
-        self.lock_devices_ids = lock_devices_ids
-        self.group_name = group_name
-        self.lock_device_id = lock_device_id
-        self.key_list = key_list
-        self.version = version
-        self.blind_tilt_devices_ids = blind_tilt_devices_ids
-        self.direction = direction
-        self.slide_position = slide_position
-        self.events = []
-
-    def __repr__(self):
-        return f'Device({self.device_id}, {self.device_name}, {self.device_type})'
-
-    def query(self):
-        raise NotImplementedError
-
-    def execute(self, cmd):
-        raise NotImplementedError
-
-
 class SwitchBotStatus:
 
     def __repr__(self):
@@ -114,6 +62,58 @@ class SwitchBotStatus:
         self.weight = weight
         self.electricity_of_day = electricity_of_day
         self.electric_current = electric_current
+
+
+class SwitchBotDevice:
+    def __init__(
+            self,
+            device_id: str,
+            device_name: str,
+            device_type: str,
+            enable_cloud_service: bool,
+            hub_device_id: str,
+            curtain_devices_ids: list = None,
+            calibrate: bool = None,
+            group: bool = None,
+            master: bool = None,
+            open_direction: str = None,
+            lock_devices_ids: list = None,
+            group_name: str = None,
+            lock_device_id: str = None,
+            key_list: dict = None,
+            version: int = None,
+            blind_tilt_devices_ids: list = None,
+            direction: str = None,
+            slide_position: int = None,
+    ):
+        self.device_id = device_id
+        self.device_name = device_name
+        self.device_type = device_type
+        self.enable_cloud_service = enable_cloud_service
+        self.hub_device_id = hub_device_id
+        self.curtain_devices_ids = curtain_devices_ids
+        self.calibrate = calibrate
+        self.group = group
+        self.master = master
+        self.open_direction = open_direction
+        self.lock_devices_ids = lock_devices_ids
+        self.group_name = group_name
+        self.lock_device_id = lock_device_id
+        self.key_list = key_list
+        self.version = version
+        self.blind_tilt_devices_ids = blind_tilt_devices_ids
+        self.direction = direction
+        self.slide_position = slide_position
+        self.events = []
+
+    def __repr__(self):
+        return f'Device({self.device_id}, {self.device_name}, {self.device_type})'
+
+    def query(self) -> SwitchBotStatus:
+        raise NotImplementedError
+
+    def execute(self, cmd_type, cmd_name, cmd_param):
+        raise NotImplementedError
 
 
 class SwitchBotScene:

@@ -113,13 +113,13 @@ def query(dev_id):
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     _schema = json_schema.SwitchBotStatusSchema()
     with bus.uow:
+        dev_status = bus.uow.api_server.get_dev_status(secret=secret,
+                                                       token=token,
+                                                       dev_id=dev_id)
+        bus.uow.devices.update(dev_status)
         click.echo(
             json.dumps(
-                _schema.dump(bus.uow.api_server.get_dev_status(
-                    secret=secret,
-                    token=token,
-                    dev_id=dev_id,
-                )), indent=2, ensure_ascii=False
+                _schema.dump(dev_status), indent=2, ensure_ascii=False
             )
         )
 
@@ -136,6 +136,8 @@ def cmd(command, dev_id, cmd_type, cmd_param):
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     try:
         with bus.uow:
+            dev = bus.uow.devices.get(dev_id=dev_id)
+            dev.execute()
             bus.uow.api_server.send_dev_ctrl_cmd(
                 secret=secret,
                 token=token,
@@ -145,6 +147,8 @@ def cmd(command, dev_id, cmd_type, cmd_param):
                 cmd_param=cmd_param
             )
         click.echo(f'OK')
+    except ValueError as err:
+        click.echo(f'{err}')
     except SwitchBotAPIServerError:
         click.echo(f'Fail')
 
