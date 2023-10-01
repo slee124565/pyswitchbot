@@ -137,7 +137,6 @@ def cmd(command, dev_id, cmd_type, cmd_param):
     try:
         with bus.uow:
             dev = bus.uow.devices.get(dev_id=dev_id)
-            dev.execute()
             bus.uow.api_server.send_dev_ctrl_cmd(
                 secret=secret,
                 token=token,

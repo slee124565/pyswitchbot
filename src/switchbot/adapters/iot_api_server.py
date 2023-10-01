@@ -118,7 +118,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
                 resp.raise_for_status()
 
             logger.debug(f'{resp.status_code}, {resp.json()}')
-            logger.info(f'{endpoint},{params},{resp.json()}')
+            logger.info(f'GET,{endpoint},{params},{resp.json()}')
             return resp.json().get('body')
         except Exception:
             raise SwitchBotAPIServerError
@@ -137,7 +137,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
             if resp.status_code != HTTPStatus.OK:
                 resp.raise_for_status()
 
-            logger.info(f'{endpoint},{data},{resp.json()}')
+            logger.info(f'POST,{endpoint},{data},{resp.json()}')
             return resp.json().get('body')
         except Exception:
             raise SwitchBotAPIServerError

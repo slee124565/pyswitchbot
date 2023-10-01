@@ -36,7 +36,8 @@ class SwitchBotStatus:
             voltage=None,
             weight=None,
             electricity_of_day=None,
-            electric_current=None):
+            electric_current=None
+    ):
         self.device_id = device_id
         self.device_type = device_type
         self.hub_device_id = hub_device_id

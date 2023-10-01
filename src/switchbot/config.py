@@ -39,6 +39,14 @@ logging_config = {
             "class": "logging.StreamHandler",
             "formatter": "standard",
             "level": "INFO"
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "simple",
+            "filename": "switchbotapi.log",
+            "maxBytes": 5 * 1024 * 1024,  # 5 MB
+            "backupCount": 3,
+            "level": "INFO"
         }
     },
     "root": {
@@ -49,8 +57,8 @@ logging_config = {
         "requests": {
             "level": "INFO"
         },
-        "switchbot.adapters.switchbotapi": {
-            "handlers": ["console"],
+        "switchbot.adapters.iot_api_server": {
+            "handlers": ["console", "file"],
             "level": "INFO",
             "propagate": False
         }
