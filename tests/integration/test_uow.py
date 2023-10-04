@@ -1,9 +1,9 @@
 from typing import List, Union
-from switchbot.adapters import iot_api_server
+from switchbot.adapters.iot_api_server import AbstractIotApiServer
 from switchbot.domain import model
 
 
-class FakeSwitchBotApiServer(switchbotapi.AbstractIotApiServer):
+class FakeSwitchBotApiServer(AbstractIotApiServer):
     def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
         raise NotImplementedError
 
