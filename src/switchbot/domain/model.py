@@ -145,3 +145,12 @@ class SwitchBotUserRepo:
     scenes: List[SwitchBotScene]
     webhooks: List[str]
 
+
+class SwitchBotUser:
+    def __init__(self, secret, token, devices: List[SwitchBotDevice]):
+        self.secret = secret
+        self.token = token
+        self.devices = devices
+
+    def sync(self, devices: List[SwitchBotDevice]):
+        raise NotImplementedError
