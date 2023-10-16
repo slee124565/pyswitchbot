@@ -154,3 +154,6 @@ class SwitchBotUser:
 
     def sync(self, devices: List[SwitchBotDevice]):
         raise NotImplementedError
+
+    def disconnect(self):
+        raise NotImplementedError
