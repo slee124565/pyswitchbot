@@ -164,6 +164,8 @@ class SwitchBotStatus:
 
 
 class SwitchBotDevice:
+    state: SwitchBotStatus
+
     def __init__(
             self,
             device_id: str,
@@ -215,9 +217,6 @@ class SwitchBotDevice:
     def load(cls, data: dict):
         return SwitchBotDeviceSchema().load(data)
 
-    def query(self) -> SwitchBotStatus:
-        raise NotImplementedError
-
     def execute(self, cmd_type, cmd_name, cmd_param):
         raise NotImplementedError
 
@@ -263,6 +262,22 @@ class SwitchBotUser:
         self.secret = secret
         self.token = token
         self.devices = devices
+
+    def sync(self) -> List[SwitchBotDevice]:
+        return self.devices
+
+    def query(self, dev_id_list: List[str]) -> List[SwitchBotStatus]:
+        targets = [next((dev for dev in self.devices if dev.device_id == dev_id)) for dev_id in dev_id_list]
+        return [dev.state for dev in targets]
+
+    # def query(self, dev_id: str) ->:
+    def query_dev_state(self, dev_id: str) -> SwitchBotStatus:
+        dev = next((dev for dev in self.devices if dev.device_id == dev_id))
+        return dev.state
+
+    def report_state(self, state: SwitchBotStatus):
+        dev = next((dev for dev in self.devices if dev.device_id == state.device_id))
+        dev.state = state
 
     def request_sync(self, devices: List[SwitchBotDevice]):
         sync_dev_id_list = [dev.device_id for dev in devices]
