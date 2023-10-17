@@ -108,6 +108,13 @@ def report_event(
     raise NotImplementedError
 
 
+def request_sync(
+        cmd: commands.RequestSync,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    raise NotImplementedError
+
+
 EVENT_HANDLERS = {
     # events.Allocated: [publish_allocated_event, add_allocation_to_read_model],
     # events.Deallocated: [remove_allocation_from_read_model, reallocate],
@@ -123,6 +130,7 @@ COMMAND_HANDLERS = {
     commands.UpdateWebhook: update_webhook,
     commands.DeleteWebhook: delete_webhook,
     commands.ReportEvent: report_event,
+    commands.RequestSync: request_sync,
     # commands.Allocate: allocate,
     # commands.CreateBatch: add_batch,
     # commands.ChangeBatchQuantity: change_batch_quantity,

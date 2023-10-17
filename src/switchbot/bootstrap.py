@@ -1,11 +1,16 @@
 """"""
 import inspect
 from switchbot.service_layer import handlers, messagebus, unit_of_work
+from switchbot.adapters import orm
 
 
 def bootstrap(
-        uow: unit_of_work.AbstractUnitOfWork = unit_of_work.FakeFileUnitOfWork()
+        uow: unit_of_work.AbstractUnitOfWork = unit_of_work.FakeFileUnitOfWork(),
+        start_orm: bool = False,
 ) -> messagebus.MessageBus:
+
+    if start_orm:
+        orm.start_mappers()
 
     dependencies = {'uow': uow}
     injected_event_handlers = {

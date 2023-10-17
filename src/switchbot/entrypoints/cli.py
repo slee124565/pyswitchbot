@@ -135,7 +135,7 @@ def cmd(command, dev_id, cmd_type, cmd_param):
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     try:
         with bus.uow:
-            dev = bus.uow.devices.get(dev_id=dev_id)
+            # dev = bus.uow.devices.get(dev_id=dev_id)
             bus.uow.api_server.send_dev_ctrl_cmd(
                 secret=secret,
                 token=token,

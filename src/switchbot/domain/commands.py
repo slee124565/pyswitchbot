@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 from dataclasses import dataclass
 
 
@@ -68,3 +68,9 @@ class CheckAuthToken(Command):
 class GetDeviceList(Command):
     secret: str
     token: str
+
+
+@dataclass
+class RequestSync(Command):
+    user_id: str
+    devices: List[dict]
