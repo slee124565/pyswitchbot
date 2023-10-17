@@ -4,7 +4,6 @@ import json
 import logging
 from typing import Set, List
 from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus
-from switchbot.adapters.json_schema import SwitchBotDeviceSchema, SwitchBotStatusSchema
 
 logger = logging.getLogger(__name__)
 
@@ -66,18 +65,15 @@ class FileRepository(AbstractRepository):
 
         with open(self._file) as file:
             _data = json.loads(file.read())
-            _schema = SwitchBotDeviceSchema()
-            self._devices = [_schema.load(d) for d in _data.get('devices', [])]
-            _schema = SwitchBotStatusSchema()
-            self._states = [_schema.load(s) for s in _data.get('states', [])]
+            self._devices = [SwitchBotDevice.load(d) for d in _data.get('devices', [])]
+            self._states = [SwitchBotStatus.load(s) for s in _data.get('states', [])]
 
     def _save(self):
         with open(self._file, 'w', encoding='utf-8') as file:
-            _data = {}
-            _schema = SwitchBotDeviceSchema()
-            _data['devices'] = [_schema.dump(d) for d in self._devices]
-            _schema = SwitchBotStatusSchema()
-            _data['states'] = [_schema.dump(s) for s in self._states]
+            _data = {
+                'devices': [SwitchBotDevice.dump(d) for d in self._devices],
+                'states': [SwitchBotStatus.dump(s) for s in self._states]
+            }
             file.write(json.dumps(_data, ensure_ascii=False, indent=2))
 
     def _add(self, devices: List[SwitchBotDevice]):

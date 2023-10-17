@@ -3,10 +3,11 @@ import logging
 import logging.config as logging_config
 import os
 import json
+
+from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
 from switchbot import bootstrap, views
 from switchbot import config
 from switchbot.domain import commands
-from switchbot.adapters import json_schema
 from switchbot.adapters.iot_api_server import SwitchBotAPIServerError
 from switchbot.service_layer import unit_of_work
 
@@ -93,13 +94,12 @@ def listall(save):
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     # cmd = commands.GetDeviceList(secret=secret, token=token)
-    _schema = json_schema.SwitchBotDeviceSchema()
     with bus.uow:
         dev_list = bus.uow.api_server.get_dev_list(secret=secret, token=token)
         bus.uow.devices.add(dev_list)
         click.echo(
             json.dumps(
-                [_schema.dump(dev) for dev in dev_list], indent=2, ensure_ascii=False
+                [SwitchBotDevice.dump(dev) for dev in dev_list], indent=2, ensure_ascii=False
             )
         )
 
@@ -111,7 +111,6 @@ def query(dev_id):
     click.echo(f"Querying device status {dev_id}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    _schema = json_schema.SwitchBotStatusSchema()
     with bus.uow:
         dev_status = bus.uow.api_server.get_dev_status(secret=secret,
                                                        token=token,
@@ -119,7 +118,7 @@ def query(dev_id):
         bus.uow.devices.update(dev_status)
         click.echo(
             json.dumps(
-                _schema.dump(dev_status), indent=2, ensure_ascii=False
+                SwitchBotStatus.dump(dev_status), indent=2, ensure_ascii=False
             )
         )
 
@@ -166,7 +165,6 @@ def listall(save):
     click.echo(f"Listing all scenes. Save: {save}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    _schema = json_schema.SwitchBotSceneSchema()
     try:
         with bus.uow:
             _list = bus.uow.api_server.get_scene_list(
@@ -174,7 +172,7 @@ def listall(save):
                 token=token,
             )
             click.echo(
-                json.dumps([_schema.dump(s) for s in _list], indent=2, ensure_ascii=False)
+                json.dumps([SwitchBotScene.dump(s) for s in _list], indent=2, ensure_ascii=False)
             )
     except SwitchBotAPIServerError:
         click.echo('Fail')
