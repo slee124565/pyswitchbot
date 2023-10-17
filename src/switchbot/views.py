@@ -46,7 +46,6 @@ def get_device_list(
             secret=secret,
             token=token
         )
-        uow.devices.add(dev_list)
     return dev_list
 
 

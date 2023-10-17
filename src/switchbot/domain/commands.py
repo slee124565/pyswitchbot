@@ -74,3 +74,13 @@ class GetDeviceList(Command):
 class RequestSync(Command):
     user_id: str
     devices: List[dict]
+
+
+@dataclass
+class ReportState(Command):
+    state: dict
+
+
+@dataclass
+class Disconnect(Command):
+    user_id: str

@@ -96,7 +96,6 @@ def listall(save):
     # cmd = commands.GetDeviceList(secret=secret, token=token)
     with bus.uow:
         dev_list = bus.uow.api_server.get_dev_list(secret=secret, token=token)
-        bus.uow.devices.add(dev_list)
         click.echo(
             json.dumps(
                 [SwitchBotDevice.dump(dev) for dev in dev_list], indent=2, ensure_ascii=False

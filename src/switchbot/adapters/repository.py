@@ -12,14 +12,15 @@ class AbstractRepository(abc.ABC):
     def __init__(self):
         self.seen = set()  # type: Set[SwitchBotDevice]
 
-    def add(self, devices: List[SwitchBotDevice]):
-        self._add(devices)
+    def add(self, user_id: str, devices: List[SwitchBotDevice]):
+        self._add(user_id=user_id, devices=devices)
 
-    def get(self, dev_id: str) -> SwitchBotDevice:
-        dev = self._get(dev_id)
-        if dev:
-            self.seen.add(dev)
-        return dev
+    def get(self, user_id: str) -> List[SwitchBotDevice]:
+        devices = self._get(user_id)
+        if devices:
+            for dev in devices:
+                self.seen.add(dev)
+        return devices
 
     def list(self, user_id: str) -> List[SwitchBotDevice]:
         dev_list = self._list(user_id)
@@ -30,11 +31,11 @@ class AbstractRepository(abc.ABC):
         self._update(status)
 
     @abc.abstractmethod
-    def _add(self, devices: List[SwitchBotDevice]):
+    def _add(self, user_id: str, devices: List[SwitchBotDevice]):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get(self, dev_id: str) -> SwitchBotDevice:
+    def _get(self, user_id: str) -> List[SwitchBotDevice]:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -76,7 +77,7 @@ class FileRepository(AbstractRepository):
             }
             file.write(json.dumps(_data, ensure_ascii=False, indent=2))
 
-    def _add(self, devices: List[SwitchBotDevice]):
+    def _add(self, user_id: str, devices: List[SwitchBotDevice]):
         for dev in devices:
             if dev.device_id not in [d.device_id for d in self._devices]:
                 self._devices.append(dev)
