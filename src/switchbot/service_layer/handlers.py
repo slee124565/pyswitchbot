@@ -128,7 +128,7 @@ def request_sync(
     """sync with user devices data"""
     logger.debug(f'cmd: {cmd}')
     with uow:
-        user_repo = uow.users.get_user(user_id=cmd.user_id)
+        user_repo = uow.users.get(user_id=cmd.user_id)
         _devices = [model.SwitchBotDevice.load(data) for data in cmd.devices]
         user_repo.request_sync(devices=_devices)
 

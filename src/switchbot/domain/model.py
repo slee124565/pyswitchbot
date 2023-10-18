@@ -86,6 +86,12 @@ class SwitchBotSceneSchema(Schema):
         return SwitchBotScene(**data)
 
 
+class SwitchBotUserRepoSchema(Schema):
+    """todo: how setup nested Schema"""
+    user_id = fields.String(data_key='userId')
+    devices = fields.List(fields.Nested(SwitchBotDeviceSchema()))
+
+
 class SwitchBotStatus:
 
     def __repr__(self):

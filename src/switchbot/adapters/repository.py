@@ -34,9 +34,9 @@ class AbstractRepository(abc.ABC):
         dev = self._get_dev_by_id(dev_id=state.device_id)
         dev.state = state
 
-    def get_user(self, user_id: str) -> SwitchBotUserRepo:
+    def get(self, user_id: str) -> SwitchBotUserRepo:
         """todo: rename to get"""
-        return self._get_user(user_id)
+        return self._get(user_id)
 
     # def get(self, user_id: str) -> List[SwitchBotDevice]:
     #     devices = self._get(user_id)
@@ -61,10 +61,6 @@ class AbstractRepository(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get_user(self, user_id: str) -> SwitchBotUserRepo:
-        raise NotImplementedError
-
-    @abc.abstractmethod
     def _get(self, user_id: str) -> SwitchBotUserRepo:
         raise NotImplementedError
 
@@ -76,6 +72,7 @@ class AbstractRepository(abc.ABC):
     def _remove(self, user_id: str):
         raise NotImplementedError
 
+
 # @abc.abstractmethod
 # def _list(self, user_id: str) -> List[SwitchBotDevice]:
 #     raise NotImplementedError
@@ -86,7 +83,9 @@ class AbstractRepository(abc.ABC):
 
 
 class FileRepository(AbstractRepository):
+    """todo: refactor to use schema json and auto save w/ .repository"""
     _file: str = '.repository'
+    _users = []
     _devices = []  # type:List['SwitchBotDevice']
     _states = []  # type:List['SwitchBotStatus']
 
@@ -116,9 +115,9 @@ class FileRepository(AbstractRepository):
             file.write(json.dumps(_data, ensure_ascii=False, indent=2))
 
     def _get_dev_by_id(self, dev_id: str) -> SwitchBotDevice:
-        return next((dev for dev in self._devices if dev.device_id == dev_id))
+        return next((dev for dev in self._devices if dev.device_id == dev_id), None)
 
-    def _get_user(self, user_id: str) -> SwitchBotUserRepo:
+    def _get(self, user_id: str) -> SwitchBotUserRepo:
         return SwitchBotUserRepo(user_id=user_id, devices=self._devices, scenes=[], webhooks=[])
 
     def _add(self, user_id: str, devices: List[SwitchBotDevice]):
@@ -127,32 +126,8 @@ class FileRepository(AbstractRepository):
                 self._devices.append(dev)
         self._save()
 
-    def _get(self, dev_id: str) -> SwitchBotDevice:
-        for dev in self._devices:
-            if dev.device_id == dev_id:
-                return dev
-        raise ValueError(f'device ({dev_id}) not found')
-
-    def _list(self, user_id: str) -> List[SwitchBotDevice]:
-        return self._devices
-
-    def _update(self, status: SwitchBotStatus):
-        """
-        loop all states
-        if dev_id not exist, append
-        else remove old and add new
-        """
-        # self._states.append(status)
-        for i, s in enumerate(self._states):
-            if status.device_id == s.device_id:
-                # 若存在，更新該設備資訊
-                self._states[i] = status
-                self._save()
-                return
-
-            # 若不存在該設備，則添加到列表中
-        self._states.append(status)
-        self._save()
+    def _remove(self, user_id: str):
+        raise NotImplementedError
 
 
 class SqlAlchemyRepository(AbstractRepository):
