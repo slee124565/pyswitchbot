@@ -1,5 +1,6 @@
 from typing import List, Dict, Callable, Type, TYPE_CHECKING
 from switchbot.domain import commands, events, model
+from switchbot.adapters import iot_api_server
 # if TYPE_CHECKING:
 #     from . import unit_of_work
 from . import unit_of_work
@@ -14,7 +15,8 @@ def send_dev_ctrl_cmd(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        uow.devices.send_dev_ctrl_cmd(
+        # dev = uow.devices.get(dev_id=cmd.dev_id)
+        response = uow.api_server.send_dev_ctrl_cmd(
             secret=cmd.secret,
             token=cmd.token,
             dev_id=cmd.dev_id,
@@ -29,11 +31,10 @@ def get_device_list(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        dev_list = uow.devices.get_dev_list(
+        dev_list = uow.api_server.get_dev_list(
             secret=cmd.secret,
             token=cmd.token
         )
-    return dev_list
 
 
 def check_auth_token(
@@ -41,7 +42,7 @@ def check_auth_token(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        uow.devices.get_dev_list(
+        uow.api_server.get_dev_list(
             secret=cmd.secret,
             token=cmd.token
         )
@@ -52,7 +53,7 @@ def exec_manual_scene(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        uow.devices.exec_manual_scene(
+        uow.api_server.exec_manual_scene(
             secret=cmd.secret,
             token=cmd.token,
             scene_id=cmd.scene_id
@@ -64,7 +65,7 @@ def config_webhook(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        uow.devices.create_webhook_config(
+        uow.api_server.create_webhook_config(
             secret=cmd.secret,
             token=cmd.token,
             url=cmd.url
@@ -76,7 +77,7 @@ def update_webhook(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        uow.devices.update_webhook_config(
+        uow.api_server.update_webhook_config(
             secret=cmd.secret,
             token=cmd.token,
             url=cmd.url,
@@ -84,11 +85,12 @@ def update_webhook(
         )
 
 
-def delete_webhook(cmd: commands.DeleteWebhook,
-                   uow: unit_of_work.AbstractUnitOfWork
-                   ):
+def delete_webhook(
+        cmd: commands.DeleteWebhook,
+        uow: unit_of_work.AbstractUnitOfWork
+):
     with uow:
-        uow.devices.delete_webhook_config(
+        uow.api_server.delete_webhook_config(
             secret=cmd.secret,
             token=cmd.token,
             url=cmd.url,
@@ -103,6 +105,13 @@ def report_event(
     #     uow.devices.report_event(
     #
     #     )
+    raise NotImplementedError
+
+
+def request_sync(
+        cmd: commands.RequestSync,
+        uow: unit_of_work.AbstractUnitOfWork
+):
     raise NotImplementedError
 
 
@@ -121,6 +130,7 @@ COMMAND_HANDLERS = {
     commands.UpdateWebhook: update_webhook,
     commands.DeleteWebhook: delete_webhook,
     commands.ReportEvent: report_event,
+    commands.RequestSync: request_sync,
     # commands.Allocate: allocate,
     # commands.CreateBatch: add_batch,
     # commands.ChangeBatchQuantity: change_batch_quantity,
