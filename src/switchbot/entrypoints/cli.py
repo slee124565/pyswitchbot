@@ -5,9 +5,8 @@ import os
 import json
 
 from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
-from switchbot import bootstrap, views
+from switchbot import bootstrap
 from switchbot import config
-from switchbot.domain import commands
 from switchbot.adapters.iot_api_server import SwitchBotAPIServerError
 from switchbot.service_layer import unit_of_work
 
@@ -210,13 +209,13 @@ def create(url):
     click.echo(f"Creating webhook {url}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    _cmd = commands.ConfigWebhook(
-        secret=secret,
-        token=token,
-        url=url
-    )
-    bus.handle(_cmd)
-    click.echo(f'Command sent')
+    with bus.uow:
+        bus.uow.api_server.create_webhook_config(
+            secret=secret,
+            token=token,
+            url=url
+        )
+    click.echo(f'OK')
 
 
 @webhook.command()
@@ -225,15 +224,13 @@ def read():
     click.echo(f"Getting webhook")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    click.echo(
-        json.dumps(
-            views.read_webhook_config(
-                secret=secret,
-                token=token,
-                uow=bus.uow
-            ), indent=2, ensure_ascii=False
+    with bus.uow:
+        # todo: webhooks should be List[SwitchBotWebhookConfig]
+        webhooks = bus.uow.api_server.read_webhook_config(
+            secret=secret,
+            token=token,
         )
-    )
+    click.echo(json.dumps(webhooks, indent=2, ensure_ascii=False))
 
 
 @webhook.command()
@@ -243,32 +240,32 @@ def read_detail(url):
     click.echo(f"Getting webhook {url} detail")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    click.echo(
-        json.dumps(
-            views.read_webhook_config_detail(
-                secret=secret,
-                token=token,
-                url=url,
-                uow=bus.uow
-            ), indent=2, ensure_ascii=False
+    with bus.uow:
+        # todo: data should be SwitchBotWebhookConfigDetail
+        data = bus.uow.api_server.read_webhook_config_list(
+            secret=secret,
+            token=token,
+            url_list=[url]
         )
-    )
+    click.echo(json.dumps(data, indent=2, ensure_ascii=False))
 
 
 @webhook.command()
 @click.argument('url')
-def update(url):
+@click.argument('enabled')
+def update(url, enabled):
     """Update a webhook."""
     click.echo(f"Updating webhook {url}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    _cmd = commands.UpdateWebhook(
-        secret=secret,
-        token=token,
-        url=url
-    )
-    bus.handle(_cmd)
-    click.echo(f'Command sent')
+    with bus.uow:
+        bus.uow.api_server.update_webhook_config(
+            secret=secret,
+            token=token,
+            url=url,
+            enable=enabled
+        )
+    click.echo('OK')
 
 
 @webhook.command()
@@ -278,13 +275,13 @@ def delete(url):
     click.echo(f"Deleting webhook {url}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    _cmd = commands.DeleteWebhook(
-        secret=secret,
-        token=token,
-        url=url
-    )
-    bus.handle(_cmd)
-    click.echo(f'Command sent')
+    with bus.uow:
+        bus.uow.api_server.delete_webhook_config(
+            secret=secret,
+            token=token,
+            url=url
+        )
+    click.echo(f'OK')
 
 
 # 程序入口
