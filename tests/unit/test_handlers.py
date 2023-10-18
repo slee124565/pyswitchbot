@@ -1,5 +1,6 @@
 from typing import List
 from switchbot import bootstrap
+from switchbot.domain.model import SwitchBotDevice, SwitchBotUserRepo
 from switchbot.service_layer import unit_of_work
 from switchbot.adapters import repository
 from switchbot.domain import model, commands
@@ -35,20 +36,59 @@ _dev_status_data = {
 
 
 class FakeRepository(repository.AbstractRepository):
-    def __init__(self, devices: List[model.SwitchBotDevice]):
+    def _remove(self, user_id: str):
+        n = next((n for n, user in enumerate(list(self._users)) if user.user_id == user_id), None)
+        if n is not None:
+            del self._users[n]
+        else:
+            raise ValueError(f'User ({user_id}) not exist')
+
+    def _get(self, user_id: str) -> SwitchBotUserRepo:
+        return next((user for user in list(self._users) if user.user_id == user_id), None)
+
+    def _get_dev_by_id(self, dev_id: str) -> SwitchBotDevice:
+        for user in self._users:
+            return next((dev for dev in list(user.devices) if dev.device_id == dev_id))
+        raise ValueError(f'Device ({dev_id}) not exist')
+
+    def __init__(self):
         super().__init__()
-        self._devices = devices
+        self._users = [
+            model.SwitchBotUserRepo(
+                user_id='user_id',
+                devices=[],
+                scenes=[],
+                webhooks=[]
+            ),
+            model.SwitchBotUserRepo(
+                user_id='tester',
+                devices=[],
+                scenes=[],
+                webhooks=[]
+            ),
+        ]
+
+    def _get_user(self, user_id: str) -> model.SwitchBotUserRepo:
+        return next((user for user in list(self._users) if user.user_id == user_id), None)
 
     def _add(self, user_id: str, devices: List[model.SwitchBotDevice]):
-        self._devices.extend(devices)
+        user = self._get_user(user_id=user_id)
+        user.devices.extend(devices)
 
-    def _get(self, user_id: str) -> List[model.SwitchBotDevice]:
-        return self._devices
+    # def _get(self, user_id: str) -> List[SwitchBotDevice]:
+    #     raise Exception
+
+    # def _list(self, user_id: str) -> List[model.SwitchBotDevice]:
+    #     return self._devices
+
+    # def _update(self, status: model.SwitchBotStatus):
+    #     dev = next((dev for dev in self._devices if dev.device_id == status.device_id))
+    #     dev.state = status
 
 
 class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
     def __init__(self):
-        self.devices = FakeRepository([])
+        self.users = FakeRepository()
         self.committed = False
 
     def _commit(self):
@@ -69,19 +109,22 @@ class TestDisconnect:
     def test_user_disconnect(self):
         bus = bootstrap_test_app()
 
+        bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
         bus.handle(commands.Disconnect(user_id='user_id'))
 
-        assert not bus.uow.devices.get(user_id='user_id')
+        assert bus.uow.users.get_user(user_id='user_id') is None
 
 
 class TestReportState:
     def test_update_device_status(self):
         bus = bootstrap_test_app()
 
+        bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
         bus.handle(commands.ReportState(_dev_status_data))
 
-        _devices = bus.uow.devices.get(user_id='user_id')
-        _dev = next((dev for dev in _devices if dev.device_id == _dev_status_data['deviceId']))
+        _user = bus.uow.users.get_user(user_id='user_id')
+        _dev = next((dev for dev in _user.devices
+                     if dev.device_id == _dev_status_data['deviceId']))
         assert _dev.state.dump() == _dev_status_data
 
 
@@ -91,25 +134,25 @@ class TestRequestSync:
 
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
 
-        _devices = bus.uow.devices.get(user_id='user_id')
-        assert [dev.dump() for dev in _devices] == _init_dev_data_list
+        _user = bus.uow.users.get_user(user_id='user_id')
+        assert [dev.dump() for dev in _user.devices] == _init_dev_data_list
 
     def test_a_device_name_changed(self):
         bus = bootstrap_test_app()
 
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
-        _init_dev_data_list[0]['deviceName'] = '床頭燈'
+        _init_dev_data_list[1]['deviceName'] = '床頭燈'
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
 
-        _devices = bus.uow.devices.get(user_id='user_id')
-        for dev in _devices:
+        _user = bus.uow.users.get_user(user_id='user_id')
+        for dev in _user.devices:
             if dev.device_id == '6055F92FCFD2':
                 assert dev.device_name == '小風扇開關'
             elif dev.device_id == '6055F930FF22':
                 assert dev.device_name == '床頭燈'
             else:
                 assert False
-        assert len(_devices) == 2
+        assert len(_user.devices) == 2
 
     def test_a_device_removed(self):
         bus = bootstrap_test_app()
@@ -118,9 +161,9 @@ class TestRequestSync:
         del _init_dev_data_list[1]
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
 
-        _devices = bus.uow.devices.get(user_id='user_id')
-        assert len(_devices) == 1
-        device = _devices[0]
+        _user = bus.uow.users.get_user(user_id='user_id')
+        assert len(_user.devices) == 1
+        device = _user.devices[0]
         assert device.device_id == '6055F92FCFD2'
         assert device.device_name == '小風扇開關'
         assert device.device_type == 'Plug Mini (US)'
@@ -131,5 +174,5 @@ class TestRequestSync:
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
 
-        _devices = bus.uow.devices.get(user_id='user_id')
-        assert [dev.dump() for dev in _devices] == _init_dev_data_list
+        _user = bus.uow.users.get_user(user_id='user_id')
+        assert [dev.dump() for dev in _user.devices] == _init_dev_data_list

@@ -86,16 +86,6 @@ class SwitchBotSceneSchema(Schema):
         return SwitchBotScene(**data)
 
 
-class SwitchBotUserRepoSchema(Schema):
-    devices = fields.List(fields.Nested(SwitchBotDeviceSchema()))
-    scenes = fields.List(fields.Nested(SwitchBotSceneSchema()))
-    webhooks = fields.List(fields.Str())
-
-    @post_load
-    def make_user_portfolio(self, data, **kwargs):
-        return SwitchBotUserRepo(**data)
-
-
 class SwitchBotStatus:
 
     def __repr__(self):
@@ -250,18 +240,18 @@ class SwitchBotWebhook:
     enable: bool | None
 
 
-@dataclass
 class SwitchBotUserRepo:
-    devices: List[SwitchBotDevice]
-    scenes: List[SwitchBotScene]
-    webhooks: List[str]
-
-
-class SwitchBotUser:
-    def __init__(self, secret, token, devices: List[SwitchBotDevice]):
-        self.secret = secret
-        self.token = token
+    def __init__(
+            self,
+            user_id,
+            devices: List[SwitchBotDevice],
+            scenes: List[SwitchBotScene],
+            webhooks: List[SwitchBotWebhook]
+    ):
+        self.user_id = user_id
         self.devices = devices
+        self.scenes = scenes
+        self.webhooks = webhooks
 
     def sync(self) -> List[SwitchBotDevice]:
         return self.devices
@@ -316,27 +306,3 @@ class SwitchBotUser:
             del self.devices[index]
         else:
             raise ValueError(f'device({dev_id}) not exist')
-
-
-if __name__ == '__main__':
-    sync_devices = [
-        SwitchBotDevice(
-            device_id='6055F92FCFD2',
-            device_name='小風扇開關',
-            device_type='Plug Mini (US)',
-            enable_cloud_service=True,
-            hub_device_id=''
-        ),
-        SwitchBotDevice(
-            device_id='6055F930FF22',
-            device_name='床頭燈',
-            device_type='Plug Mini (US)',
-            enable_cloud_service=True,
-            hub_device_id=''
-        )
-    ]
-    user = SwitchBotUser(secret='secret', token='token', devices=sync_devices)
-
-    user.disconnect()
-
-    assert len(user.devices) == 0

@@ -12,7 +12,7 @@ from switchbot.adapters.iot_api_server import AbstractIotApiServer, SwitchBotApi
 
 
 class AbstractUnitOfWork(abc.ABC):
-    devices: repository.AbstractRepository
+    users: repository.AbstractRepository
     api_server: AbstractIotApiServer
 
     def __enter__(self) -> AbstractUnitOfWork:
@@ -25,7 +25,7 @@ class AbstractUnitOfWork(abc.ABC):
         self._commit()
 
     def collect_new_events(self):
-        for dev in self.devices.seen:
+        for dev in self.users.seen:
             while dev.events:
                 yield dev.events.pop(0)
 
@@ -40,7 +40,7 @@ class AbstractUnitOfWork(abc.ABC):
 
 class FakeFileUnitOfWork(AbstractUnitOfWork):
     def __enter__(self):
-        self.devices = repository.FileRepository()
+        self.users = repository.FileRepository()
         self.api_server = FakeApiServer()
         return super().__enter__()
 

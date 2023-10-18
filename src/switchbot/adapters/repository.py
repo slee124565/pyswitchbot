@@ -3,7 +3,7 @@ import abc
 import json
 import logging
 from typing import Set, List
-from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus
+from switchbot.domain.model import SwitchBotUserRepo, SwitchBotDevice, SwitchBotStatus
 
 logger = logging.getLogger(__name__)
 
@@ -12,39 +12,77 @@ class AbstractRepository(abc.ABC):
     def __init__(self):
         self.seen = set()  # type: Set[SwitchBotDevice]
 
+    # def sync(self, user_id: str) -> List[SwitchBotDevice]:
+    #     user = self._get_user(user_id=user_id)
+    #     if user:
+    #         return user.devices
+    #     else:
+    #         raise ValueError(f'User({user_id}) not exist')
+    #
+    # def query(self, dev_id_list: List[str]) -> List[SwitchBotStatus]:
+    #     devices = [self._get_dev_by_id(dev_id=dev_id) for dev_id in dev_id_list]
+    #     states = [dev.state for dev in devices]
+    #     return states
+
+    # def execute(self, dev_id: str, cmd: SwitchBotCmd):
+    #     raise NotImplementedError
+
+    def remove(self, user_id: str):
+        self._remove(user_id=user_id)
+
+    def update_dev_state(self, state: SwitchBotStatus):
+        dev = self._get_dev_by_id(dev_id=state.device_id)
+        dev.state = state
+
+    def get_user(self, user_id: str) -> SwitchBotUserRepo:
+        """todo: rename to get"""
+        return self._get_user(user_id)
+
+    # def get(self, user_id: str) -> List[SwitchBotDevice]:
+    #     devices = self._get(user_id)
+    #     if devices:
+    #         for dev in devices:
+    #             self.seen.add(dev)
+    #     return devices
+
     def add(self, user_id: str, devices: List[SwitchBotDevice]):
         self._add(user_id=user_id, devices=devices)
 
-    def get(self, user_id: str) -> List[SwitchBotDevice]:
-        devices = self._get(user_id)
-        if devices:
-            for dev in devices:
-                self.seen.add(dev)
-        return devices
+    # def list(self, user_id: str) -> List[SwitchBotDevice]:
+    #     dev_list = self._list(user_id)
+    #     self.seen.update(dev_list)
+    #     return dev_list
 
-    def list(self, user_id: str) -> List[SwitchBotDevice]:
-        dev_list = self._list(user_id)
-        self.seen.update(dev_list)
-        return dev_list
+    # def update(self, status: SwitchBotStatus):
+    #     self._update(status)
 
-    def update(self, status: SwitchBotStatus):
-        self._update(status)
+    @abc.abstractmethod
+    def _get_dev_by_id(self, dev_id: str) -> SwitchBotDevice:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _get_user(self, user_id: str) -> SwitchBotUserRepo:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _get(self, user_id: str) -> SwitchBotUserRepo:
+        raise NotImplementedError
 
     @abc.abstractmethod
     def _add(self, user_id: str, devices: List[SwitchBotDevice]):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get(self, user_id: str) -> List[SwitchBotDevice]:
+    def _remove(self, user_id: str):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def _list(self, user_id: str) -> List[SwitchBotDevice]:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def _update(self, status: SwitchBotStatus):
-        raise NotImplementedError
+# @abc.abstractmethod
+# def _list(self, user_id: str) -> List[SwitchBotDevice]:
+#     raise NotImplementedError
+#
+# @abc.abstractmethod
+# def _update(self, status: SwitchBotStatus):
+#     raise NotImplementedError
 
 
 class FileRepository(AbstractRepository):
@@ -76,6 +114,12 @@ class FileRepository(AbstractRepository):
                 'states': [SwitchBotStatus.dump(s) for s in self._states]
             }
             file.write(json.dumps(_data, ensure_ascii=False, indent=2))
+
+    def _get_dev_by_id(self, dev_id: str) -> SwitchBotDevice:
+        return next((dev for dev in self._devices if dev.device_id == dev_id))
+
+    def _get_user(self, user_id: str) -> SwitchBotUserRepo:
+        return SwitchBotUserRepo(user_id=user_id, devices=self._devices, scenes=[], webhooks=[])
 
     def _add(self, user_id: str, devices: List[SwitchBotDevice]):
         for dev in devices:

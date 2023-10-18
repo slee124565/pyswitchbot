@@ -92,12 +92,12 @@ def listall(save):
     click.echo(f"Listing all devices. Save: {save}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    # cmd = commands.GetDeviceList(secret=secret, token=token)
     with bus.uow:
         dev_list = bus.uow.api_server.get_dev_list(secret=secret, token=token)
         click.echo(
             json.dumps(
-                [SwitchBotDevice.dump(dev) for dev in dev_list], indent=2, ensure_ascii=False
+                [SwitchBotDevice.dump(dev) for dev in dev_list],
+                indent=2, ensure_ascii=False
             )
         )
 
@@ -110,13 +110,15 @@ def query(dev_id):
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     with bus.uow:
-        dev_status = bus.uow.api_server.get_dev_status(secret=secret,
-                                                       token=token,
-                                                       dev_id=dev_id)
-        bus.uow.devices.update(dev_status)
+        dev_status = bus.uow.api_server.get_dev_status(
+            secret=secret,
+            token=token,
+            dev_id=dev_id
+        )
         click.echo(
             json.dumps(
-                SwitchBotStatus.dump(dev_status), indent=2, ensure_ascii=False
+                SwitchBotStatus.dump(dev_status),
+                indent=2, ensure_ascii=False
             )
         )
 
@@ -170,7 +172,10 @@ def listall(save):
                 token=token,
             )
             click.echo(
-                json.dumps([SwitchBotScene.dump(s) for s in _list], indent=2, ensure_ascii=False)
+                json.dumps(
+                    [SwitchBotScene.dump(s) for s in _list],
+                    indent=2, ensure_ascii=False
+                )
             )
     except SwitchBotAPIServerError:
         click.echo('Fail')

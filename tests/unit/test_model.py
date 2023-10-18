@@ -1,5 +1,5 @@
 from typing import List
-from switchbot.domain.model import SwitchBotUser
+from switchbot.domain.model import SwitchBotUserRepo
 from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus
 
 
@@ -31,7 +31,7 @@ def _make_fake_dev_states() -> List[SwitchBotStatus]:
     return [SwitchBotStatus.load(data) for data in state_data_list]
 
 
-def _make_initial_user_devices() -> SwitchBotUser:
+def _make_initial_user_devices() -> SwitchBotUserRepo:
     _a = SwitchBotDevice(
         device_id='6055F92FCFD2',
         device_name='小風扇開關',
@@ -69,9 +69,10 @@ def _make_initial_user_devices() -> SwitchBotUser:
         "electricCurrent": 0.0
     })
 
-    return SwitchBotUser(
-        secret='secret', token='token',
-        devices=[_a, _b]
+    return SwitchBotUserRepo(
+        user_id='user_id',
+        devices=[_a, _b],
+        scenes=[], webhooks=[]
     )
 
 
@@ -93,7 +94,7 @@ def test_request_sync_with_new_device_added():
             hub_device_id=''
         ),
     ]
-    user = SwitchBotUser(secret='secret', token='token', devices=[])
+    user = SwitchBotUserRepo(user_id='user_id', devices=[], scenes=[], webhooks=[])
 
     user.request_sync(devices=devices)
 
