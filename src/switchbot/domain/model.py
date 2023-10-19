@@ -282,11 +282,6 @@ class SwitchBotUserRepo:
         targets = [next((dev for dev in self.devices if dev.device_id == dev_id)) for dev_id in dev_id_list]
         return [dev.state for dev in targets]
 
-    # def query(self, dev_id: str) ->:
-    def query_dev_state(self, dev_id: str) -> SwitchBotStatus:
-        dev = next((dev for dev in self.devices if dev.device_id == dev_id))
-        return dev.state
-
     def report_state(self, state: SwitchBotStatus):
         dev = next((dev for dev in self.devices if dev.device_id == state.device_id))
         dev.state = state

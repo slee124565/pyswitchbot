@@ -59,18 +59,18 @@ class AbstractRepository(abc.ABC):
 
 class FileRepository(AbstractRepository):
     """todo: refactor to use schema json and auto save w/ .repository"""
-    _file: str = '.repository'
+    _file: str
     _users = []  # type:List['SwitchBotUserRepo']
 
     # _devices = []  # type:List['SwitchBotDevice']
     # _states = []  # type:List['SwitchBotStatus']
 
-    def __init__(self, file: str = '.repository'):
+    def __init__(self, file):
         super().__init__()
         self._file = file
-        self.load()
+        self._load()
 
-    def load(self):
+    def _load(self):
         if not os.path.exists(self._file):
             self._users = []
         else:
@@ -81,7 +81,7 @@ class FileRepository(AbstractRepository):
                 for data in _dataset:
                     self._users.append(SwitchBotUserRepo.load(data))
 
-    def save(self):
+    def _save(self):
         with open(self._file, 'w', encoding='utf-8') as file:
             _dataset = [user.dump() for user in self._users]
             file.write(json.dumps(_dataset, ensure_ascii=False, indent=2))
@@ -107,6 +107,7 @@ class FileRepository(AbstractRepository):
                 del user.devices[_check]
             else:
                 user.devices.append(_dev)
+        self._save()
 
     def _remove(self, user_id: str):
         _check = next((n for n, user in enumerate(self._users) if user.user_id == user_id), None)
@@ -114,6 +115,7 @@ class FileRepository(AbstractRepository):
             raise ValueError(f'User ({user_id}) not exist')
         else:
             del self._users[_check]
+        self._save()
 
 
 # class SqlAlchemyRepository(AbstractRepository):

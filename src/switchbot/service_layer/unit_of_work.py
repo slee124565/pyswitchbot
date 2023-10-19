@@ -1,6 +1,8 @@
 # pylint: disable=attribute-defined-outside-init
 from __future__ import annotations
 import abc
+import os
+import shutil
 # from sqlalchemy import create_engine
 # from sqlalchemy.orm import sessionmaker
 # from sqlalchemy.orm.session import Session
@@ -57,9 +59,12 @@ class FakeFileUnitOfWork(AbstractUnitOfWork):
 class CliUnitOfWork(AbstractUnitOfWork):
     def __init__(self, file: str = '.repository'):
         self._file = file
+        self._origin = os.path.join(file, '.swap')
 
     def __enter__(self):
         # todo: 如何整合 file repository
+        if os.path.exists(self._file):
+            shutil.copyfile(self._file, self._origin)
         self.users = repository.FileRepository(file=self._file)
         self.api_server = SwitchBotApiServer()
         return super().__enter__()
@@ -68,10 +73,10 @@ class CliUnitOfWork(AbstractUnitOfWork):
         super().__exit__(*args)
 
     def _commit(self):
-        self.users.save()
+        os.remove(self._origin)
 
     def rollback(self):
-        pass
+        shutil.copyfile(self._origin, self._file)
 
 # DEFAULT_SESSION_FACTORY = sessionmaker(
 #     bind=create_engine(
