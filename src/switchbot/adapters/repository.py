@@ -35,26 +35,10 @@ class AbstractRepository(abc.ABC):
         dev.state = state
 
     def get(self, user_id: str) -> SwitchBotUserRepo:
-        """todo: rename to get"""
         return self._get(user_id)
-
-    # def get(self, user_id: str) -> List[SwitchBotDevice]:
-    #     devices = self._get(user_id)
-    #     if devices:
-    #         for dev in devices:
-    #             self.seen.add(dev)
-    #     return devices
 
     def add(self, user_id: str, devices: List[SwitchBotDevice]):
         self._add(user_id=user_id, devices=devices)
-
-    # def list(self, user_id: str) -> List[SwitchBotDevice]:
-    #     dev_list = self._list(user_id)
-    #     self.seen.update(dev_list)
-    #     return dev_list
-
-    # def update(self, status: SwitchBotStatus):
-    #     self._update(status)
 
     @abc.abstractmethod
     def _get_dev_by_id(self, dev_id: str) -> SwitchBotDevice:
@@ -71,82 +55,68 @@ class AbstractRepository(abc.ABC):
     @abc.abstractmethod
     def _remove(self, user_id: str):
         raise NotImplementedError
-
-
-# @abc.abstractmethod
-# def _list(self, user_id: str) -> List[SwitchBotDevice]:
-#     raise NotImplementedError
-#
-# @abc.abstractmethod
-# def _update(self, status: SwitchBotStatus):
-#     raise NotImplementedError
 
 
 class FileRepository(AbstractRepository):
     """todo: refactor to use schema json and auto save w/ .repository"""
     _file: str = '.repository'
-    _users = []
-    _devices = []  # type:List['SwitchBotDevice']
-    _states = []  # type:List['SwitchBotStatus']
+    _users = []  # type:List['SwitchBotUserRepo']
+
+    # _devices = []  # type:List['SwitchBotDevice']
+    # _states = []  # type:List['SwitchBotStatus']
 
     def __init__(self, file: str = '.repository'):
         super().__init__()
         self._file = file
-        self._load()
+        self.load()
 
-    def _load(self):
+    def load(self):
         if not os.path.exists(self._file):
-            # logger.warning(f'repository file {self._file} not exist')
-            self._devices = []
-            self._states = []
-            return
+            self._users = []
+        else:
+            with open(self._file) as file:
+                _dataset = json.loads(file.read())
+                if not isinstance(_dataset, list):
+                    raise ValueError(f'File ({self._file}) format invalid')
+                for data in _dataset:
+                    self._users.append(SwitchBotUserRepo.load(data))
 
-        with open(self._file) as file:
-            _data = json.loads(file.read())
-            self._devices = [SwitchBotDevice.load(d) for d in _data.get('devices', [])]
-            self._states = [SwitchBotStatus.load(s) for s in _data.get('states', [])]
-
-    def _save(self):
+    def save(self):
         with open(self._file, 'w', encoding='utf-8') as file:
-            _data = {
-                'devices': [SwitchBotDevice.dump(d) for d in self._devices],
-                'states': [SwitchBotStatus.dump(s) for s in self._states]
-            }
-            file.write(json.dumps(_data, ensure_ascii=False, indent=2))
-
-    def _get_dev_by_id(self, dev_id: str) -> SwitchBotDevice:
-        return next((dev for dev in self._devices if dev.device_id == dev_id), None)
+            _dataset = [user.dump() for user in self._users]
+            file.write(json.dumps(_dataset, ensure_ascii=False, indent=2))
 
     def _get(self, user_id: str) -> SwitchBotUserRepo:
-        return SwitchBotUserRepo(user_id=user_id, devices=self._devices, scenes=[], webhooks=[])
+        return next((user for user in self._users if user.user_id == user_id), None)
+
+    def _get_dev_by_id(self, dev_id: str) -> SwitchBotDevice:
+        _all_devices = []
+        for user in self._users:
+            _all_devices.extend(user.devices)
+        return next((dev for dev in _all_devices if dev.device_id == dev_id), None)
 
     def _add(self, user_id: str, devices: List[SwitchBotDevice]):
-        for dev in devices:
-            if dev.device_id not in [d.device_id for d in self._devices]:
-                self._devices.append(dev)
-        self._save()
+        user = self._get(user_id=user_id)
+        if user is None:
+            raise ValueError(f'User ({user_id}) not exist')
+
+        for _dev in devices:
+            _check = next((n for n, dev in list(enumerate(user.devices)) if dev.device_id == _dev.device_id), None)
+            if _check is not None:
+                logger.warning(f'Add duplicated device ({_dev.device_id}) for user ({user_id})')
+                del user.devices[_check]
+            else:
+                user.devices.append(_dev)
 
     def _remove(self, user_id: str):
-        raise NotImplementedError
+        _check = next((n for n, user in enumerate(self._users) if user.user_id == user_id), None)
+        if _check is None:
+            raise ValueError(f'User ({user_id}) not exist')
+        else:
+            del self._users[_check]
 
 
-class SqlAlchemyRepository(AbstractRepository):
-    def __init__(self, session):
-        super().__init__()
-        self.session = session
-
-    # def _add(self, product):
-    #     self.session.add(product)
-    #
-    # def _get(self, sku):
-    #     return self.session.query(model.Product).filter_by(sku=sku).first()
-    #
-    # def _get_by_batchref(self, batchref):
-    #     return (
-    #         self.session.query(model.Product)
-    #         .join(model.Batch)
-    #         .filter(
-    #             orm.batches.c.reference == batchref,
-    #         )
-    #         .first()
-    #     )
+# class SqlAlchemyRepository(AbstractRepository):
+#     def __init__(self, session):
+#         super().__init__()
+#         self.session = session

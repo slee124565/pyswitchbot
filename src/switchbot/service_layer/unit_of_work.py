@@ -55,8 +55,12 @@ class FakeFileUnitOfWork(AbstractUnitOfWork):
 
 
 class CliUnitOfWork(AbstractUnitOfWork):
+    def __init__(self, file: str = '.repository'):
+        self._file = file
+
     def __enter__(self):
-        self.devices = repository.FileRepository()
+        # todo: 如何整合 file repository
+        self.users = repository.FileRepository(file=self._file)
         self.api_server = SwitchBotApiServer()
         return super().__enter__()
 
@@ -64,7 +68,7 @@ class CliUnitOfWork(AbstractUnitOfWork):
         super().__exit__(*args)
 
     def _commit(self):
-        pass
+        self.users.save()
 
     def rollback(self):
         pass

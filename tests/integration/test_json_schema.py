@@ -1,37 +1,54 @@
-"""
-cmd_resp_status = {
-        'isDelay': False,
-        'rssiQuality': 54,
-        'currentElectricity': 0,
-        'currentTemperature': 73,
-        'onTime': 43,
-        'currentWeight': 20,
-        'currentPower': 0,
-        'isOverload': False,
-        'currentVoltage': 1122,
-        'power': 'off',
-        'isLed': True
-    }
-"""
-from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
+import logging
+from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene, SwitchBotUserRepo
+
+logger = logging.getLogger(__name__)
+_dev_plug_mini_CFD2 = {
+    'deviceId': '6055F92FCFD2',
+    'deviceName': '小風扇開關',
+    'deviceType': 'Plug Mini (US)',
+    'enableCloudService': True,
+    'hubDeviceId': ''
+}
+_state_plug_mini_CFD2 = {
+    "deviceId": "6055F92FCFD2",
+    "deviceType": "Plug Mini (US)",
+    "hubDeviceId": "6055F92FCFD2",
+    "power": "off",
+    "version": "V1.4-1.4",
+    "voltage": 114.7,
+    "weight": 0.0,
+    "electricityOfDay": 3,
+    "electricCurrent": 0.0
+}
+_dev_plug_mini_FF22 = {
+    "deviceId": "6055F930FF22",
+    "deviceName": "風扇開關",
+    "deviceType": "Plug Mini (US)",
+    "enableCloudService": True,
+    "hubDeviceId": ""
+}
+_state_plug_mini_FF22 = {
+    "deviceId": "6055F930FF22",
+    "deviceType": "Plug Mini (US)",
+    "hubDeviceId": "6055F930FF22",
+    "power": "off",
+    "version": "V1.4-1.4",
+    "voltage": 114.7,
+    "weight": 0.0,
+    "electricityOfDay": 122,
+    "electricCurrent": 0.0
+}
+_dev_motion_sensor_CDA5 = {
+    'deviceId': 'C395D0F0CDA5',
+    'deviceName': 'Motion Sensor A5',
+    'deviceType': 'Motion Sensor',
+    'enableCloudService': False,
+    'hubDeviceId': ''
+}
 
 
 def test_switchbot_device_schema():
-    data_plug_min = {
-        'deviceId': '6055F92FCFD2',
-        'deviceName': '小風扇開關',
-        'deviceType': 'Plug Mini (US)',
-        'enableCloudService': True,
-        'hubDeviceId': ''
-    }
-    data_motion_sensor = {
-        'deviceId': 'C395D0F0CDA5',
-        'deviceName': 'Motion Sensor A5',
-        'deviceType': 'Motion Sensor',
-        'enableCloudService': False,
-        'hubDeviceId': ''
-    }
-    for data in [data_plug_min, data_motion_sensor]:
+    for data in [_dev_plug_mini_CFD2, _dev_motion_sensor_CDA5]:
         obj = SwitchBotDevice.load(data)
         assert isinstance(obj, SwitchBotDevice)
         assert obj.device_id == data.get('deviceId')
@@ -39,31 +56,11 @@ def test_switchbot_device_schema():
         assert obj.device_type == data.get('deviceType')
         assert obj.enable_cloud_service == data.get('enableCloudService')
         assert obj.hub_device_id == data.get('hubDeviceId')
-        assert SwitchBotDevice.dump(obj) == data
+        assert obj.dump() == data
 
 
 def test_switchbot_status_schema():
-    data_plug_mini = {
-        "deviceId": "6055F92FCFD2",
-        "deviceType": "Plug Mini (US)",
-        "hubDeviceId": "6055F92FCFD2",
-        "power": "off",
-        "voltage": 114.1,
-        "weight": 0,
-        "electricityOfDay": 3,
-        "electricCurrent": 0,
-        "version": "V1.4-1.4"
-    }
-    data_motion_sensor = {
-        'deviceId': 'C395D0F0CDA5',
-        'deviceType': 'Motion Sensor',
-        'hubDeviceId': 'C8D8E9A17ED3',
-        'moveDetected': False,
-        'brightness': 'dim',
-        'version': 'V1.3',
-        'battery': 100
-    }
-    for data in [data_plug_mini, data_motion_sensor]:
+    for data in [_state_plug_mini_CFD2, _state_plug_mini_FF22]:
         obj = SwitchBotStatus.load(data)
         assert isinstance(obj, SwitchBotStatus)
         assert obj.device_id == data.get('deviceId')
@@ -75,7 +72,7 @@ def test_switchbot_status_schema():
         assert obj.electricity_of_day == data.get('electricityOfDay')
         assert obj.electric_current == data.get('electricCurrent')
         assert obj.version == data.get('version')
-        assert SwitchBotStatus.dump(obj) == data
+        assert obj.dump() == data
 
 
 def test_switchbot_scene_schema():
@@ -87,4 +84,20 @@ def test_switchbot_scene_schema():
     assert isinstance(obj, SwitchBotScene)
     assert obj.scene_id == data.get('sceneId')
     assert obj.scene_name == data.get('sceneName')
-    assert SwitchBotScene.dump(obj) == data
+    assert obj.dump() == data
+
+
+def test_switchbot_user_repo_schema():
+    data = {
+        'userId': 'user_id',
+        'devices': [_dev_plug_mini_CFD2, _dev_plug_mini_FF22],
+        'states': [_state_plug_mini_CFD2, _state_plug_mini_FF22],
+        'scenes': [],
+        'webhooks': []
+    }
+    obj = SwitchBotUserRepo.load(data)
+    logger.info(f'{type(obj)}')
+    assert isinstance(obj, SwitchBotUserRepo)
+    assert obj.user_id == 'user_id'
+    assert len(obj.devices) == 2
+    assert obj.dump() == data

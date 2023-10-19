@@ -53,12 +53,14 @@ class FakeRepository(repository.AbstractRepository):
             model.SwitchBotUserRepo(
                 user_id='user_id',
                 devices=[],
+                states=[],
                 scenes=[],
                 webhooks=[]
             ),
             model.SwitchBotUserRepo(
                 user_id='tester',
                 devices=[],
+                states=[],
                 scenes=[],
                 webhooks=[]
             ),
@@ -70,16 +72,6 @@ class FakeRepository(repository.AbstractRepository):
     def _add(self, user_id: str, devices: List[model.SwitchBotDevice]):
         user = self._get(user_id=user_id)
         user.devices.extend(devices)
-
-    # def _get(self, user_id: str) -> List[SwitchBotDevice]:
-    #     raise Exception
-
-    # def _list(self, user_id: str) -> List[model.SwitchBotDevice]:
-    #     return self._devices
-
-    # def _update(self, status: model.SwitchBotStatus):
-    #     dev = next((dev for dev in self._devices if dev.device_id == status.device_id))
-    #     dev.state = status
 
 
 class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):

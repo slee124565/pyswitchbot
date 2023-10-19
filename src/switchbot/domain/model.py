@@ -90,6 +90,20 @@ class SwitchBotUserRepoSchema(Schema):
     """todo: how setup nested Schema"""
     user_id = fields.String(data_key='userId')
     devices = fields.List(fields.Nested(SwitchBotDeviceSchema()))
+    states = fields.List(fields.Nested(SwitchBotStatusSchema()))
+    scenes = fields.List(fields.Str(), load_default=None)
+    webhooks = fields.List(fields.Str(), load_default=None)
+
+    @post_load
+    def make_user_repo(self, data, **kwargs):
+        return SwitchBotUserRepo(**data)
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
 
 
 class SwitchBotStatus:
@@ -249,13 +263,15 @@ class SwitchBotWebhook:
 class SwitchBotUserRepo:
     def __init__(
             self,
-            user_id,
+            user_id: str,
             devices: List[SwitchBotDevice],
+            states: List[SwitchBotStatus],
             scenes: List[SwitchBotScene],
             webhooks: List[SwitchBotWebhook]
     ):
         self.user_id = user_id
         self.devices = devices
+        self.states = states
         self.scenes = scenes
         self.webhooks = webhooks
 
@@ -312,3 +328,10 @@ class SwitchBotUserRepo:
             del self.devices[index]
         else:
             raise ValueError(f'device({dev_id}) not exist')
+
+    @classmethod
+    def load(cls, data: dict):
+        return SwitchBotUserRepoSchema().load(data)
+
+    def dump(self) -> dict:
+        return SwitchBotUserRepoSchema().dump(self)
