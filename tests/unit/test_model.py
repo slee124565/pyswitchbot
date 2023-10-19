@@ -1,9 +1,8 @@
 from typing import List
-from switchbot.domain.model import SwitchBotUserRepo
-from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus
+from switchbot.domain import model
 
 
-def _make_fake_dev_states() -> List[SwitchBotStatus]:
+def _make_fake_dev_states() -> List[model.SwitchBotStatus]:
     state_data_list = [
         {
             "deviceId": "6055F92FCFD2",
@@ -28,25 +27,25 @@ def _make_fake_dev_states() -> List[SwitchBotStatus]:
             "electricCurrent": 0.0
         }
     ]
-    return [SwitchBotStatus.load(data) for data in state_data_list]
+    return [model.SwitchBotStatus.load(data) for data in state_data_list]
 
 
-def _make_initial_user_devices() -> SwitchBotUserRepo:
-    _a = SwitchBotDevice(
+def _make_initial_user_devices() -> model.SwitchBotUserRepo:
+    _a = model.SwitchBotDevice(
         device_id='6055F92FCFD2',
         device_name='小風扇開關',
         device_type='Plug Mini (US)',
         enable_cloud_service=True,
         hub_device_id=''
     )
-    _b = SwitchBotDevice(
+    _b = model.SwitchBotDevice(
         device_id='6055F930FF22',
         device_name='風扇開關',
         device_type='Plug Mini (US)',
         enable_cloud_service=True,
         hub_device_id=''
     )
-    _a.state = SwitchBotStatus.load({
+    _a.state = model.SwitchBotStatus.load({
         "deviceId": "6055F92FCFD2",
         "deviceType": "Plug Mini (US)",
         "hubDeviceId": "6055F92FCFD2",
@@ -57,7 +56,7 @@ def _make_initial_user_devices() -> SwitchBotUserRepo:
         "electricityOfDay": 3,
         "electricCurrent": 0.0
     })
-    _b.state = SwitchBotStatus.load({
+    _b.state = model.SwitchBotStatus.load({
         "deviceId": "6055F930FF22",
         "deviceType": "Plug Mini (US)",
         "hubDeviceId": "6055F930FF22",
@@ -69,7 +68,7 @@ def _make_initial_user_devices() -> SwitchBotUserRepo:
         "electricCurrent": 0.0
     })
 
-    return SwitchBotUserRepo(
+    return model.SwitchBotUserRepo(
         user_id='user_id',
         devices=[_a, _b],
         scenes=[], webhooks=[]
@@ -79,14 +78,14 @@ def _make_initial_user_devices() -> SwitchBotUserRepo:
 def test_request_sync_with_new_device_added():
     """設備新增"""
     devices = [
-        SwitchBotDevice(
+        model.SwitchBotDevice(
             device_id='6055F92FCFD2',
             device_name='小風扇開關',
             device_type='Plug Mini (US)',
             enable_cloud_service=True,
             hub_device_id=''
         ),
-        SwitchBotDevice(
+        model.SwitchBotDevice(
             device_id='6055F930FF22',
             device_name='風扇開關',
             device_type='Plug Mini (US)',
@@ -94,7 +93,7 @@ def test_request_sync_with_new_device_added():
             hub_device_id=''
         ),
     ]
-    user = SwitchBotUserRepo(user_id='user_id', devices=[], scenes=[], webhooks=[])
+    user = model.SwitchBotUserRepo(user_id='user_id', devices=[], scenes=[], webhooks=[])
 
     user.request_sync(devices=devices)
 
@@ -105,14 +104,14 @@ def test_request_sync_with_new_device_added():
 def test_request_sync_with_device_name_changed():
     """設備名稱變更"""
     sync_devices = [
-        SwitchBotDevice(
+        model.SwitchBotDevice(
             device_id='6055F92FCFD2',
             device_name='小風扇開關',
             device_type='Plug Mini (US)',
             enable_cloud_service=True,
             hub_device_id=''
         ),
-        SwitchBotDevice(
+        model.SwitchBotDevice(
             device_id='6055F930FF22',
             device_name='床頭燈',
             device_type='Plug Mini (US)',
@@ -137,7 +136,7 @@ def test_request_sync_with_device_name_changed():
 def test_request_sync_with_device_removed():
     """設備移除"""
     sync_devices = [
-        SwitchBotDevice(
+        model.SwitchBotDevice(
             device_id='6055F92FCFD2',
             device_name='小風扇開關',
             device_type='Plug Mini (US)',
@@ -159,14 +158,14 @@ def test_request_sync_with_device_removed():
 def test_request_sync_device_with_no_changed():
     """設備維持不變"""
     sync_devices = [
-        SwitchBotDevice(
+        model.SwitchBotDevice(
             device_id='6055F92FCFD2',
             device_name='小風扇開關',
             device_type='Plug Mini (US)',
             enable_cloud_service=True,
             hub_device_id=''
         ),
-        SwitchBotDevice(
+        model.SwitchBotDevice(
             device_id='6055F930FF22',
             device_name='床頭燈',
             device_type='Plug Mini (US)',
@@ -216,7 +215,7 @@ def test_query_devices():
 
     assert len(state_list) == len(target_dev_list)
     for state in state_list:
-        assert isinstance(state, SwitchBotStatus)
+        assert isinstance(state, model.SwitchBotStatus)
 
 # def test_device_exec_one_cmd_on_one_device():
 #     raise NotImplementedError

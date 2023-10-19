@@ -1,6 +1,5 @@
 from typing import List
 from switchbot import bootstrap
-from switchbot.domain.model import SwitchBotDevice, SwitchBotUserRepo
 from switchbot.service_layer import unit_of_work
 from switchbot.adapters import repository
 from switchbot.domain import model, commands
@@ -43,7 +42,7 @@ class FakeRepository(repository.AbstractRepository):
         else:
             raise ValueError(f'User ({user_id}) not exist')
 
-    def _get_dev_by_id(self, dev_id: str) -> SwitchBotDevice:
+    def _get_dev_by_id(self, dev_id: str) -> model.SwitchBotDevice:
         for user in self._users:
             return next((dev for dev in user.devices if dev.device_id == dev_id))
         raise ValueError(f'Device ({dev_id}) not exist')
@@ -105,8 +104,8 @@ def bootstrap_test_app():
 class TestDisconnect:
     def test_user_disconnect(self):
         bus = bootstrap_test_app()
-
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
+
         bus.handle(commands.Disconnect(user_id='user_id'))
 
         assert bus.uow.users.get(user_id='user_id') is None
@@ -136,8 +135,8 @@ class TestRequestSync:
 
     def test_a_device_name_changed(self):
         bus = bootstrap_test_app()
-
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
+
         _init_dev_data_list[1]['deviceName'] = '床頭燈'
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
 
