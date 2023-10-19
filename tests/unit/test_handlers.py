@@ -43,9 +43,6 @@ class FakeRepository(repository.AbstractRepository):
         else:
             raise ValueError(f'User ({user_id}) not exist')
 
-    def _get(self, user_id: str) -> SwitchBotUserRepo:
-        return next((user for user in self._users if user.user_id == user_id), None)
-
     def _get_dev_by_id(self, dev_id: str) -> SwitchBotDevice:
         for user in self._users:
             return next((dev for dev in user.devices if dev.device_id == dev_id))
