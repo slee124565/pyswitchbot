@@ -30,9 +30,11 @@ def request_sync(
     """sync with user devices data"""
     logger.debug(f'cmd: {cmd}')
     with uow:
-        user_repo = uow.users.get(user_id=cmd.user_id)
+        user = uow.users.get(user_id=cmd.user_id)
+        if user is None:
+            raise ValueError(f'User ({cmd.user_id}) not exist')
         _devices = [model.SwitchBotDevice.load(data) for data in cmd.devices]
-        user_repo.request_sync(devices=_devices)
+        user.request_sync(devices=_devices)
 
 
 def unlink_user(

@@ -35,6 +35,17 @@ _dev_status_data = {
 
 
 class FakeRepository(repository.AbstractRepository):
+    def _register(self, secret: str, token: str, user_id: str):
+        self._users.append(
+            model.SwitchBotUserRepo(
+                user_id=user_id,
+                devices=[],
+                states=[],
+                scenes=[],
+                webhooks=[]
+            )
+        )
+
     def _remove(self, user_id: str):
         n = next((n for n, user in enumerate(self._users) if user.user_id == user_id), None)
         if n is not None:
@@ -49,22 +60,7 @@ class FakeRepository(repository.AbstractRepository):
 
     def __init__(self):
         super().__init__()
-        self._users = [
-            model.SwitchBotUserRepo(
-                user_id='user_id',
-                devices=[],
-                states=[],
-                scenes=[],
-                webhooks=[]
-            ),
-            model.SwitchBotUserRepo(
-                user_id='tester',
-                devices=[],
-                states=[],
-                scenes=[],
-                webhooks=[]
-            ),
-        ]
+        self._users = []
 
     def _get(self, user_id: str) -> model.SwitchBotUserRepo:
         return next((user for user in self._users if user.user_id == user_id), None)
@@ -94,19 +90,26 @@ def bootstrap_test_app():
     )
 
 
-class TestDisconnect:
+class TestRegister:
+    def test_register(self):
+        bus = bootstrap_test_app()
+        bus.handle(commands.Register(user_id='user_id', secret='secret', token='token'))
+        # bus.handle(commands.Register(user_id='user2', secret='secret', token='token'))
+        assert bus.uow.users.get(user_id='user_id') is not None
+
     def test_user_disconnect(self):
         bus = bootstrap_test_app()
+        bus.handle(commands.Register(user_id='user_id', secret='secret', token='token'))
+        bus.handle(commands.Register(user_id='user2', secret='secret', token='token'))
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
-
         bus.handle(commands.Disconnect(user_id='user_id'))
-
         assert bus.uow.users.get(user_id='user_id') is None
 
 
 class TestReportState:
     def test_update_device_status(self):
         bus = bootstrap_test_app()
+        bus.handle(commands.Register(user_id='user_id', secret='secret', token='token'))
 
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
         bus.handle(commands.ReportState(_dev_status_data))
@@ -120,6 +123,7 @@ class TestReportState:
 class TestRequestSync:
     def test_new_devices_added(self):
         bus = bootstrap_test_app()
+        bus.handle(commands.Register(user_id='user_id', secret='secret', token='token'))
 
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
 
@@ -128,6 +132,7 @@ class TestRequestSync:
 
     def test_a_device_name_changed(self):
         bus = bootstrap_test_app()
+        bus.handle(commands.Register(user_id='user_id', secret='secret', token='token'))
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
 
         _init_dev_data_list[1]['deviceName'] = '床頭燈'
@@ -145,6 +150,7 @@ class TestRequestSync:
 
     def test_a_device_removed(self):
         bus = bootstrap_test_app()
+        bus.handle(commands.Register(user_id='user_id', secret='secret', token='token'))
 
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
         del _init_dev_data_list[1]
@@ -159,6 +165,7 @@ class TestRequestSync:
 
     def test_no_device_changed(self):
         bus = bootstrap_test_app()
+        bus.handle(commands.Register(user_id='user_id', secret='secret', token='token'))
 
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
