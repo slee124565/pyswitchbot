@@ -263,6 +263,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
 
 
 class FakeApiServer(AbstractIotApiServer):
+    """todo: response by fixed data"""
     def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
         devices = [
             {

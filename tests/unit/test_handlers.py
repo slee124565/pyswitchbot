@@ -1,7 +1,7 @@
 from typing import List
 from switchbot import bootstrap
 from switchbot.service_layer import unit_of_work
-from switchbot.adapters import repository
+from switchbot.adapters import repository, iot_api_server
 from switchbot.domain import model, commands
 
 _init_dev_data_list = [
@@ -90,6 +90,7 @@ def bootstrap_test_app():
     return bootstrap.bootstrap(
         start_orm=False,
         uow=FakeUnitOfWork(),
+        iot=iot_api_server.FakeApiServer()
     )
 
 

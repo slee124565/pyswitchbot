@@ -12,6 +12,11 @@ class AbstractRepository(abc.ABC):
     def __init__(self):
         self.seen = set()  # type: Set[SwitchBotDevice]
 
+    def register(self, secret: str, token: str, user_id: str = None):
+        if not user_id:
+            user_id = secret
+        self._register(secret=secret, token=token, user_id=user_id)
+
     # def sync(self, user_id: str) -> List[SwitchBotDevice]:
     #     user = self._get_user(user_id=user_id)
     #     if user:
@@ -39,6 +44,10 @@ class AbstractRepository(abc.ABC):
 
     def add(self, user_id: str, devices: List[SwitchBotDevice]):
         self._add(user_id=user_id, devices=devices)
+
+    @abc.abstractmethod
+    def _register(self, secret: str, token: str, user_id: str):
+        raise NotImplementedError
 
     @abc.abstractmethod
     def _get_dev_by_id(self, dev_id: str) -> SwitchBotDevice:
@@ -69,6 +78,10 @@ class FileRepository(AbstractRepository):
         super().__init__()
         self._file = file
         self._load()
+
+    def _register(self, secret: str, token: str, user_id: str):
+        # todo: Register >> create user repo in system
+        raise NotImplementedError
 
     def _load(self):
         if not os.path.exists(self._file):
@@ -116,7 +129,6 @@ class FileRepository(AbstractRepository):
         else:
             del self._users[_check]
         self._save()
-
 
 # class SqlAlchemyRepository(AbstractRepository):
 #     def __init__(self, session):

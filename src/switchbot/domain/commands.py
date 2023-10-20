@@ -6,9 +6,11 @@ class Command:
     pass
 
 
-# @dataclass
-# class RegisterUser(Command):
-#     user_id: str
+@dataclass
+class Register(Command):
+    user_id: str
+    secret: str
+    token: str
 
 
 @dataclass

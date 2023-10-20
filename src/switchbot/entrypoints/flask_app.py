@@ -15,22 +15,10 @@ def fulfillment():
     raise NotImplementedError
 
 
-@app.route('/report_event', methods=['POST'])
-def report_event():
+@app.route('/state', methods=['POST'])
+def report_state():
     try:
-        _event = request.json
-        cmd = commands.ReportEvent(**_event)
-        bus.handle(cmd)
-        return jsonify({}), HTTPStatus.OK
-    except InvalidSrcServer:
-        return jsonify({}), HTTPStatus.UNAUTHORIZED
-
-
-@app.route('/report_event_2', methods=['POST'])
-def report_event():
-    try:
-        _event = request.json
-        cmd = commands.ReportEvent(**_event)
+        cmd = commands.ReportState(state=request.json)
         bus.handle(cmd)
         return jsonify({}), HTTPStatus.OK
     except InvalidSrcServer:

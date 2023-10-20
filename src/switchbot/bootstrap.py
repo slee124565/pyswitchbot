@@ -1,13 +1,15 @@
 """"""
 import inspect
 from switchbot.service_layer import handlers, messagebus, unit_of_work
-from switchbot.adapters import orm
+from switchbot.adapters import orm, iot_api_server
 
 
 def bootstrap(
         uow: unit_of_work.AbstractUnitOfWork = unit_of_work.FakeFileUnitOfWork(),
         start_orm: bool = False,
+        iot: iot_api_server.AbstractIotApiServer = iot_api_server.SwitchBotApiServer()
 ) -> messagebus.MessageBus:
+    """todo: Register >> inject iot_api_server"""
 
     if start_orm:
         orm.start_mappers()
