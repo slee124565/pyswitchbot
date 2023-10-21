@@ -1,5 +1,5 @@
 import logging
-from typing import List, Dict, Callable, Type, TYPE_CHECKING
+from typing import List, Dict, Callable, Type  # , TYPE_CHECKING
 from switchbot.domain import commands, events, model
 from switchbot.adapters import iot_api_server
 # if TYPE_CHECKING:
@@ -35,6 +35,7 @@ def request_sync(
             raise ValueError(f'User ({cmd.user_id}) not exist')
         _devices = [model.SwitchBotDevice.load(data) for data in cmd.devices]
         user.request_sync(devices=_devices)
+        uow.commit()
 
 
 def unlink_user(
@@ -60,10 +61,18 @@ def register_user(
 
 def pull_user_devices(
         event: events.UserRegistered,
-        iot: iot_api_server.AbstractIotApiServer
+        uow: unit_of_work.AbstractUnitOfWork
+        # iot: iot_api_server.AbstractIotApiServer
 ):
     """todo: Register >> pull user device from switchbot openapi"""
-    logger.warning('todo: pull_user_devices')
+    with uow:
+        user = uow.users.get(user_id=event.user_id)
+        devices = uow.api_server.get_dev_list(
+            secret=user.secret,
+            token=user.token,
+        )
+        user.request_sync(devices=devices)
+        uow.commit()
 
 
 def pull_user_dev_states(

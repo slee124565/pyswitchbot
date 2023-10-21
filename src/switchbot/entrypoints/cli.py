@@ -4,6 +4,7 @@ import logging.config as logging_config
 import os
 import json
 
+from switchbot.domain import commands
 from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
 from switchbot import bootstrap
 from switchbot import config
@@ -12,9 +13,11 @@ from switchbot.service_layer import unit_of_work
 
 logging_config.dictConfig(config.logging_config)
 logger = logging.getLogger(__name__)
-# logger.info('switchbot cli process')
-bus = bootstrap.bootstrap(uow=unit_of_work.CliUnitOfWork())
-# bus = bootstrap.bootstrap(uow=unit_of_work.FakeFileUnitOfWork())
+bus = bootstrap.bootstrap(
+    uow=unit_of_work.CliUnitOfWork(
+        file=os.path.join(os.getcwd(), '.repository')
+    )
+)
 env_secret, env_token = config.get_switchbot_key_pair()
 
 
@@ -50,6 +53,9 @@ def config(secret, token, envfile):
     ]
     with open(envfile, 'w') as fh:
         fh.writelines(lines)
+    with bus.uow:
+        bus.handle(commands.Register(user_id=secret, secret=secret, token=token))
+        bus.uow.commit()
     click.echo(f"Configured authentication with secret: {secret} and token: {token}")
 
 
@@ -93,13 +99,18 @@ def listall(save):
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     with bus.uow:
-        dev_list = bus.uow.api_server.get_dev_list(secret=secret, token=token)
+        devices = bus.uow.api_server.get_dev_list(secret=secret, token=token)
+        bus.handle(commands.RequestSync(
+            user_id=secret,
+            devices=[dev.dump() for dev in devices]
+        ))
         click.echo(
             json.dumps(
-                [SwitchBotDevice.dump(dev) for dev in dev_list],
+                [SwitchBotDevice.dump(dev) for dev in devices],
                 indent=2, ensure_ascii=False
             )
         )
+        bus.uow.commit()
 
 
 @device.command()
@@ -291,4 +302,5 @@ def delete(url):
 
 # 程序入口
 if __name__ == '__main__':
+    # print(f'curr path {os.getcwd()}')
     switchbotcli()

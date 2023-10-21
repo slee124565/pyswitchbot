@@ -1,8 +1,7 @@
-from typing import List
 from switchbot import bootstrap
 from switchbot.service_layer import unit_of_work
-from switchbot.adapters import repository, iot_api_server
-from switchbot.domain import model, commands
+from switchbot.adapters import iot_api_server
+from switchbot.domain import commands
 
 _init_dev_data_list = [
     {
@@ -34,58 +33,10 @@ _dev_status_data = {
 }
 
 
-class FakeRepository(repository.AbstractRepository):
-    def _register(self, secret: str, token: str, user_id: str):
-        self._users.append(
-            model.SwitchBotUserRepo(
-                user_id=user_id,
-                devices=[],
-                states=[],
-                scenes=[],
-                webhooks=[]
-            )
-        )
-
-    def _remove(self, user_id: str):
-        n = next((n for n, user in enumerate(self._users) if user.user_id == user_id), None)
-        if n is not None:
-            del self._users[n]
-        else:
-            raise ValueError(f'User ({user_id}) not exist')
-
-    def _get_dev_by_id(self, dev_id: str) -> model.SwitchBotDevice:
-        for user in self._users:
-            return next((dev for dev in user.devices if dev.device_id == dev_id))
-        raise ValueError(f'Device ({dev_id}) not exist')
-
-    def __init__(self):
-        super().__init__()
-        self._users = []
-
-    def _get(self, user_id: str) -> model.SwitchBotUserRepo:
-        return next((user for user in self._users if user.user_id == user_id), None)
-
-    def _add(self, user_id: str, devices: List[model.SwitchBotDevice]):
-        user = self._get(user_id=user_id)
-        user.devices.extend(devices)
-
-
-class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
-    def __init__(self):
-        self.users = FakeRepository()
-        self.committed = False
-
-    def _commit(self):
-        self.committed = True
-
-    def rollback(self):
-        pass
-
-
 def bootstrap_test_app():
     return bootstrap.bootstrap(
         start_orm=False,
-        uow=FakeUnitOfWork(),
+        uow=unit_of_work.MemoryUnitOfWork(),
         iot=iot_api_server.FakeApiServer()
     )
 

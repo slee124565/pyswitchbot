@@ -3,6 +3,8 @@ from typing import List
 from dataclasses import dataclass
 from marshmallow import Schema, fields, post_load, post_dump
 
+from switchbot.domain import events
+
 logger = logging.getLogger(__name__)
 
 
@@ -87,8 +89,9 @@ class SwitchBotSceneSchema(Schema):
 
 
 class SwitchBotUserRepoSchema(Schema):
-    """todo: how setup nested Schema"""
     user_id = fields.String(data_key='userId')
+    secret = fields.String(data_key='userSecret')
+    token = fields.String(data_key='userToken')
     devices = fields.List(fields.Nested(SwitchBotDeviceSchema()))
     states = fields.List(fields.Nested(SwitchBotStatusSchema()))
     scenes = fields.List(fields.Str(), load_default=None)
@@ -264,16 +267,21 @@ class SwitchBotUserRepo:
     def __init__(
             self,
             user_id: str,
+            secret: str,
+            token: str,
             devices: List[SwitchBotDevice],
             states: List[SwitchBotStatus],
             scenes: List[SwitchBotScene],
             webhooks: List[SwitchBotWebhook]
     ):
         self.user_id = user_id
+        self.secret = secret
+        self.token = token
         self.devices = devices
         self.states = states
         self.scenes = scenes
         self.webhooks = webhooks
+        self.events = []
 
     def sync(self) -> List[SwitchBotDevice]:
         return self.devices
@@ -304,6 +312,9 @@ class SwitchBotUserRepo:
         for user_dev_id in user_dev_id_list:
             if user_dev_id not in sync_dev_id_list:
                 self._remove_device(dev_id=user_dev_id)
+        self.events.append(
+            events.UserDevFetched(user_id=self.user_id)
+        )
 
     def disconnect(self):
         for dev_id in [dev.device_id for dev in self.devices]:

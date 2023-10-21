@@ -40,26 +40,36 @@ class AbstractUnitOfWork(abc.ABC):
         raise NotImplementedError
 
 
-class FakeFileUnitOfWork(AbstractUnitOfWork):
-    def __enter__(self):
-        self.users = repository.FileRepository()
-        self.api_server = FakeApiServer()
-        return super().__enter__()
-
-    def __exit__(self, *args):
-        super().__exit__(*args)
+# class FakeFileUnitOfWork(AbstractUnitOfWork):
+#     def __enter__(self):
+#         self.users = repository.FileRepository()
+#         self.api_server = FakeApiServer()
+#         return super().__enter__()
+#
+#     def __exit__(self, *args):
+#         super().__exit__(*args)
+#
+#     def _commit(self):
+#         pass
+#
+#     def rollback(self):
+#         pass
+class MemoryUnitOfWork(AbstractUnitOfWork):
+    def __init__(self):
+        self.users = repository.MemoryRepository()
+        self.committed = False
 
     def _commit(self):
-        pass
+        self.committed = True
 
     def rollback(self):
         pass
 
 
 class CliUnitOfWork(AbstractUnitOfWork):
-    def __init__(self, file: str = '.repository'):
+    def __init__(self, file: str):
         self._file = file
-        self._origin = os.path.join(file, '.swap')
+        self._origin = f'{self._file}.swap'
 
     def __enter__(self):
         # todo: 如何整合 file repository
@@ -73,10 +83,12 @@ class CliUnitOfWork(AbstractUnitOfWork):
         super().__exit__(*args)
 
     def _commit(self):
-        os.remove(self._origin)
+        if os.path.exists(self._origin):
+            os.remove(self._origin)
 
     def rollback(self):
-        shutil.copyfile(self._origin, self._file)
+        if os.path.exists(self._origin):
+            shutil.copyfile(self._origin, self._file)
 
 # DEFAULT_SESSION_FACTORY = sessionmaker(
 #     bind=create_engine(

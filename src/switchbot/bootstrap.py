@@ -5,7 +5,7 @@ from switchbot.adapters import orm, iot_api_server
 
 
 def bootstrap(
-        uow: unit_of_work.AbstractUnitOfWork = unit_of_work.FakeFileUnitOfWork(),
+        uow: unit_of_work.AbstractUnitOfWork = unit_of_work.MemoryUnitOfWork(),
         start_orm: bool = False,
         iot: iot_api_server.AbstractIotApiServer = iot_api_server.SwitchBotApiServer()
 ) -> messagebus.MessageBus:
