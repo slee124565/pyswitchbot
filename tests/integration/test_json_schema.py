@@ -90,6 +90,8 @@ def test_switchbot_scene_schema():
 def test_switchbot_user_repo_schema():
     data = {
         'userId': 'user_id',
+        'userSecret': 'secret',
+        'userToken': 'token',
         'devices': [_dev_plug_mini_CFD2, _dev_plug_mini_FF22],
         'states': [_state_plug_mini_CFD2, _state_plug_mini_FF22],
         'scenes': [],
