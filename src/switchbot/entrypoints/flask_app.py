@@ -1,4 +1,5 @@
 import logging
+import base64
 from http import HTTPStatus
 from flask import Flask, jsonify, request
 from switchbot.domain import commands
@@ -178,6 +179,20 @@ def report_state():
 @app.route('/sync', methods=['POST'])
 def request_sync():
     try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return jsonify({}), HTTPStatus.UNAUTHORIZED
+        auth_type, auth_string = auth_header.split(' ')
+        if auth_type != 'Basic':
+            return jsonify({}), HTTPStatus.UNAUTHORIZED
+        # Base64解碼
+        base64_bytes = base64.b64decode(auth_string)
+        decoded_string = base64_bytes.decode('utf-8')
+        # 獲取 api_key 和 user_secret
+        api_key, user_secret = decoded_string.split(':')
+        if api_key != 'secret':
+            return jsonify({}), HTTPStatus.UNAUTHORIZED
+
         data = request.json
         if not isinstance(data, dict):
             return jsonify({}), HTTPStatus.BAD_REQUEST
