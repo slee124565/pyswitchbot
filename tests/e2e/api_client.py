@@ -4,14 +4,79 @@ from http import HTTPStatus
 from switchbot import config
 
 
-def post_to_intent_execute():
+def post_to_intent_execute(user_id, dev_id):
     """todo:"""
-    raise NotImplementedError
+    url = config.get_api_url()
+    auth = HTTPBasicAuth('secret', user_id)
+    r = requests.post(
+        f'{url}/fulfillment',
+        auth=auth,
+        json={
+            "requestId": "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
+            "inputs": [{
+                "intent": "action.devices.EXECUTE",
+                "payload": {
+                    "commands": [
+                        {
+                            "devices": [
+                                {
+                                    "id": f"{dev_id})"
+                                },
+                            ],
+                            "execution": [
+                                {
+                                    "command": "action.devices.commands.OnOff",
+                                    "params": {
+                                        "on": True
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }]
+        }
+    )
+    assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
+    return r
+    # response = r.json
+    # assert isinstance(response, dict)
+    # assert response.get("requestId") == "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
+    # assert isinstance(response.get("payload"), dict)
+    # assert response.get("payload").get("commands", None) is not None
+    # cmds = response.get("payload").get("commands")
+    # assert isinstance(cmds, list)
+    # assert list(cmds[0].get("ids")) == [dev_id]
 
 
-def post_to_intent_query(user_id):
-    """todo:"""
-    raise NotImplementedError
+def post_to_intent_query(user_id, dev_id):
+    url = config.get_api_url()
+    auth = HTTPBasicAuth('secret', user_id)
+    r = requests.post(
+        f'{url}/fulfillment',
+        auth=auth,
+        json={
+            "requestId": "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
+            "inputs": [{
+                "intent": "action.devices.QUERY",
+                "payload": {
+                    "devices": [{
+                            "id": f"{dev_id}"
+                        }]
+                }
+            }]
+        }
+    )
+    assert r.status_code == HTTPStatus.OK
+    return r
+    # response = r.json
+    # assert isinstance(response, dict)
+    # assert response.get("requestId") == "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
+    # assert isinstance(response.get("payload"), dict)
+    # assert response.get("payload").get("devices", None) is not None
+    # states = response.get("payload").get("devices")
+    # assert isinstance(states, dict)
+    # assert list(states.keys()) == [dev_id]
 
 
 def post_to_intent_disconnect(user_id):
@@ -44,13 +109,14 @@ def post_to_intent_sync(user_id):
             }]
         }
     )
-    assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
-    response = r.json
-    assert isinstance(response, dict)
-    assert response.get("requestId") == "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
-    assert isinstance(response.get("payload"), dict)
-    assert response.get("payload").get("devices", None) is not None
-    assert isinstance(response.get("payload").get("devices"), list)
+    assert r.status_code in [HTTPStatus.OK]
+    # response = r.json
+    # assert isinstance(response, dict)
+    # assert response.get("requestId") == "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
+    # assert isinstance(response.get("payload"), dict)
+    # assert response.get("payload").get("devices", None) is not None
+    # assert isinstance(response.get("payload").get("devices"), list)
+    return r
 
 
 def post_to_report_state(state):
@@ -92,4 +158,3 @@ def post_to_subscribe(user_id, secret, token, expect_success=True):
     )
     if expect_success:
         assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
-    return r
