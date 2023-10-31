@@ -49,7 +49,7 @@ def test_subscribe_a_account_n_dev_intent_fulfillment():
         }
     ]
     api_client.post_to_request_sync(secret=secret, devices=devices)
-    api_client.post_to_report_state(state={
+    api_client.post_to_report_state(secret=secret, state={
         "deviceId": "6055F92FCFD2",
         "deviceType": "Plug Mini (US)",
         "hubDeviceId": "6055F92FCFD2",
@@ -60,7 +60,7 @@ def test_subscribe_a_account_n_dev_intent_fulfillment():
         "electricCurrent": 0,
         "version": "V1.4-1.4"
     })
-    api_client.post_to_report_state(state={
+    api_client.post_to_report_state(secret=secret, state={
         "deviceId": "6055F930FF22",
         "deviceType": "Plug Mini (US)",
         "hubDeviceId": "6055F930FF22",
@@ -103,7 +103,7 @@ def test_subscribe_a_account_n_dev_intent_fulfillment():
             "timeOfSample": 123456789
         }
     }
-    api_client.post_to_report_state(state=state)
+    api_client.post_to_report_state(secret=secret, state=state)
 
     # 查詢用戶設備列表中的第一個設備狀態
     r = api_client.post_to_query_user_dev_state(secret=secret, dev_id=dev_id)

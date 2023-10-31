@@ -4,11 +4,13 @@ from http import HTTPStatus
 from switchbot import config
 
 
-def post_to_report_state(state):
+def post_to_report_state(secret, state):
     """todo: only localhost and ALLOWED_REPORT_STATE_HOST requests should be accepted"""
     url = config.get_api_url()
+    auth = HTTPBasicAuth('secret', secret)
     r = requests.post(
         f"{url}/state",
+        auth=auth,
         json={
             "state": state
         }

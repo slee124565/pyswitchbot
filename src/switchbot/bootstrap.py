@@ -14,7 +14,7 @@ def bootstrap(
     if start_orm:
         orm.start_mappers()
 
-    dependencies = {'uow': uow}
+    dependencies = {'uow': uow, 'iot': iot}
     injected_event_handlers = {
         event_type: [
             inject_dependencies(handler, dependencies)

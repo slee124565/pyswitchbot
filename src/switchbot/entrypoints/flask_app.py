@@ -154,7 +154,7 @@ def _check_api_access_token(http_request: requests.Request):
     return api_key, user_secret
 
 
-@app.route('/fulfillment', method=['POST'])
+@app.route('/fulfillment', methods=['POST'])
 def fulfillment():
     try:
         # check request access token
@@ -202,7 +202,6 @@ def report_change():
         cmd = commands.ReportChange(change=request.json)
         bus.handle(cmd)
         return jsonify({}), HTTPStatus.OK
-
 
     except ApiAccessTokenError:
         return jsonify({}), HTTPStatus.UNAUTHORIZED
