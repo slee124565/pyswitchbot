@@ -3,6 +3,26 @@ import pytest
 from switchbot.entrypoints.flask_app import ApiAccessTokenError
 from . import api_client
 
+webhook_data = [{
+    "eventType": "changeReport",
+    "eventVersion": "1",
+    "context": {
+        "deviceType": "WoPlugUS",
+        "deviceMac": "6055F930FF22",
+        "powerState": "ON",
+        "timeOfSample": 1698720698088
+    }
+}, {
+    "eventType": "changeReport",
+    "eventVersion": "1",
+    "context": {
+        "deviceType": "WoPlugUS",
+        "deviceMac": "6055F92FCFD2",
+        "powerState": "OFF",
+        "timeOfSample": 1698682911154
+    }
+}]
+
 
 def test_subscribe_a_account_n_dev_intent_fulfillment():
     secret = 'secret'
