@@ -28,6 +28,12 @@ class ReportState(Command):
 
 
 @dataclass
+class ReportChange(Command):
+    """webhook report change"""
+    change: dict
+
+
+@dataclass
 class Disconnect(Command):
     """訂閱用戶取消訂閱"""
     user_id: str

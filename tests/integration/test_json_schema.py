@@ -1,5 +1,6 @@
 import logging
 from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene, SwitchBotUserRepo
+from switchbot.domain.model import SwitchBotChangeReport
 
 logger = logging.getLogger(__name__)
 _dev_plug_mini_CFD2 = {
@@ -102,4 +103,24 @@ def test_switchbot_user_repo_schema():
     assert isinstance(obj, SwitchBotUserRepo)
     assert obj.user_id == 'user_id'
     assert len(obj.devices) == 2
+    assert obj.dump() == data
+
+
+def test_switchbot_webhook_report_change():
+    data = {
+        "eventType": "changeReport",
+        "eventVersion": "1",
+        "context": {
+            "deviceType": "WoPlugUS",
+            "deviceMac": "6055F930FF22",
+            "powerState": "ON",
+            "timeOfSample": 1698720698088
+        }
+    }
+    obj = SwitchBotChangeReport.load(data)
+    logger.info(f'{type(obj)}')
+    assert isinstance(obj, SwitchBotChangeReport)
+    assert obj.event_type == data.get("eventType")
+    assert obj.event_version == data.get("eventVersion")
+    assert obj.context == data.get("context")
     assert obj.dump() == data

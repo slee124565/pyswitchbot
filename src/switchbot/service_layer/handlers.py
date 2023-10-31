@@ -23,6 +23,16 @@ def report_state(
         uow.users.update_dev_state(state)
 
 
+def report_change(
+        cmd: commands.ReportChange,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    logger.debug(f'cmd: {cmd}')
+    with uow:
+        change = model.SwitchBotChangeReport.load(cmd.change)
+        uow.users.update_dev_change(change)
+
+
 def request_sync(
         cmd: commands.RequestSync,
         uow: unit_of_work.AbstractUnitOfWork
@@ -109,5 +119,6 @@ COMMAND_HANDLERS = {
     commands.Register: register_user,
     commands.RequestSync: request_sync,
     commands.ReportState: report_state,
+    commands.ReportChange: report_change,
     commands.Disconnect: unlink_user,
 }  # type: Dict[Type[commands.Command], Callable]

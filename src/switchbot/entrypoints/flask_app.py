@@ -190,6 +190,24 @@ def fulfillment():
         return jsonify({}), HTTPStatus.UNAUTHORIZED
 
 
+@app.route('/change', methods=['POSST'])
+def report_change():
+    try:
+        api_key, user_secret = _check_api_access_token(http_request=request)
+        data = request.json
+
+        if not isinstance(data, dict):
+            return jsonify({}), HTTPStatus.BAD_REQUEST
+
+        cmd = commands.ReportChange(change=request.json)
+        bus.handle(cmd)
+        return jsonify({}), HTTPStatus.OK
+
+
+    except ApiAccessTokenError:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
+
+
 @app.route('/state', methods=['POST'])
 def report_state():
     try:

@@ -40,6 +40,23 @@ class SwitchBotDeviceSchema(Schema):
         }
 
 
+class SwitchBotChangeReportSchema(Schema):
+    event_type = fields.String(data_key="eventType", required=True)
+    event_version = fields.String(data_key="eventVersion", required=True)
+    context = fields.Dict(data_key="context", required=True)
+
+    @post_load
+    def make_change_report(self, data, **kwargs):
+        return SwitchBotChangeReport(**data)
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
+
+
 class SwitchBotStatusSchema(Schema):
     device_id = fields.String(data_key='deviceId', required=True)
     device_type = fields.String(data_key='deviceType', required=True)
@@ -107,6 +124,31 @@ class SwitchBotUserRepoSchema(Schema):
             key: value for key, value in data.items()
             if value is not None
         }
+
+
+class SwitchBotChangeReport:
+    """
+    "eventType": "changeReport",
+    "eventVersion": "1",
+    "context": {
+    """
+
+    def __init__(
+            self,
+            event_type,
+            event_version,
+            context,
+    ):
+        self.event_type = event_type
+        self.event_version = event_version
+        self.context = context
+
+    def dump(self) -> dict:
+        return SwitchBotChangeReportSchema().dump(self)
+
+    @classmethod
+    def load(cls, data: dict):
+        return SwitchBotChangeReportSchema().load(data)
 
 
 class SwitchBotStatus:
