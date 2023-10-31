@@ -8,6 +8,7 @@ class Command:
 
 @dataclass
 class Register(Command):
+    """要求系統新增訂閱用戶 todo: change name to Subscribe"""
     user_id: str
     secret: str
     token: str
@@ -15,78 +16,32 @@ class Register(Command):
 
 @dataclass
 class RequestSync(Command):
+    """要求系統更新訂閱用戶設備清單"""
     user_id: str
     devices: List[dict]
 
 
 @dataclass
 class ReportState(Command):
+    """要求系統更新訂閱用戶的設備狀態"""
     state: dict
 
 
 @dataclass
 class Disconnect(Command):
+    """訂閱用戶取消訂閱"""
     user_id: str
 
-# @dataclass
-# class DeleteWebhook(Command):
-#     secret: str
-#     token: str
-#     url: str
-#
-#
-# @dataclass
-# class UpdateWebhook(Command):
-#     secret: str
-#     token: str
-#     url: str
-#
-#
-# @dataclass
-# class ConfigWebhook(Command):
-#     secret: str
-#     token: str
-#     url: str
-#
-#
-# @dataclass
-# class ReportEvent(Command):
-#     eventType: str
-#     eventVersion: str
-#     context: dict
-#
-#
-# @dataclass
-# class ExecManualScene(Command):
-#     secret: str
-#     token: str
-#     scene_id: str
-#
-#
-# @dataclass
-# class SendDeviceCtrlCmd(Command):
-#     secret: str
-#     token: str
-#     dev_id: str
-#     cmd_type: str
-#     cmd_value: str
-#     cmd_param: Union[str, dict]
-#
-#
-# @dataclass
-# class SwitchBotDevCommand(Command):
-#     commandType: str
-#     command: str
-#     parameter: Union[str, dict]
-#
-#
-# @dataclass
-# class CheckAuthToken(Command):
-#     secret: str
-#     token: str
-#
-#
-# @dataclass
-# class GetDeviceList(Command):
-#     secret: str
-#     token: str
+
+@dataclass
+class ReportSubscriberToSync(Command):
+    """通知外部整合系統用戶設備清單更新"""
+    user_id: str
+
+
+@dataclass
+class ReportSubscriberDevState(Command):
+    """通知外部整合系統用戶設備狀態更新"""
+    user_id: str
+    dev_id: str
+    state: dict

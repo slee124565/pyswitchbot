@@ -1,6 +1,8 @@
 import logging
 import base64
 from http import HTTPStatus
+
+import requests
 from flask import Flask, jsonify, request
 from switchbot.domain import commands
 from switchbot.service_layer.handlers import InvalidSrcServer
@@ -128,12 +130,36 @@ seudo_execute_payload = {
 }
 
 
+class ApiAccessTokenError(Exception):
+    pass
+
+
+def _check_api_access_token(http_request: requests.Request):
+    """basic auth with ('secret', {user switchbot secret})
+    todo: revise to api access token instead of user secret
+    """
+    auth_header = http_request.headers.get('Authorization')
+    if not auth_header:
+        raise ApiAccessTokenError
+    auth_type, auth_string = auth_header.split(' ')
+    if auth_type != 'Basic':
+        raise ApiAccessTokenError
+    # Base64解碼
+    base64_bytes = base64.b64decode(auth_string)
+    decoded_string = base64_bytes.decode('utf-8')
+    # 獲取 api_key 和 user_secret
+    api_key, user_secret = decoded_string.split(':')
+    if api_key != 'secret':
+        raise ApiAccessTokenError
+    return api_key, user_secret
+
+
 @app.route('/fulfillment', method=['POST'])
 def fulfillment():
     try:
+        # check request access token
+        api_key, user_secret = _check_api_access_token(http_request=request)
         data = request.json
-        if not isinstance(data, dict):
-            return jsonify({}), HTTPStatus.BAD_REQUEST
 
         # create cmd according to IntentID
         request_id = data.get("requestId")
@@ -158,6 +184,8 @@ def fulfillment():
         else:
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
+    except ApiAccessTokenError:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
     except InvalidSrcServer:
         return jsonify({}), HTTPStatus.UNAUTHORIZED
 
@@ -165,13 +193,19 @@ def fulfillment():
 @app.route('/state', methods=['POST'])
 def report_state():
     try:
+        # check request access token
+        api_key, user_secret = _check_api_access_token(http_request=request)
         data = request.json
+
         if not isinstance(data, dict):
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
         cmd = commands.ReportState(state=request.json)
         bus.handle(cmd)
         return jsonify({}), HTTPStatus.OK
+
+    except ApiAccessTokenError:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
     except InvalidSrcServer:
         return jsonify({}), HTTPStatus.UNAUTHORIZED
 
@@ -179,21 +213,10 @@ def report_state():
 @app.route('/sync', methods=['POST'])
 def request_sync():
     try:
-        auth_header = request.headers.get('Authorization')
-        if not auth_header:
-            return jsonify({}), HTTPStatus.UNAUTHORIZED
-        auth_type, auth_string = auth_header.split(' ')
-        if auth_type != 'Basic':
-            return jsonify({}), HTTPStatus.UNAUTHORIZED
-        # Base64解碼
-        base64_bytes = base64.b64decode(auth_string)
-        decoded_string = base64_bytes.decode('utf-8')
-        # 獲取 api_key 和 user_secret
-        api_key, user_secret = decoded_string.split(':')
-        if api_key != 'secret':
-            return jsonify({}), HTTPStatus.UNAUTHORIZED
-
+        # check request access token
+        api_key, user_secret = _check_api_access_token(http_request=request)
         data = request.json
+
         if not isinstance(data, dict):
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
@@ -203,6 +226,9 @@ def request_sync():
         )
         bus.handle(cmd)
         return jsonify({}), HTTPStatus.OK
+
+    except ApiAccessTokenError:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
     except InvalidSrcServer:
         return jsonify({}), HTTPStatus.UNAUTHORIZED
 
@@ -210,7 +236,10 @@ def request_sync():
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
     try:
+        # check request access token
+        api_key, user_secret = _check_api_access_token(http_request=request)
         data = request.json
+
         if not isinstance(data, dict):
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
@@ -221,10 +250,12 @@ def subscribe():
         )
         bus.handle(cmd)
         return jsonify({}), HTTPStatus.ACCEPTED
+
+    except ApiAccessTokenError:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
     except InvalidSrcServer:
         return jsonify({}), HTTPStatus.UNAUTHORIZED
 
 
 if __name__ == '__main__':
-
     app.run(debug=True)
