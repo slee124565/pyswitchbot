@@ -7,8 +7,22 @@ class Command:
 
 
 @dataclass
+class Subscribe(Command):
+    """第三方系統訂閱用戶設備IoT服務"""
+    secret: str
+
+
+@dataclass
+class Unregister(Command):
+    """要用系統移除用戶資料"""
+    user_id: str
+    secret: str
+    token: str
+
+
+@dataclass
 class Register(Command):
-    """要求系統新增訂閱用戶 todo: change name to Subscribe"""
+    """要求系統新增訂閱用戶"""
     user_id: str
     secret: str
     token: str

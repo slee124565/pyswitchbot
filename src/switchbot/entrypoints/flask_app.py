@@ -260,7 +260,53 @@ def subscribe():
         if not isinstance(data, dict):
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
+        cmd = commands.Subscribe(
+            secret=data.get('userSecret')
+        )
+        bus.handle(cmd)
+        return jsonify({}), HTTPStatus.ACCEPTED
+
+    except ApiAccessTokenError:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
+    except InvalidSrcServer:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        # check request access token
+        api_key, user_secret = _check_api_access_token(http_request=request)
+        data = request.json
+
+        if not isinstance(data, dict):
+            return jsonify({}), HTTPStatus.BAD_REQUEST
+
         cmd = commands.Register(
+            user_id=data.get('userId'),
+            token=data.get('userToken'),
+            secret=data.get('userSecret')
+        )
+        bus.handle(cmd)
+        return jsonify({}), HTTPStatus.ACCEPTED
+
+    except ApiAccessTokenError:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
+    except InvalidSrcServer:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
+
+
+@app.route('/unregister', methods=['POST'])
+def unregister():
+    try:
+        # check request access token
+        api_key, user_secret = _check_api_access_token(http_request=request)
+        data = request.json
+
+        if not isinstance(data, dict):
+            return jsonify({}), HTTPStatus.BAD_REQUEST
+
+        cmd = commands.Unregister(
             user_id=data.get('userId'),
             token=data.get('userToken'),
             secret=data.get('userSecret')

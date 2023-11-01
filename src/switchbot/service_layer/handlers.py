@@ -58,11 +58,33 @@ def unlink_user(
         uow.users.remove(user_id=cmd.user_id)
 
 
+def subscribe_user_iot(
+        cmd: commands.Subscribe,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    """3rd party service (aog) subscribe user iot service"""
+    logger.debug(f'cmd: {cmd}')
+    with uow:
+        uow.users.subscribe(secret=cmd.secret)
+        uow.commit()
+
+
+def unregister_user(
+        cmd: commands.Register,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    """register user iot service w/key-pair"""
+    logger.debug(f'cmd: {cmd}')
+    with uow:
+        uow.users.unregister(secret=cmd.secret, token=cmd.token, user_id=cmd.user_id)
+        uow.commit()
+
+
 def register_user(
         cmd: commands.Register,
         uow: unit_of_work.AbstractUnitOfWork
 ):
-    """register user w/ service"""
+    """register user iot service w/key-pair"""
     logger.debug(f'cmd: {cmd}')
     with uow:
         uow.users.register(secret=cmd.secret, token=cmd.token, user_id=cmd.user_id)
@@ -117,6 +139,8 @@ EVENT_HANDLERS = {
 
 COMMAND_HANDLERS = {
     commands.Register: register_user,
+    commands.Unregister: unregister_user,
+    commands.Subscribe: subscribe_user_iot,
     commands.RequestSync: request_sync,
     commands.ReportState: report_state,
     commands.ReportChange: report_change,

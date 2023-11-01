@@ -12,11 +12,19 @@ class AbstractRepository(abc.ABC):
     def __init__(self):
         self.seen = set()  # type: Set[model.SwitchBotUserRepo]
 
+    def unregister(self, secret: str, token: str, user_id: str = None):
+        """todo"""
+        raise NotImplementedError
+
     def register(self, secret: str, token: str, user_id: str = None):
         if not user_id:
             user_id = secret
         self._register(secret=secret, token=token, user_id=user_id)
         self.seen.add(self.get(user_id=user_id))
+
+    def subscribe(self, secret: str):
+        """todo"""
+        raise NotImplementedError
 
     # def request_sync(self, user_id: str, devices: List[model.SwitchBotDevice]):
     #     user = self._get(user_id=user_id)
@@ -110,7 +118,6 @@ class FileRepository(AbstractRepository):
     def __init__(self, file):
         super().__init__()
         self._file = file
-        # print(f'curr path {os.path.abspath("./")}')
         self._load()
 
     def _register(self, secret: str, token: str, user_id: str):
