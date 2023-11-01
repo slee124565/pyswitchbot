@@ -18,6 +18,20 @@ def post_to_report_state(secret, state):
     assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
 
 
+def post_to_report_change(secret, change):
+    """todo: only localhost and ALLOWED_REPORT_STATE_HOST requests should be accepted"""
+    url = config.get_api_url()
+    auth = HTTPBasicAuth('secret', secret)
+    r = requests.post(
+        f"{url}/change",
+        auth=auth,
+        json={
+            "change": change
+        }
+    )
+    assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
+
+
 def post_to_request_sync(secret, devices):
     """todo: user_id as API SECRET KEY"""
     url = config.get_api_url()
@@ -119,7 +133,7 @@ def post_to_query_user_dev_list(secret):
     return r
 
 
-def post_to_unsubscribe(secret):
+def post_to_unsubscribe(secret, expect_success=True):
     url = config.get_api_url()
     auth = HTTPBasicAuth('secret', secret)
     r = requests.post(
@@ -132,7 +146,8 @@ def post_to_unsubscribe(secret):
             }]
         }
     )
-    assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
+    if expect_success:
+        assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
 
 
 def post_to_subscribe(secret, token, expect_success=True):
@@ -140,6 +155,36 @@ def post_to_subscribe(secret, token, expect_success=True):
     auth = HTTPBasicAuth('secret', secret)
     r = requests.post(
         f"{url}/subscribe",
+        auth=auth,
+        json={
+            "userSecret": secret,
+            "userToken": token
+        }
+    )
+    if expect_success:
+        assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
+
+
+def post_to_unregister(secret, token, expect_success=True):
+    url = config.get_api_url()
+    auth = HTTPBasicAuth('secret', secret)
+    r = requests.post(
+        f"{url}/unregister",
+        auth=auth,
+        json={
+            "userSecret": secret,
+            "userToken": token
+        }
+    )
+    if expect_success:
+        assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
+
+
+def post_to_register(secret, token, expect_success=True):
+    url = config.get_api_url()
+    auth = HTTPBasicAuth('secret', secret)
+    r = requests.post(
+        f"{url}/register",
         auth=auth,
         json={
             "userSecret": secret,
