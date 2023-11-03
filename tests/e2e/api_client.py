@@ -11,9 +11,7 @@ def post_to_report_state(secret, state):
     r = requests.post(
         f"{url}/state",
         auth=auth,
-        json={
-            "state": state
-        }
+        json=state
     )
     assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
 

@@ -57,6 +57,17 @@ class TestRegister:
         assert bus.uow.users.get(user_id='user_id') is None
 
 
+class TestSubscribe:
+
+    def test_subscribe(self):
+        bus = bootstrap_test_app()
+        bus.handle(commands.Subscribe(secret='secret'))
+        """subscriber 是否屬於另一個 aggregator?"""
+
+    def test_unsubscribe(self):
+        pass
+
+
 class TestReportState:
     def test_update_device_status(self):
         bus = bootstrap_test_app()
