@@ -1,6 +1,6 @@
 import logging
-from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene, SwitchBotUserRepo
-from switchbot.domain.model import SwitchBotChangeReport
+from switchbot.adapters import orm_json
+from switchbot.domain import model
 
 logger = logging.getLogger(__name__)
 _dev_plug_mini_CFD2 = {
@@ -50,20 +50,22 @@ _dev_motion_sensor_CDA5 = {
 
 def test_switchbot_device_schema():
     for data in [_dev_plug_mini_CFD2, _dev_motion_sensor_CDA5]:
-        obj = SwitchBotDevice.load(data)
-        assert isinstance(obj, SwitchBotDevice)
+        _schema = orm_json.SwitchBotDeviceSchema()
+        obj = _schema.load(data)
+        assert isinstance(obj, model.SwitchBotDevice)
         assert obj.device_id == data.get('deviceId')
         assert obj.device_name == data.get('deviceName')
         assert obj.device_type == data.get('deviceType')
         assert obj.enable_cloud_service == data.get('enableCloudService')
         assert obj.hub_device_id == data.get('hubDeviceId')
-        assert obj.dump() == data
+        assert _schema.dump(obj) == data
 
 
 def test_switchbot_status_schema():
     for data in [_state_plug_mini_CFD2, _state_plug_mini_FF22]:
-        obj = SwitchBotStatus.load(data)
-        assert isinstance(obj, SwitchBotStatus)
+        _schema = orm_json.SwitchBotStatusSchema()
+        obj = _schema.load(data)
+        assert isinstance(obj, model.SwitchBotStatus)
         assert obj.device_id == data.get('deviceId')
         assert obj.device_type == data.get('deviceType')
         assert obj.hub_device_id == data.get('hubDeviceId')
@@ -73,7 +75,7 @@ def test_switchbot_status_schema():
         assert obj.electricity_of_day == data.get('electricityOfDay')
         assert obj.electric_current == data.get('electricCurrent')
         assert obj.version == data.get('version')
-        assert obj.dump() == data
+        assert _schema.dump(obj) == data
 
 
 def test_switchbot_scene_schema():
@@ -81,11 +83,12 @@ def test_switchbot_scene_schema():
         "sceneId": "T01-202309291436-01716250",
         "sceneName": "allOff"
     }
-    obj = SwitchBotScene.load(data)
-    assert isinstance(obj, SwitchBotScene)
+    _schema = orm_json.SwitchBotSceneSchema()
+    obj = _schema.load(data)
+    assert isinstance(obj, model.SwitchBotScene)
     assert obj.scene_id == data.get('sceneId')
     assert obj.scene_name == data.get('sceneName')
-    assert obj.dump() == data
+    assert _schema.dump(obj) == data
 
 
 def test_switchbot_user_repo_schema():
@@ -98,12 +101,13 @@ def test_switchbot_user_repo_schema():
         'scenes': [],
         'webhooks': []
     }
-    obj = SwitchBotUserRepo.load(data)
+    _schema = orm_json.SwitchBotUserRepoSchema()
+    obj = _schema.load(data)
     logger.info(f'{type(obj)}')
-    assert isinstance(obj, SwitchBotUserRepo)
+    assert isinstance(obj, model.SwitchBotUserRepo)
     assert obj.user_id == 'user_id'
     assert len(obj.devices) == 2
-    assert obj.dump() == data
+    assert _schema.dump(obj) == data
 
 
 def test_switchbot_webhook_report_change():
@@ -117,10 +121,11 @@ def test_switchbot_webhook_report_change():
             "timeOfSample": 1698720698088
         }
     }
-    obj = SwitchBotChangeReport.load(data)
+    _schema = orm_json.SwitchBotChangeReportSchema()
+    obj = _schema.load(data)
     logger.info(f'{type(obj)}')
-    assert isinstance(obj, SwitchBotChangeReport)
+    assert isinstance(obj, model.SwitchBotChangeReport)
     assert obj.event_type == data.get("eventType")
     assert obj.event_version == data.get("eventVersion")
     assert obj.context == data.get("context")
-    assert obj.dump() == data
+    assert _schema.dump(obj) == data
