@@ -23,7 +23,7 @@ class Unregister(Command):
 @dataclass
 class Register(Command):
     """要求系統新增訂閱用戶"""
-    user_id: str
+    # user_id: str
     secret: str
     token: str
 

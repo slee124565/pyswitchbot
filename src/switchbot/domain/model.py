@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import List
 from dataclasses import dataclass
 # from marshmallow import Schema, fields, post_load, post_dump
@@ -185,7 +186,7 @@ class SwitchBotWebhook:
 class SwitchBotUserRepo:
     def __init__(
             self,
-            user_id: str,
+            uid: str,
             secret: str,
             token: str,
             devices: List[SwitchBotDevice],
@@ -193,7 +194,7 @@ class SwitchBotUserRepo:
             scenes: List[SwitchBotScene],
             webhooks: List[SwitchBotWebhook]
     ):
-        self.user_id = user_id
+        self.uid = uid
         self.secret = secret
         self.token = token
         self.devices = devices
@@ -231,7 +232,7 @@ class SwitchBotUserRepo:
             if user_dev_id not in sync_dev_id_list:
                 self._remove_device(dev_id=user_dev_id)
         self.events.append(
-            events.UserDevFetched(user_id=self.user_id)
+            events.UserDevFetched(user_id=self.uid)
         )
 
     def disconnect(self):
@@ -252,3 +253,14 @@ class SwitchBotUserRepo:
             del self.devices[index]
         else:
             raise ValueError(f'device({dev_id}) not exist')
+
+
+class SwitchBotUserFactory:
+    @classmethod
+    def create_user(cls,
+                    secret: str, token: str, uid: str = None) -> SwitchBotUserRepo:
+        uid = str(uuid.uuid4()) if uid is None else uid
+        return SwitchBotUserRepo(
+            uid=uid, secret=secret, token=token,
+            devices=[], states=[], scenes=[], webhooks=[]
+        )

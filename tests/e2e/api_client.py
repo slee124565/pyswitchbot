@@ -191,3 +191,4 @@ def post_to_register(secret, token, expect_success=True):
     )
     if expect_success:
         assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
+    return r

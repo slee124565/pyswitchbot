@@ -8,17 +8,19 @@ from switchbot.domain import commands
 from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
 from switchbot import bootstrap
 from switchbot import config
+from switchbot.adapters import iot_api_server
 from switchbot.adapters.iot_api_server import SwitchBotAPIServerError
 from switchbot.service_layer import unit_of_work
 
 logging_config.dictConfig(config.logging_config)
 logger = logging.getLogger(__name__)
 bus = bootstrap.bootstrap(
-    uow=unit_of_work.CliUnitOfWork(
-        file=os.path.join(os.getcwd(), '.repository')
-    )
+    uow=unit_of_work.JsonFileUnitOfWork(json_file='.repository'),
+    start_orm=False,
+    iot=iot_api_server.SwitchBotApiServer()
 )
 env_secret, env_token = config.get_switchbot_key_pair()
+open_api = iot_api_server.SwitchBotApiServer()
 
 
 # 主命令
@@ -74,11 +76,19 @@ def listall(envfile):
 def check(secret, token):
     """Check authentication status."""
     try:
+        response = open_api.get_scene_list(
+            secret=secret,
+            token=token
+        )
+        if not response:
+            click.echo('Fail')
+            return
         with bus.uow:
-            bus.uow.api_server.get_scene_list(
+            cmd = commands.Register(
                 secret=secret,
-                token=token,
+                token=token
             )
+            bus.handle(cmd)
         click.echo('OK')
     except SwitchBotAPIServerError:
         click.echo(f'Fail')

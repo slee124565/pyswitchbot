@@ -105,7 +105,7 @@ def test_switchbot_user_repo_schema():
     obj = _schema.load(data)
     logger.info(f'{type(obj)}')
     assert isinstance(obj, model.SwitchBotUserRepo)
-    assert obj.user_id == 'user_id'
+    assert obj.uid == 'user_id'
     assert len(obj.devices) == 2
     assert _schema.dump(obj) == data
 

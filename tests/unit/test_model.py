@@ -69,7 +69,7 @@ def _make_initial_user_devices() -> model.SwitchBotUserRepo:
     })
 
     return model.SwitchBotUserRepo(
-        user_id='user_id',
+        uid='user_id',
         secret='secret',
         token='token',
         devices=[_a, _b],
@@ -98,7 +98,7 @@ def test_request_sync_with_new_device_added():
         ),
     ]
     user = model.SwitchBotUserRepo(
-        user_id='user_id',
+        uid='user_id',
         secret='secret',
         token='token',
         devices=[],

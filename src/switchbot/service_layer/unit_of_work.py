@@ -3,19 +3,12 @@ from __future__ import annotations
 import abc
 import os
 import shutil
-# from sqlalchemy import create_engine
-# from sqlalchemy.orm import sessionmaker
-# from sqlalchemy.orm.session import Session
-from switchbot.adapters import repository
+from switchbot.adapters import repository, orm_json
 from switchbot.adapters.iot_api_server import AbstractIotApiServer, SwitchBotApiServer, FakeApiServer
-
-
-# from switchbot import config
 
 
 class AbstractUnitOfWork(abc.ABC):
     users: repository.AbstractRepository
-    api_server: AbstractIotApiServer
 
     def __enter__(self) -> AbstractUnitOfWork:
         return self
@@ -40,30 +33,44 @@ class AbstractUnitOfWork(abc.ABC):
         raise NotImplementedError
 
 
-# class FakeFileUnitOfWork(AbstractUnitOfWork):
-#     def __enter__(self):
-#         self.users = repository.FileRepository()
-#         self.api_server = FakeApiServer()
-#         return super().__enter__()
-#
-#     def __exit__(self, *args):
-#         super().__exit__(*args)
+class JsonFileUnitOfWork(AbstractUnitOfWork):
+    def __init__(self, json_file='.repository'):
+        super().__init__()
+        self._json_file = json_file
+        self._origin = f'{json_file}.swap'
+        self.session_factory = orm_json.session_factory
+
+    def __enter__(self):
+        if os.path.exists(self._json_file):
+            shutil.copyfile(self._json_file, self._origin)
+        self.session = self.session_factory(self._json_file)
+        self.users = repository.JsonFileRepository(self.session)
+        # self.api_server = FakeApiServer()
+        return super().__enter__()
+
+    def __exit__(self, *args):
+        if os.path.exists(self._origin):
+            os.remove(self._origin)
+        super().__exit__(*args)
+
+    def _commit(self):
+        pass
+
+    def rollback(self):
+        if os.path.exists(self._origin):
+            shutil.copyfile(self._origin, self._json_file)
+
+
+# class MemoryUnitOfWork(AbstractUnitOfWork):
+#     def __init__(self):
+#         self.users = repository.MemoryRepository()
+#         self.committed = False
 #
 #     def _commit(self):
-#         pass
+#         self.committed = True
 #
 #     def rollback(self):
 #         pass
-class MemoryUnitOfWork(AbstractUnitOfWork):
-    def __init__(self):
-        self.users = repository.MemoryRepository()
-        self.committed = False
-
-    def _commit(self):
-        self.committed = True
-
-    def rollback(self):
-        pass
 
 
 class CliUnitOfWork(AbstractUnitOfWork):
@@ -75,7 +82,7 @@ class CliUnitOfWork(AbstractUnitOfWork):
         # todo: 如何整合 file repository
         if os.path.exists(self._file):
             shutil.copyfile(self._file, self._origin)
-        self.users = repository.FileRepository(file=self._file)
+        self.users = repository.JsonFileRepository(file=self._file)
         self.api_server = SwitchBotApiServer()
         return super().__enter__()
 

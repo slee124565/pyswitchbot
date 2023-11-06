@@ -70,13 +70,13 @@ def subscribe_user_iot(
 
 
 def unregister_user(
-        cmd: commands.Register,
+        cmd: commands.Unregister,
         uow: unit_of_work.AbstractUnitOfWork
 ):
     """register user iot service w/key-pair"""
     logger.debug(f'cmd: {cmd}')
     with uow:
-        uow.users.unregister(secret=cmd.secret, token=cmd.token, user_id=cmd.user_id)
+        uow.users.unregister(uid=cmd.user_id)
         uow.commit()
 
 
@@ -87,8 +87,13 @@ def register_user(
     """register user iot service w/key-pair"""
     logger.debug(f'cmd: {cmd}')
     with uow:
-        uow.users.register(secret=cmd.secret, token=cmd.token, user_id=cmd.user_id)
+        user = model.SwitchBotUserFactory.create_user(
+            secret=cmd.secret,
+            token=cmd.token
+        )
+        uow.users.register(user=user)
         uow.commit()
+    return user
 
 
 def pull_user_devices(

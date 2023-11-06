@@ -44,14 +44,14 @@ def bootstrap_test_app():
 class TestRegister:
     def test_register(self):
         bus = bootstrap_test_app()
-        bus.handle(commands.Register(user_id='user_id', secret='secret', token='token'))
-        # bus.handle(commands.Register(user_id='user2', secret='secret', token='token'))
-        assert bus.uow.users.get(user_id='user_id') is not None
+        user1 = bus.handle(commands.Register(secret='secret1', token='token'))
+        user2 = bus.handle(commands.Register(secret='secret2', token='token'))
+        assert bus.uow.users.get(uid=user1.uid) is not None
 
     def test_user_disconnect(self):
         bus = bootstrap_test_app()
-        bus.handle(commands.Register(user_id='user_id', secret='secret', token='token'))
-        bus.handle(commands.Register(user_id='user2', secret='secret', token='token'))
+        bus.handle(commands.Register(secret='secret', token='token'))
+        bus.handle(commands.Register(secret='secret', token='token'))
         bus.handle(commands.RequestSync('user_id', _init_dev_data_list))
         bus.handle(commands.Disconnect(user_id='user_id'))
         assert bus.uow.users.get(user_id='user_id') is None
