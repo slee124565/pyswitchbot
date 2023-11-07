@@ -40,10 +40,16 @@ def request_sync(
     """sync with user devices data"""
     logger.debug(f'cmd: {cmd}')
     with uow:
-        user = uow.users.get(user_id=cmd.user_id)
+        user = uow.users.get_by_uid(uid=cmd.uid)
         if user is None:
-            raise ValueError(f'User ({cmd.user_id}) not exist')
-        _devices = [model.SwitchBotDevice.load(data) for data in cmd.devices]
+            raise ValueError(f'User ({cmd.uid}) not exist')
+        _devices = [model.SwitchBotDevice(
+            device_id=data.get("deviceId"),
+            device_name=data.get("deviceName"),
+            device_type=data.get("deviceType"),
+            enable_cloud_service=data.get("enableCloudService"),
+            hub_device_id=data.get("hubDeviceId")
+        ) for data in cmd.devices]
         user.request_sync(devices=_devices)
         uow.commit()
 
@@ -76,7 +82,7 @@ def unregister_user(
     """register user iot service w/key-pair"""
     logger.debug(f'cmd: {cmd}')
     with uow:
-        uow.users.unregister(uid=cmd.user_id)
+        uow.users.unregister(uid=cmd.uid)
         uow.commit()
 
 

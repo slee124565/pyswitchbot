@@ -61,16 +61,16 @@ class JsonFileUnitOfWork(AbstractUnitOfWork):
             shutil.copyfile(self._origin, self._json_file)
 
 
-# class MemoryUnitOfWork(AbstractUnitOfWork):
-#     def __init__(self):
-#         self.users = repository.MemoryRepository()
-#         self.committed = False
-#
-#     def _commit(self):
-#         self.committed = True
-#
-#     def rollback(self):
-#         pass
+class MemoryUnitOfWork(AbstractUnitOfWork):
+    def __init__(self):
+        self.users = repository.MemoryRepository()
+        self.committed = False
+
+    def _commit(self):
+        self.committed = True
+
+    def rollback(self):
+        pass
 
 
 class CliUnitOfWork(AbstractUnitOfWork):

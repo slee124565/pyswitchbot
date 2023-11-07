@@ -19,6 +19,10 @@ class AbstractRepository(abc.ABC):
         self.seen.add(user)
 
     @abc.abstractmethod
+    def get_dev_state_by_did(self, uid: str, did: str) -> model.SwitchBotStatus:
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def get_by_secret(self, secret: str) -> model.SwitchBotUserRepo:
         raise NotImplementedError
 
@@ -84,42 +88,47 @@ class AbstractRepository(abc.ABC):
     #     raise NotImplementedError
 
 
-# class MemoryRepository(AbstractRepository):
-#     def _register(self, secret: str, token: str, user_id: str):
-#         self._users.append(
-#             model.SwitchBotUserRepo(
-#                 uid=user_id,
-#                 secret=secret,
-#                 token=token,
-#                 devices=[],
-#                 states=[],
-#                 scenes=[],
-#                 webhooks=[]
-#             )
-#         )
-#
-#     def _remove(self, user_id: str):
-#         n = next((n for n, user in enumerate(self._users) if user.uid == user_id), None)
-#         if n is not None:
-#             del self._users[n]
-#         else:
-#             raise ValueError(f'User ({user_id}) not exist')
-#
-#     def _get_dev_by_id(self, dev_id: str) -> model.SwitchBotDevice:
-#         for user in self._users:
-#             return next((dev for dev in user.devices if dev.device_id == dev_id))
-#         raise ValueError(f'Device ({dev_id}) not exist')
-#
-#     def __init__(self):
-#         super().__init__()
-#         self._users = []  # type:List['SwitchBotUserRepo']
-#
-#     def _get(self, user_id: str) -> model.SwitchBotUserRepo:
-#         return next((user for user in self._users if user.uid == user_id), None)
-#
-#     def _add(self, user_id: str, devices: List[model.SwitchBotDevice]):
-#         user = self._get(user_id=user_id)
-#         user.devices.extend(devices)
+class MemoryRepository(AbstractRepository):
+    def get_by_secret(self, secret: str) -> model.SwitchBotUserRepo:
+        return next((u for u in self._users if u.secret == secret), None)
+
+    def get_by_uid(self, uid: str) -> model.SwitchBotUserRepo:
+        return next((u for u in self._users if u.uid == uid), None)
+
+    def _unregister(self, uid: str):
+        n = next((n for n, u in enumerate(self._users) if u.uid == uid))
+        if n is not None:
+            del self._users[n]
+
+    def _register(self, user: model.SwitchBotUserRepo):
+        u = self.get_by_uid(uid=user.uid)
+        if u:  # uid already exist, replace
+            n = next((n for n, u in self._users if u.uid == user.uid))
+            del self._users[n]
+        self._users.append(user)
+
+    def __init__(self):
+        super().__init__()
+        self._users = []  # type:List[model.SwitchBotUserRepo]
+
+    # def _remove(self, user_id: str):
+    #     n = next((n for n, user in enumerate(self._users) if user.uid == user_id), None)
+    #     if n is not None:
+    #         del self._users[n]
+    #     else:
+    #         raise ValueError(f'User ({user_id}) not exist')
+    #
+    # def _get_dev_by_id(self, dev_id: str) -> model.SwitchBotDevice:
+    #     for user in self._users:
+    #         return next((dev for dev in user.devices if dev.device_id == dev_id))
+    #     raise ValueError(f'Device ({dev_id}) not exist')
+    #
+    # def _get(self, user_id: str) -> model.SwitchBotUserRepo:
+    #     return next((user for user in self._users if user.uid == user_id), None)
+    #
+    # def _add(self, user_id: str, devices: List[model.SwitchBotDevice]):
+    #     user = self._get(user_id=user_id)
+    #     user.devices.extend(devices)
 
 
 class JsonFileRepository(AbstractRepository):

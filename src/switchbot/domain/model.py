@@ -154,6 +154,9 @@ class SwitchBotDevice:
                 self.direction == other.direction and
                 self.slide_position == other.slide_position)
 
+    def __hash__(self):
+        return hash((self.device_id, self.device_name, self.device_type))
+
     def __repr__(self):
         return f'Device({self.device_id}, {self.device_name}, {self.device_type})'
 
@@ -202,6 +205,19 @@ class SwitchBotUserRepo:
         self.scenes = scenes
         self.webhooks = webhooks
         self.events = []
+
+    def __eq__(self, other):
+        if not isinstance(other, SwitchBotUserRepo):
+            return False
+        return all([
+            self.uid == other.uid,
+            self.secret == other.secret,
+            self.token == other.token,
+            len(self.devices) == len(other.devices)
+        ])
+
+    def __hash__(self):
+        return hash((self.uid, self.secret, self.token))
 
     def sync(self) -> List[SwitchBotDevice]:
         return self.devices

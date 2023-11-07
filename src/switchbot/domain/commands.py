@@ -15,9 +15,7 @@ class Subscribe(Command):
 @dataclass
 class Unregister(Command):
     """要用系統移除用戶資料"""
-    user_id: str
-    secret: str
-    token: str
+    uid: str
 
 
 @dataclass
@@ -31,7 +29,7 @@ class Register(Command):
 @dataclass
 class RequestSync(Command):
     """要求系統更新訂閱用戶設備清單"""
-    user_id: str
+    uid: str
     devices: List[dict]
 
 

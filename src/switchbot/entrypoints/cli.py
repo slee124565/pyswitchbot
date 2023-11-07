@@ -111,7 +111,7 @@ def listall(save):
     with bus.uow:
         devices = bus.uow.api_server.get_dev_list(secret=secret, token=token)
         bus.handle(commands.RequestSync(
-            user_id=secret,
+            uid=secret,
             devices=[dev.dump() for dev in devices]
         ))
         click.echo(

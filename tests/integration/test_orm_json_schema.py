@@ -39,6 +39,16 @@ _state_plug_mini_FF22 = {
     "electricityOfDay": 122,
     "electricCurrent": 0.0
 }
+_change_plug_mini_FF22 = {
+    "eventType": "changeReport",
+    "eventVersion": "1",
+    "context": {
+        "deviceType": "WoPlugUS",
+        "deviceMac": "6055F930FF22",
+        "powerState": "ON",
+        "timeOfSample": 1698720698088
+    }
+}
 _dev_motion_sensor_CDA5 = {
     'deviceId': 'C395D0F0CDA5',
     'deviceName': 'Motion Sensor A5',

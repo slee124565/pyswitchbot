@@ -238,7 +238,7 @@ def request_sync():
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
         cmd = commands.RequestSync(
-            user_id=data.get('userId'),
+            uid=data.get('userId'),
             devices=data.get('devices')
         )
         bus.handle(cmd)
@@ -307,7 +307,7 @@ def unregister():
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
         cmd = commands.Unregister(
-            user_id=data.get('userId'),
+            uid=data.get('userId'),
             token=data.get('userToken'),
             secret=data.get('userSecret')
         )
