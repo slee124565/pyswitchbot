@@ -36,13 +36,27 @@ class RequestSync(Command):
 @dataclass
 class ReportState(Command):
     """要求系統更新訂閱用戶的設備狀態"""
+    uid: str
     state: dict
 
 
 @dataclass
 class ReportChange(Command):
     """webhook report change"""
+    # {
+    #     "eventType": "changeReport",
+    #     "eventVersion": "1",
+    #     "context": {
+    #         "deviceType": "WoPlugUS",
+    #         "deviceMac": "6055F930FF22",
+    #         "powerState": "ON",
+    #         "timeOfSample": 1698720698088
+    #     }
+    # }
     change: dict
+    # event_type: str
+    # event_version: str
+    # context: dict
 
 
 @dataclass

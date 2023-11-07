@@ -18,8 +18,29 @@ class AbstractRepository(abc.ABC):
         self._register(user=user)
         self.seen.add(user)
 
+    def get_dev(self, uid: str, dev_id: str) -> model.SwitchBotDevice:
+        u = self.get_by_uid(uid=uid)
+        return next((d for d in u.devices if d.device_id == dev_id))
+
+    def update_dev_state(self, uid: str, state: model.SwitchBotStatus):
+        u = self.get_by_uid(uid=uid)
+        if not isinstance(u, model.SwitchBotUserRepo):
+            raise ValueError
+        n = next((n for n, s in enumerate(u.states) if s.device_id == state.device_id), None)
+        if n is not None:
+            del u.states[n]
+        u.states.append(state)
+
     @abc.abstractmethod
-    def get_dev_state_by_did(self, uid: str, did: str) -> model.SwitchBotStatus:
+    def get_dev_last_change_report(self, uid: str, dev_id: str) -> model.SwitchBotChangeReport:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_dev_state(self, uid: str, dev_id: str) -> model.SwitchBotStatus:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_by_dev_id(self, dev_id: str) -> model.SwitchBotUserRepo:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -53,10 +74,6 @@ class AbstractRepository(abc.ABC):
         self._remove(user_id=user_id)
         self.seen.add(user)
 
-    def update_dev_state(self, state: model.SwitchBotStatus):
-        dev = self._get_dev_by_id(dev_id=state.device_id)
-        dev.state = state
-
     def get(self, user_id: str) -> model.SwitchBotUserRepo:
         return self._get(user_id)
 
@@ -89,6 +106,19 @@ class AbstractRepository(abc.ABC):
 
 
 class MemoryRepository(AbstractRepository):
+    def get_dev_last_change_report(self, uid: str, dev_id: str) -> model.SwitchBotChangeReport:
+        return next((c for u in self._users if u.uid == uid
+                     for c in u.changes[::-1] if c.context.get("deviceMac") == dev_id), None)
+
+    def get_by_dev_id(self, dev_id: str) -> model.SwitchBotUserRepo:
+        return next((u for u in self._users for d in u.devices if d.device_id == dev_id), None)
+
+    def get_dev_state(self, uid: str, dev_id: str) -> model.SwitchBotStatus:
+        u = self.get_by_uid(uid=uid)
+        if not u:
+            raise ValueError(f'uid {uid} not exist')
+        return next((state for state in u.states if state.device_id == dev_id))
+
     def get_by_secret(self, secret: str) -> model.SwitchBotUserRepo:
         return next((u for u in self._users if u.secret == secret), None)
 

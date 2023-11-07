@@ -84,6 +84,7 @@ def _make_initial_user_devices() -> model.SwitchBotUserRepo:
         token='token',
         devices=[_a, _b],
         states=[],
+        changes=[],
         scenes=[],
         webhooks=[]
     )
@@ -113,6 +114,7 @@ def test_request_sync_with_new_device_added():
         token='token',
         devices=[],
         states=[],
+        changes=[],
         scenes=[],
         webhooks=[]
     )

@@ -17,10 +17,33 @@ def report_state(
         cmd: commands.ReportState,
         uow: unit_of_work.AbstractUnitOfWork
 ):
+    """
+    {
+        "deviceId": "6055F92FCFD2",
+        "deviceType": "Plug Mini (US)",
+        "hubDeviceId": "6055F92FCFD2",
+        "power": "off",
+        "version": "V1.4-1.4",
+        "voltage": 114.7,
+        "weight": 0.0,
+        "electricityOfDay": 3,
+        "electricCurrent": 0.0
+    }
+    """
     logger.debug(f'cmd: {cmd}')
     with uow:
-        state = model.SwitchBotStatus.load(cmd.state)
-        uow.users.update_dev_state(state)
+        state = model.SwitchBotStatus(
+            device_id=cmd.state.get("deviceId"),
+            device_type=cmd.state.get("deviceType"),
+            hub_device_id=cmd.state.get("hubDeviceId"),
+            power=cmd.state.get("power"),
+            version=cmd.state.get("version"),
+            voltage=cmd.state.get("voltage"),
+            weight=cmd.state.get("weight"),
+            electricity_of_day=cmd.state.get("electricityOfDay"),
+            electric_current=cmd.state.get("electricCurrent")
+        )
+        uow.users.update_dev_state(uid=cmd.uid, state=state)
 
 
 def report_change(
@@ -29,8 +52,17 @@ def report_change(
 ):
     logger.debug(f'cmd: {cmd}')
     with uow:
-        change = model.SwitchBotChangeReport.load(cmd.change)
-        uow.users.update_dev_change(change)
+        dev_id = cmd.change.get("context", {}).get("deviceMac", None)
+        if dev_id is None:
+            raise ValueError(f"dev_id not exist, {cmd.change}")
+        u = uow.users.get_by_dev_id(dev_id=dev_id)
+        if u is None:
+            raise ValueError(f"dev_id {dev_id} not exist in users")
+        u.add_change_report(model.SwitchBotChangeReport(
+            event_type=cmd.change.get("eventType"),
+            event_version=cmd.change.get("eventVersion"),
+            context=cmd.change.get("context")
+        ))
 
 
 def request_sync(

@@ -193,6 +193,7 @@ class SwitchBotUserRepo:
             secret: str,
             token: str,
             devices: List[SwitchBotDevice],
+            changes: List[SwitchBotChangeReport],
             states: List[SwitchBotStatus],
             scenes: List[SwitchBotScene],
             webhooks: List[SwitchBotWebhook]
@@ -201,6 +202,7 @@ class SwitchBotUserRepo:
         self.secret = secret
         self.token = token
         self.devices = devices
+        self.changes = changes
         self.states = states
         self.scenes = scenes
         self.webhooks = webhooks
@@ -251,6 +253,9 @@ class SwitchBotUserRepo:
             events.UserDevFetched(user_id=self.uid)
         )
 
+    def add_change_report(self, change: SwitchBotChangeReport):
+        self.changes.append(change)
+
     def disconnect(self):
         for dev_id in [dev.device_id for dev in self.devices]:
             self._remove_device(dev_id=dev_id)
@@ -278,5 +283,5 @@ class SwitchBotUserFactory:
         uid = str(uuid.uuid4()) if uid is None else uid
         return SwitchBotUserRepo(
             uid=uid, secret=secret, token=token,
-            devices=[], states=[], scenes=[], webhooks=[]
+            devices=[], changes=[], states=[], scenes=[], webhooks=[]
         )

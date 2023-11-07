@@ -118,6 +118,31 @@ class TestRequestSync:
         assert [d.device_id for d in u.devices] == [data.get("deviceId") for data in _init_dev_data_list]
 
 
+class TestReportChange:
+    def test_report_change(self):
+        bus = bootstrap_test_app()
+        bus.handle(commands.Register(secret='secret1', token='token1'))
+        u = bus.uow.users.get_by_secret('secret1')
+        bus.handle(commands.RequestSync(uid=u.uid, devices=_init_dev_data_list))
+
+        _dev_change_data = {
+            "eventType": "changeReport",
+            "eventVersion": "1",
+            "context": {
+                "deviceType": "WoPlugUS",
+                "deviceMac": "6055F930FF22",
+                "powerState": "ON",
+                "timeOfSample": 1698720698088
+            }
+        }
+        bus.handle(commands.ReportChange(change=_dev_change_data))
+
+        dev_id = _dev_change_data.get("context").get("deviceMac")
+        u = bus.uow.users.get_by_dev_id(dev_id=dev_id)
+        c = bus.uow.users.get_dev_last_change_report(uid=u.uid, dev_id=dev_id)
+        assert c.context.get("timeOfSample") == _dev_change_data.get("context").get("timeOfSample")
+
+
 class TestReportState:
     def test_update_device_status(self):
         bus = bootstrap_test_app()
@@ -125,11 +150,13 @@ class TestReportState:
         u = bus.uow.users.get_by_secret('secret1')
         bus.handle(commands.RequestSync(uid=u.uid, devices=_init_dev_data_list))
 
-        bus.handle(commands.ReportState(_dev_status_data))
+        bus.handle(commands.ReportState(uid=u.uid, state=_dev_status_data))
 
         dev_id = _dev_status_data.get("deviceId")
         u = bus.uow.users.get_by_uid(uid=u.uid)
-        dev_state = bus.uow.users.get_dev_state_by_did(uid=u.uid, did=dev_id)
+        assert len(u.states) == 1
+        dev_state = bus.uow.users.get_dev_state(uid=u.uid, dev_id=dev_id)
+        assert dev_state
         assert all([
             dev_state.device_id == _dev_status_data.get("deviceId"),
             dev_state.device_type == _dev_status_data.get("deviceType"),
