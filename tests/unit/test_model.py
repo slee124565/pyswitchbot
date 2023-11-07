@@ -27,7 +27,17 @@ def _make_fake_dev_states() -> List[model.SwitchBotStatus]:
             "electricCurrent": 0.0
         }
     ]
-    return [model.SwitchBotStatus.load(data) for data in state_data_list]
+    return [model.SwitchBotStatus(
+        device_id=data.get('deviceId'),
+        device_type=data.get('deviceType'),
+        hub_device_id=data.get('hubDeviceId'),
+        power=data.get("power"),
+        version=data.get("version"),
+        voltage=data.get("voltage"),
+        weight=data.get("weight"),
+        electricity_of_day=data.get("electricityOfDay"),
+        electric_current=data.get("electricCurrent")
+    ) for data in state_data_list]
 
 
 def _make_initial_user_devices() -> model.SwitchBotUserRepo:
@@ -45,28 +55,28 @@ def _make_initial_user_devices() -> model.SwitchBotUserRepo:
         enable_cloud_service=True,
         hub_device_id=''
     )
-    _a.state = model.SwitchBotStatus.load({
-        "deviceId": "6055F92FCFD2",
-        "deviceType": "Plug Mini (US)",
-        "hubDeviceId": "6055F92FCFD2",
-        "power": "off",
-        "version": "V1.4-1.4",
-        "voltage": 114.7,
-        "weight": 0.0,
-        "electricityOfDay": 3,
-        "electricCurrent": 0.0
-    })
-    _b.state = model.SwitchBotStatus.load({
-        "deviceId": "6055F930FF22",
-        "deviceType": "Plug Mini (US)",
-        "hubDeviceId": "6055F930FF22",
-        "power": "off",
-        "version": "V1.4-1.4",
-        "voltage": 114.7,
-        "weight": 0.0,
-        "electricityOfDay": 122,
-        "electricCurrent": 0.0
-    })
+    _a.state = model.SwitchBotStatus(
+        device_id="6055F92FCFD2",
+        device_type="Plug Mini (US)",
+        hub_device_id="6055F92FCFD2",
+        power="off",
+        version="V1.4-1.4",
+        voltage=114.7,
+        weight=0.0,
+        electricity_of_day=3,
+        electric_current=0.0
+    )
+    _b.state = model.SwitchBotStatus(
+        device_id="6055F930FF22",
+        device_type="Plug Mini (US)",
+        hub_device_id="6055F930FF22",
+        power="off",
+        version="V1.4-1.4",
+        voltage=114.7,
+        weight=0.0,
+        electricity_of_day=122,
+        electric_current=0.0
+    )
 
     return model.SwitchBotUserRepo(
         uid='user_id',
