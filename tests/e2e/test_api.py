@@ -26,7 +26,7 @@ webhook_data = [{
     }
 }]
 
-test_devices = [
+_test_devices = [
     {
         "deviceId": "6055F92FCFD2",
         "deviceName": "小風扇開關",
@@ -53,11 +53,11 @@ def test_happy_user_iot_service_journey():
     assert user_id
 
     # 模擬系統更新用戶設備清單
-    r = api_client.post_to_request_sync(user_id=user_id, devices=test_devices)
+    r = api_client.post_to_request_sync(user_id=user_id, devices=_test_devices)
     data = r.json()
     logger.warning(f'response data {data}')
     assert data.get('uid') == user_id
-    assert data.get('devices') == len(test_devices)
+    assert data.get('devices') == len(_test_devices)
 
     # 模擬系統更新用戶設備狀態資料
     api_client.post_to_report_state(secret=secret, state={
