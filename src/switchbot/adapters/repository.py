@@ -88,24 +88,15 @@ class AbstractRepository(abc.ABC):
     def _unregister(self, uid: str):
         raise NotImplementedError
 
-    # @abc.abstractmethod
-    # def _get_dev_by_id(self, dev_id: str) -> model.SwitchBotDevice:
-    #     raise NotImplementedError
-    #
-    # @abc.abstractmethod
-    # def _get(self, user_id: str) -> model.SwitchBotUserRepo:
-    #     raise NotImplementedError
-    #
-    # @abc.abstractmethod
-    # def _add(self, user_id: str, devices: List[model.SwitchBotDevice]):
-    #     raise NotImplementedError
-    #
-    # @abc.abstractmethod
-    # def _remove(self, user_id: str):
-    #     raise NotImplementedError
+    @abc.abstractmethod
+    def count(self) -> int:
+        raise NotImplementedError
 
 
 class MemoryRepository(AbstractRepository):
+    def count(self) -> int:
+        return len(self._users)
+
     def get_dev_last_change_report(self, uid: str, dev_id: str) -> model.SwitchBotChangeReport:
         return next((c for u in self._users if u.uid == uid
                      for c in u.changes[::-1] if c.context.get("deviceMac") == dev_id), None)
@@ -131,11 +122,15 @@ class MemoryRepository(AbstractRepository):
             del self._users[n]
 
     def _register(self, user: model.SwitchBotUserRepo):
-        u = self.get_by_uid(uid=user.uid)
-        if u:  # uid already exist, replace
-            n = next((n for n, u in self._users if u.uid == user.uid))
-            del self._users[n]
-        self._users.append(user)
+        u = self.get_by_secret(secret=user.secret)
+        if u:  # secret already exist, skip
+            logger.warning(f'user {u.uid} secret already exist, skip')
+            # n = next((n for n, u in enumerate(self._users) if u.secret == user.secret), None)
+            # if n is not None:
+            #     del self._users[n]
+        else:
+            self._users.append(user)
+            logger.info(f'new user {user.secret} registered, fire event')
 
     def __init__(self):
         super().__init__()
@@ -162,6 +157,9 @@ class MemoryRepository(AbstractRepository):
 
 
 class JsonFileRepository(AbstractRepository):
+    def count(self) -> int:
+        return self.session.count()
+
     def get_dev_last_change_report(self, uid: str, dev_id: str) -> model.SwitchBotChangeReport:
         return self.session.get_dev_last_change_report(uid=uid, dev_id=dev_id)
 

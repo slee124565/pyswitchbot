@@ -146,6 +146,9 @@ class MarshmallowSchemaConverter:
         else:
             self._users = []
 
+    def commit(self):
+        self._save()
+
     def _save(self):
         with open(self._file, 'w') as fh:
             _schema = SwitchBotUserRepoSchema()
@@ -153,14 +156,13 @@ class MarshmallowSchemaConverter:
             fh.write(json.dumps(content, indent=2, ensure_ascii=False))
 
     def register_user(self, user: model.SwitchBotUserRepo):
-        n, u = next(((n, u) for n, u in enumerate(self._users) if u.uid == user.uid), (None, None))
+        n, u = next(((n, u) for n, u in enumerate(self._users) if u.secret == user.secret), (None, None))
         if u is None:
             self._users.append(user)
-            logger.info(f'register new user {user}')
         else:
-            del self._users[n]
-            self._users.append(user)
-            logger.info(f'register existed user {u}, replaced with new user {user}')
+            logger.warning(f'register w/ secret already exist on user {u.uid}, skip')
+            # del self._users[n]
+            # self._users.append(user)
         self._save()
 
     def unregister_user(self, uid: str):
@@ -190,6 +192,9 @@ class MarshmallowSchemaConverter:
     def get_dev_last_change_report(self, uid: str, dev_id: str) -> model.SwitchBotChangeReport:
         u = self.get_by_uid(uid=uid)
         return next((c for c in u.changes[::-1] if c.context.get("deviceMac") == dev_id), None)
+
+    def count(self) -> int:
+        return len(self._users)
 
 
 def session_factory(file: str):

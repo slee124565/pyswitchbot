@@ -54,7 +54,7 @@ class JsonFileUnitOfWork(AbstractUnitOfWork):
         super().__exit__(*args)
 
     def _commit(self):
-        pass
+        self.session.commit()
 
     def rollback(self):
         if os.path.exists(self._origin):

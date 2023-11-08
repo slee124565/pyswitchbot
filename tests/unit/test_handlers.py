@@ -1,7 +1,10 @@
+import logging
 from switchbot import bootstrap
 from switchbot.service_layer import unit_of_work
 from switchbot.adapters import iot_api_server
 from switchbot.domain import commands
+
+logger = logging.getLogger(__name__)
 
 _init_dev_data_list = [
     {
@@ -47,6 +50,11 @@ class TestRegister:
         bus = bootstrap_test_app()
         bus.handle(commands.Register(secret='secret1', token='token1'))
         bus.handle(commands.Register(secret='secret2', token='token2'))
+        count = bus.uow.users.count()
+        bus.handle(commands.Register(secret='secret1', token='token1'))
+        bus.handle(commands.Register(secret='secret2', token='token2'))
+        assert count == bus.uow.users.count()
+        assert count >= 2
         u1 = bus.uow.users.get_by_secret(secret='secret1')
         u2 = bus.uow.users.get_by_secret(secret='secret2')
         assert all([u1, u2])
@@ -57,10 +65,12 @@ class TestRegister:
         bus = bootstrap_test_app()
         bus.handle(commands.Register(secret='secret1', token='token1'))
         bus.handle(commands.Register(secret='secret2', token='token2'))
+        count = bus.uow.users.count()
         u1 = bus.uow.users.get_by_secret(secret='secret1')
         bus.handle(commands.Unregister(uid=u1.uid))
         assert bus.uow.users.get_by_uid(uid=u1.uid) is None
         assert bus.uow.users.get_by_secret('secret2')
+        assert count == bus.uow.users.count() + 1
 
 
 class TestRequestSync:
@@ -70,6 +80,8 @@ class TestRequestSync:
         u = bus.uow.users.get_by_secret('secret1')
         bus.handle(commands.RequestSync(uid=u.uid, devices=_init_dev_data_list))
         u = bus.uow.users.get_by_uid(uid=u.uid)
+        logger.warning(f'{len(u.devices)} == {len(_init_dev_data_list)}')
+        assert len(u.devices) == len(_init_dev_data_list)
         assert [d.device_id for d in u.devices] == [data.get("deviceId") for data in _init_dev_data_list]
 
     def test_a_device_name_changed(self):
