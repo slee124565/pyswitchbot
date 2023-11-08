@@ -67,7 +67,7 @@ class TestRegister:
         bus.handle(commands.Register(secret='secret2', token='token2'))
         count = bus.uow.users.count()
         u1 = bus.uow.users.get_by_secret(secret='secret1')
-        bus.handle(commands.Unregister(uid=u1.uid))
+        bus.handle(commands.Unregister(secret=u1.secret))
         assert bus.uow.users.get_by_uid(uid=u1.uid) is None
         assert bus.uow.users.get_by_secret('secret2')
         assert count == bus.uow.users.count() + 1
@@ -143,7 +143,7 @@ class TestReportChange:
             "eventVersion": "1",
             "context": {
                 "deviceType": "WoPlugUS",
-                "deviceMac": "6055F930FF22",
+                "deviceMac": "6055F92FCFD2",
                 "powerState": "ON",
                 "timeOfSample": 1698720698088
             }
@@ -184,11 +184,15 @@ class TestReportState:
 
 
 class TestSubscribe:
-
-    def test_subscribe(self):
-        bus = bootstrap_test_app()
-        bus.handle(commands.Subscribe(secret='secret'))
-        """subscriber 是否屬於另一個 aggregator?"""
-
-    def test_unsubscribe(self):
-        pass
+    """todo: JTBD"""
+    # def test_subscribe(self):
+    #     bus = bootstrap_test_app()
+    #     bus.handle(commands.Register(secret='secret1', token='token1'))
+    #     u = bus.uow.users.get_by_secret('secret1')
+    #     bus.handle(commands.RequestSync(uid=u.uid, devices=_init_dev_data_list))
+    #
+    #     bus.handle(commands.Subscribe(uid=u.uid))
+    #     """subscriber 是否屬於另一個 aggregator?"""
+    #
+    # def test_unsubscribe(self):
+    #     pass

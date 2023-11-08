@@ -47,7 +47,7 @@ def test_happy_user_iot_service_journey():
 
     # 用戶註冊iot服務
     r = api_client.post_to_register(secret=secret, token=token, expect_success=True)
-    user_id = r.json.get('userId')
+    user_id = r.json().get('userId')
     assert user_id
 
     # 模擬系統更新用戶設備清單

@@ -217,7 +217,7 @@ def report_state():
         if not isinstance(data, dict):
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
-        cmd = commands.ReportState(state=request.json)
+        cmd = commands.ReportState(uid=request.json.get('userId'), state=request.json.get("state"))
         bus.handle(cmd)
         return jsonify({}), HTTPStatus.OK
 
@@ -261,7 +261,7 @@ def subscribe():
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
         cmd = commands.Subscribe(
-            secret=data.get('userSecret')
+            uid=data.get('userId')
         )
         bus.handle(cmd)
         return jsonify({}), HTTPStatus.ACCEPTED
@@ -283,7 +283,6 @@ def register():
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
         cmd = commands.Register(
-            user_id=data.get('userId'),
             token=data.get('userToken'),
             secret=data.get('userSecret')
         )
@@ -307,9 +306,7 @@ def unregister():
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
         cmd = commands.Unregister(
-            uid=data.get('userId'),
-            token=data.get('userToken'),
-            secret=data.get('userSecret')
+            secret=data.get('userSecret'),
         )
         bus.handle(cmd)
         return jsonify({}), HTTPStatus.ACCEPTED

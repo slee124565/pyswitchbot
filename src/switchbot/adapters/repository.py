@@ -51,11 +51,12 @@ class AbstractRepository(abc.ABC):
     def get_by_uid(self, uid: str) -> model.SwitchBotUserRepo:
         raise NotImplementedError
 
-    def unregister(self, uid: str = None):
+    def unregister(self, secret: str = None):
         """todo: 新增 user.account_status, 參考 slack 用戶帳號狀態 Active|Inactive|Deactivated
         todo: send UserAccountDeactivated event for publish
         """
-        self._unregister(uid=uid)
+        u = self.get_by_secret(secret=secret)
+        self._unregister(user=u)
 
     def subscribe(self, secret: str):
         """todo"""
@@ -85,7 +86,7 @@ class AbstractRepository(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _unregister(self, uid: str):
+    def _unregister(self, user: model.SwitchBotUserRepo):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -116,8 +117,8 @@ class MemoryRepository(AbstractRepository):
     def get_by_uid(self, uid: str) -> model.SwitchBotUserRepo:
         return next((u for u in self._users if u.uid == uid), None)
 
-    def _unregister(self, uid: str):
-        n = next((n for n, u in enumerate(self._users) if u.uid == uid))
+    def _unregister(self, user: model.SwitchBotUserRepo):
+        n = next((n for n, u in enumerate(self._users) if u.uid == user.uid))
         if n is not None:
             del self._users[n]
 
@@ -185,8 +186,8 @@ class JsonFileRepository(AbstractRepository):
         # todo: encrypted save (secret, token) with user_id
         self.session.register_user(user)
 
-    def _unregister(self, uid: str):
-        self.session.unregister_user(uid=uid)
+    def _unregister(self, user: model.SwitchBotUserRepo):
+        self.session.unregister_user(user=user)
 
     # def _load(self):
     #     if not os.path.exists(self._file):

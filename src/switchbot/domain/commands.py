@@ -9,13 +9,13 @@ class Command:
 @dataclass
 class Subscribe(Command):
     """第三方系統訂閱用戶設備IoT服務"""
-    secret: str
+    uid: str
 
 
 @dataclass
 class Unregister(Command):
     """要用系統移除用戶資料"""
-    uid: str
+    secret: str
 
 
 @dataclass

@@ -165,7 +165,8 @@ class MarshmallowSchemaConverter:
             # self._users.append(user)
         self._save()
 
-    def unregister_user(self, uid: str):
+    def unregister_user(self, user: model.SwitchBotUserRepo):
+        uid = user.uid
         n, u = next(((n, u) for n, u in enumerate(self._users) if u.uid == uid), (None, None))
         if u is None:
             m = f'user uid {uid} not exist'

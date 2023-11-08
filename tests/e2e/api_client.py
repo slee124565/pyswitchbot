@@ -163,7 +163,7 @@ def post_to_subscribe(secret, token, expect_success=True):
         assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
 
 
-def post_to_unregister(secret, token, expect_success=True):
+def post_to_unregister(secret, expect_success=True):
     url = config.get_api_url()
     auth = HTTPBasicAuth('secret', secret)
     r = requests.post(
@@ -171,7 +171,6 @@ def post_to_unregister(secret, token, expect_success=True):
         auth=auth,
         json={
             "userSecret": secret,
-            "userToken": token
         }
     )
     if expect_success:
