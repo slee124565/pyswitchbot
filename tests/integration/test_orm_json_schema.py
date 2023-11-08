@@ -108,6 +108,7 @@ def test_switchbot_user_repo_schema():
         'userToken': 'token',
         'devices': [_dev_plug_mini_CFD2, _dev_plug_mini_FF22],
         'states': [_state_plug_mini_CFD2, _state_plug_mini_FF22],
+        'changes': [_change_plug_mini_FF22],
         'scenes': [],
         'webhooks': []
     }

@@ -35,7 +35,8 @@ _dev_status_data = {
 
 def bootstrap_test_app():
     return bootstrap.bootstrap(
-        uow=unit_of_work.MemoryUnitOfWork(),
+        uow=unit_of_work.JsonFileUnitOfWork(),
+        # uow=unit_of_work.MemoryUnitOfWork(),
         start_orm=False,
         iot=iot_api_server.FakeApiServer()
     )

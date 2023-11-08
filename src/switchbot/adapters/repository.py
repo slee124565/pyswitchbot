@@ -163,13 +163,13 @@ class MemoryRepository(AbstractRepository):
 
 class JsonFileRepository(AbstractRepository):
     def get_dev_last_change_report(self, uid: str, dev_id: str) -> model.SwitchBotChangeReport:
-        pass
+        return self.session.get_dev_last_change_report(uid=uid, dev_id=dev_id)
 
     def get_dev_state(self, uid: str, dev_id: str) -> model.SwitchBotStatus:
-        pass
+        return self.session.get_dev_state(uid=uid, dev_id=dev_id)
 
     def get_by_dev_id(self, dev_id: str) -> model.SwitchBotUserRepo:
-        pass
+        return self.session.get_by_dev_id(dev_id=dev_id)
 
     # _users = []  # type:List['SwitchBotUserRepo']
 
