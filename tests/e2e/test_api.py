@@ -47,14 +47,17 @@ test_devices = [
 def test_happy_user_iot_service_journey():
     secret = 'secret'
     token = 'token'
-
     # 用戶註冊iot服務
     r = api_client.post_to_register(secret=secret, token=token, expect_success=True)
-    user_id = r.json.get('uid')
+    user_id = r.json().get('uid')
     assert user_id
 
     # 模擬系統更新用戶設備清單
-    api_client.post_to_request_sync(secret=secret, devices=test_devices)
+    r = api_client.post_to_request_sync(user_id=user_id, devices=test_devices)
+    data = r.json()
+    logger.warning(f'response data {data}')
+    assert data.get('uid') == user_id
+    assert data.get('devices') == len(test_devices)
 
     # 模擬系統更新用戶設備狀態資料
     api_client.post_to_report_state(secret=secret, state={

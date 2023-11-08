@@ -5,6 +5,7 @@ from http import HTTPStatus
 from switchbot import config
 
 logger = logging.getLogger(__name__)
+API_KEY = 'test_api_key'
 
 
 def post_to_report_state(secret, state):
@@ -22,7 +23,7 @@ def post_to_report_state(secret, state):
 def post_to_report_change(secret, change):
     """todo: only localhost and ALLOWED_REPORT_STATE_HOST requests should be accepted"""
     url = config.get_api_url()
-    auth = HTTPBasicAuth('secret', secret)
+    auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/change",
         auth=auth,
@@ -33,19 +34,20 @@ def post_to_report_change(secret, change):
     assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
 
 
-def post_to_request_sync(secret, devices):
+def post_to_request_sync(user_id, devices):
     """todo: user_id as API SECRET KEY"""
     url = config.get_api_url()
-    auth = HTTPBasicAuth('secret', secret)
+    auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/sync",
         auth=auth,
         json={
-            "userId": secret,
+            "userId": user_id,
             "devices": devices
         }
     )
     assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
+    return r
 
 
 def post_to_ctrl_user_dev_onoff(secret, dev_id, dev_onoff):
@@ -182,7 +184,7 @@ def post_to_unregister(secret, expect_success=True):
 
 def post_to_register(secret, token, expect_success=True):
     url = config.get_api_url()
-    auth = HTTPBasicAuth('secret', secret)
+    auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/register",
         auth=auth,
@@ -193,16 +195,16 @@ def post_to_register(secret, token, expect_success=True):
     )
 
     # 检查是否有重定向
-    if r.history:
-        logger.warning("Request was redirected")
-        for resp in r.history:
-            logger.warning(f"{resp.status_code}, {resp.url}")
-        logger.warning("Final destination:")
-        logger.warning(f"{r.status_code}, {r.url}")
-        logger.warning(f"{r.content}, {r.url}")
-        logger.warning(f"{r.json()}, {r.url}")
-
-    logger.debug(f'response status code {r.status_code}')
+    # if r.history:
+    #     logger.warning("Request was redirected")
+    #     for resp in r.history:
+    #         logger.warning(f"{resp.status_code}, {resp.url}")
+    #     logger.warning("Final destination:")
+    #     logger.warning(f"{r.status_code}, {r.url}")
+    #     logger.warning(f"{r.content}, {r.url}")
+    #     logger.warning(f"{r.json()}, {r.url}")
+    #
+    # logger.debug(f'response status code {r.status_code}')
     if expect_success:
         assert r.status_code in [HTTPStatus.OK, HTTPStatus.ACCEPTED]
     return r

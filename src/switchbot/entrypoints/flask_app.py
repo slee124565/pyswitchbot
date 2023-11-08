@@ -249,7 +249,7 @@ def request_sync():
             devices=data.get('devices')
         )
         bus.handle(cmd)
-        return jsonify({}), HTTPStatus.OK
+        return redirect(f"{url_for('profile')}?u={data.get('userId')}")
 
     except ApiAccessTokenError:
         return jsonify({}), HTTPStatus.UNAUTHORIZED
@@ -307,11 +307,19 @@ def profile():
         # check request access token
         _check_api_access_token(http_request=request)
         user_secret = request.args.get('s', default=None, type=str)
+        user_id = request.args.get('u', default=None, type=str)
+        if user_secret:
+            return jsonify(views.user_profile_by_secret(
+                secret=user_secret,
+                uow=bus.uow
+            )), HTTPStatus.OK
+        elif user_id:
+            return jsonify(views.user_profile_by_uid(
+                uid=user_id,
+                uow=bus.uow
+            )), HTTPStatus.OK
 
-        return jsonify(views.user_profile(
-            secret=user_secret,
-            uow=bus.uow
-        )), HTTPStatus.OK
+
 
     except ApiAccessTokenError:
         return jsonify({}), HTTPStatus.UNAUTHORIZED
