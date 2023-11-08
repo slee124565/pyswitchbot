@@ -15,7 +15,7 @@ from switchbot.service_layer import unit_of_work
 logging_config.dictConfig(config.logging_config)
 logger = logging.getLogger(__name__)
 bus = bootstrap.bootstrap(
-    uow=unit_of_work.JsonFileUnitOfWork(json_file='.repository'),
+    uow=unit_of_work.JsonFileUnitOfWork(),
     start_orm=False,
     iot=iot_api_server.SwitchBotApiServer()
 )
@@ -56,7 +56,7 @@ def config(secret, token, envfile):
     with open(envfile, 'w') as fh:
         fh.writelines(lines)
     with bus.uow:
-        bus.handle(commands.Register(user_id=secret, secret=secret, token=token))
+        bus.handle(commands.Register(secret=secret, token=token))
         bus.uow.commit()
     click.echo(f"Configured authentication with secret: {secret} and token: {token}")
 
@@ -76,20 +76,14 @@ def listall(envfile):
 def check(secret, token):
     """Check authentication status."""
     try:
-        response = open_api.get_scene_list(
+        r = open_api.get_scene_list(
             secret=secret,
             token=token
         )
-        if not response:
+        if not r:
             click.echo('Fail')
-            return
-        with bus.uow:
-            cmd = commands.Register(
-                secret=secret,
-                token=token
-            )
-            bus.handle(cmd)
-        click.echo('OK')
+        else:
+            click.echo('OK')
     except SwitchBotAPIServerError:
         click.echo(f'Fail')
 

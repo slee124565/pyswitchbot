@@ -161,4 +161,4 @@ cython_debug/
 
 # project
 .repository
-
+.datastore

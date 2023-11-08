@@ -131,7 +131,7 @@ class SwitchBotUserRepoSchema(Schema):
         }
 
 
-class MarshmallowSchemaConverter:
+class MarshmallowSchemaDatastore:
     _users = []  # type: List['model.SwitchBotUserRepo']
 
     def __init__(self, file: str):
@@ -199,4 +199,4 @@ class MarshmallowSchemaConverter:
 
 
 def session_factory(file: str):
-    return MarshmallowSchemaConverter(file)
+    return MarshmallowSchemaDatastore(file)

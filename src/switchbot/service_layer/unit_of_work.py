@@ -34,7 +34,7 @@ class AbstractUnitOfWork(abc.ABC):
 
 
 class JsonFileUnitOfWork(AbstractUnitOfWork):
-    def __init__(self, json_file='.repository'):
+    def __init__(self, json_file='.datastore'):
         super().__init__()
         self._json_file = json_file
         self._origin = f'{json_file}.swap'
@@ -73,29 +73,29 @@ class MemoryUnitOfWork(AbstractUnitOfWork):
         pass
 
 
-class CliUnitOfWork(AbstractUnitOfWork):
-    def __init__(self, file: str):
-        self._file = file
-        self._origin = f'{self._file}.swap'
-
-    def __enter__(self):
-        # todo: 如何整合 file repository
-        if os.path.exists(self._file):
-            shutil.copyfile(self._file, self._origin)
-        self.users = repository.JsonFileRepository(file=self._file)
-        self.api_server = SwitchBotApiServer()
-        return super().__enter__()
-
-    def __exit__(self, *args):
-        super().__exit__(*args)
-
-    def _commit(self):
-        if os.path.exists(self._origin):
-            os.remove(self._origin)
-
-    def rollback(self):
-        if os.path.exists(self._origin):
-            shutil.copyfile(self._origin, self._file)
+# class CliUnitOfWork(AbstractUnitOfWork):
+#     def __init__(self, file: str):
+#         self._file = file
+#         self._origin = f'{self._file}.swap'
+#
+#     def __enter__(self):
+#         # todo: 如何整合 file repository
+#         if os.path.exists(self._file):
+#             shutil.copyfile(self._file, self._origin)
+#         self.users = repository.JsonFileRepository(file=self._file)
+#         self.api_server = SwitchBotApiServer()
+#         return super().__enter__()
+#
+#     def __exit__(self, *args):
+#         super().__exit__(*args)
+#
+#     def _commit(self):
+#         if os.path.exists(self._origin):
+#             os.remove(self._origin)
+#
+#     def rollback(self):
+#         if os.path.exists(self._origin):
+#             shutil.copyfile(self._origin, self._file)
 
 # DEFAULT_SESSION_FACTORY = sessionmaker(
 #     bind=create_engine(
