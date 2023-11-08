@@ -44,6 +44,7 @@ def report_state(
             electric_current=cmd.state.get("electricCurrent")
         )
         uow.users.update_dev_state(uid=cmd.uid, state=state)
+        uow.commit()
 
 
 def report_change(
@@ -63,6 +64,7 @@ def report_change(
             event_version=cmd.change.get("eventVersion"),
             context=cmd.change.get("context")
         ))
+        uow.commit()
 
 
 def request_sync(
@@ -94,6 +96,7 @@ def unlink_user(
     logger.debug(f'cmd: {cmd}')
     with uow:
         uow.users.remove(user_id=cmd.user_id)
+        uow.commit()
 
 
 def subscribe_user_iot(
@@ -131,7 +134,6 @@ def register_user(
         )
         uow.users.register(user=user)
         uow.commit()
-    return user
 
 
 def pull_user_devices(
