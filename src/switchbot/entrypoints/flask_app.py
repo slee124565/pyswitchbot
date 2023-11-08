@@ -3,14 +3,20 @@ import base64
 from http import HTTPStatus
 
 import requests
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, url_for, redirect
 from switchbot.domain import commands
+from switchbot.service_layer import unit_of_work
+from switchbot.adapters import iot_api_server
 from switchbot.service_layer.handlers import InvalidSrcServer
-from switchbot import bootstrap, config  # views
+from switchbot import bootstrap, views  # , config
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
-bus = bootstrap.bootstrap()
+bus = bootstrap.bootstrap(
+    uow=unit_of_work.JsonFileUnitOfWork(),
+    start_orm=False,
+    iot=iot_api_server.SwitchBotApiServer()
+)
 seudo_sync_payload = {
     "agentUserId": "1836.15267389",
     "devices": [
@@ -138,27 +144,28 @@ def _check_api_access_token(http_request: requests.Request):
     """basic auth with ('secret', {user switchbot secret})
     todo: revise to api access token instead of user secret
     """
-    auth_header = http_request.headers.get('Authorization')
-    if not auth_header:
-        raise ApiAccessTokenError
-    auth_type, auth_string = auth_header.split(' ')
-    if auth_type != 'Basic':
-        raise ApiAccessTokenError
-    # Base64解碼
-    base64_bytes = base64.b64decode(auth_string)
-    decoded_string = base64_bytes.decode('utf-8')
-    # 獲取 api_key 和 user_secret
-    api_key, user_secret = decoded_string.split(':')
-    if api_key != 'secret':
-        raise ApiAccessTokenError
-    return api_key, user_secret
+    # auth_header = http_request.headers.get('Authorization')
+    # if not auth_header:
+    #     raise ApiAccessTokenError
+    # auth_type, auth_string = auth_header.split(' ')
+    # if auth_type != 'Basic':
+    #     raise ApiAccessTokenError
+    # # Base64解碼
+    # base64_bytes = base64.b64decode(auth_string)
+    # decoded_string = base64_bytes.decode('utf-8')
+    # # 獲取 api_key 和 user_secret
+    # api_key, user_secret = decoded_string.split(':')
+    # if api_key != 'secret':
+    #     raise ApiAccessTokenError
+    # return api_key, user_secret
+    pass
 
 
 @app.route('/fulfillment', methods=['POST'])
 def fulfillment():
     try:
         # check request access token
-        api_key, user_secret = _check_api_access_token(http_request=request)
+        _check_api_access_token(http_request=request)
         data = request.json
 
         # create cmd according to IntentID
@@ -193,7 +200,7 @@ def fulfillment():
 @app.route('/change', methods=['POSST'])
 def report_change():
     try:
-        api_key, user_secret = _check_api_access_token(http_request=request)
+        _check_api_access_token(http_request=request)
         data = request.json
 
         if not isinstance(data, dict):
@@ -211,7 +218,7 @@ def report_change():
 def report_state():
     try:
         # check request access token
-        api_key, user_secret = _check_api_access_token(http_request=request)
+        _check_api_access_token(http_request=request)
         data = request.json
 
         if not isinstance(data, dict):
@@ -231,7 +238,7 @@ def report_state():
 def request_sync():
     try:
         # check request access token
-        api_key, user_secret = _check_api_access_token(http_request=request)
+        _check_api_access_token(http_request=request)
         data = request.json
 
         if not isinstance(data, dict):
@@ -254,7 +261,7 @@ def request_sync():
 def subscribe():
     try:
         # check request access token
-        api_key, user_secret = _check_api_access_token(http_request=request)
+        _check_api_access_token(http_request=request)
         data = request.json
 
         if not isinstance(data, dict):
@@ -272,34 +279,11 @@ def subscribe():
         return jsonify({}), HTTPStatus.UNAUTHORIZED
 
 
-@app.route('/register', methods=['POST'])
-def register():
-    try:
-        # check request access token
-        api_key, user_secret = _check_api_access_token(http_request=request)
-        data = request.json
-
-        if not isinstance(data, dict):
-            return jsonify({}), HTTPStatus.BAD_REQUEST
-
-        cmd = commands.Register(
-            token=data.get('userToken'),
-            secret=data.get('userSecret')
-        )
-        bus.handle(cmd)
-        return jsonify({}), HTTPStatus.ACCEPTED
-
-    except ApiAccessTokenError:
-        return jsonify({}), HTTPStatus.UNAUTHORIZED
-    except InvalidSrcServer:
-        return jsonify({}), HTTPStatus.UNAUTHORIZED
-
-
 @app.route('/unregister', methods=['POST'])
 def unregister():
     try:
         # check request access token
-        api_key, user_secret = _check_api_access_token(http_request=request)
+        _check_api_access_token(http_request=request)
         data = request.json
 
         if not isinstance(data, dict):
@@ -310,6 +294,46 @@ def unregister():
         )
         bus.handle(cmd)
         return jsonify({}), HTTPStatus.ACCEPTED
+
+    except ApiAccessTokenError:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
+    except InvalidSrcServer:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
+
+
+@app.route('/profile', methods=['GET'])
+def profile():
+    try:
+        # check request access token
+        _check_api_access_token(http_request=request)
+        user_secret = request.args.get('s', default=None, type=str)
+
+        return jsonify(views.user_profile(
+            secret=user_secret,
+            uow=bus.uow
+        )), HTTPStatus.OK
+
+    except ApiAccessTokenError:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
+    except InvalidSrcServer:
+        return jsonify({}), HTTPStatus.UNAUTHORIZED
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        # check request access token
+        _check_api_access_token(http_request=request)
+        data = request.json
+        if not isinstance(data, dict):
+            return jsonify({}), HTTPStatus.BAD_REQUEST
+
+        cmd = commands.Register(
+            token=data.get('userToken'),
+            secret=data.get('userSecret')
+        )
+        bus.handle(cmd)
+        return redirect(f"{url_for('profile')}?s={data.get('userSecret')}")
 
     except ApiAccessTokenError:
         return jsonify({}), HTTPStatus.UNAUTHORIZED

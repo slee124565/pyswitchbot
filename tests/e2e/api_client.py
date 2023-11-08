@@ -1,7 +1,10 @@
+import logging
 import requests
 from requests.auth import HTTPBasicAuth
 from http import HTTPStatus
 from switchbot import config
+
+logger = logging.getLogger(__name__)
 
 
 def post_to_report_state(secret, state):
@@ -188,6 +191,18 @@ def post_to_register(secret, token, expect_success=True):
             "userToken": token
         }
     )
+
+    # 检查是否有重定向
+    if r.history:
+        logger.warning("Request was redirected")
+        for resp in r.history:
+            logger.warning(f"{resp.status_code}, {resp.url}")
+        logger.warning("Final destination:")
+        logger.warning(f"{r.status_code}, {r.url}")
+        logger.warning(f"{r.content}, {r.url}")
+        logger.warning(f"{r.json()}, {r.url}")
+
+    logger.debug(f'response status code {r.status_code}')
     if expect_success:
-        assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
+        assert r.status_code in [HTTPStatus.OK, HTTPStatus.ACCEPTED]
     return r

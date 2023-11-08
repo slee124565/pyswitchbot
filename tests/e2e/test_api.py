@@ -1,7 +1,10 @@
 """todo:"""
+import logging
 import pytest
 from switchbot.entrypoints.flask_app import ApiAccessTokenError
 from . import api_client
+
+logger = logging.getLogger(__name__)
 
 webhook_data = [{
     "eventType": "changeReport",
@@ -47,7 +50,7 @@ def test_happy_user_iot_service_journey():
 
     # 用戶註冊iot服務
     r = api_client.post_to_register(secret=secret, token=token, expect_success=True)
-    user_id = r.json().get('userId')
+    user_id = r.json.get('uid')
     assert user_id
 
     # 模擬系統更新用戶設備清單
@@ -152,4 +155,3 @@ def test_happy_user_iot_service_journey():
     with pytest.raises(Exception) as err:
         api_client.post_to_query_user_dev_list(secret=secret)
         assert isinstance(err, ApiAccessTokenError)
-
