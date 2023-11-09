@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 import os
 import shutil
-from switchbot.adapters import repository, orm_json
+from switchbot.adapters import repository, file_datastore
 from switchbot.adapters.iot_api_server import AbstractIotApiServer, SwitchBotApiServer, FakeApiServer
 
 

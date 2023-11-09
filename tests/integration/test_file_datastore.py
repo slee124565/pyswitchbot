@@ -1,10 +1,10 @@
-from switchbot.adapters import repository, orm_json
+from switchbot.adapters import repository, file_datastore
 from switchbot.domain import model
 
 
 class TestJsonFileDatastore:
     def test_get_by_dev_id(self):
-        session = orm_json.MarshmallowSchemaDatastore(file='.datastore')
+        session = file_datastore.FileDatastore(file='.datastore')
         repo = repository.JsonFileRepository(session=session)
         d = model.SwitchBotDevice(
             device_id='did-1',

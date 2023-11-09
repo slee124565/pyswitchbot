@@ -3,16 +3,15 @@ import logging
 import json
 from typing import List
 from switchbot.domain import model
-from switchbot.domain.model import SwitchBotUserRepoSchema
 
 logger = logging.getLogger(__name__)
 
 
-class OrmJsonSchemaError(Exception):
+class DatastoreSchemaError(Exception):
     pass
 
 
-class MarshmallowSchemaDatastore:
+class FileDatastore:
     _users = []  # type: List['model.SwitchBotUserRepo']
 
     def __init__(self, file: str):
@@ -21,9 +20,8 @@ class MarshmallowSchemaDatastore:
             with open(self._file, 'r') as fh:
                 content = json.loads(fh.read())
                 if not isinstance(content, list):
-                    raise OrmJsonSchemaError
-            _schema = SwitchBotUserRepoSchema()
-            self._users = [_schema.load(data) for data in content]
+                    raise DatastoreSchemaError
+            self._users = [model.SwitchBotUserRepo.load(data) for data in content]
         else:
             self._users = []
 
@@ -32,8 +30,7 @@ class MarshmallowSchemaDatastore:
 
     def _save(self):
         with open(self._file, 'w') as fh:
-            _schema = SwitchBotUserRepoSchema()
-            content = [_schema.dump(u) for u in self._users]
+            content = [model.SwitchBotUserRepo.dump(u) for u in self._users]
             fh.write(json.dumps(content, indent=2, ensure_ascii=False))
 
     def register_user(self, user: model.SwitchBotUserRepo):
@@ -80,4 +77,4 @@ class MarshmallowSchemaDatastore:
 
 
 def session_factory(file: str):
-    return MarshmallowSchemaDatastore(file)
+    return FileDatastore(file)
