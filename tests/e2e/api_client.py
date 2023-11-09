@@ -8,14 +8,17 @@ logger = logging.getLogger(__name__)
 API_KEY = 'test_api_key'
 
 
-def post_to_report_state(secret, state):
+def post_to_report_state(uid, state):
     """todo: only localhost and ALLOWED_REPORT_STATE_HOST requests should be accepted"""
     url = config.get_api_url()
-    auth = HTTPBasicAuth('secret', secret)
+    auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/state",
         auth=auth,
-        json=state
+        json={
+            "userId": uid,
+            "state": state
+        }
     )
     assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
 

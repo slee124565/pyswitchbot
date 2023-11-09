@@ -60,7 +60,7 @@ def test_happy_user_iot_service_journey():
     assert data.get('devices') == len(_test_devices)
 
     # 模擬系統更新用戶設備狀態資料
-    api_client.post_to_report_state(secret=secret, state={
+    api_client.post_to_report_state(uid=user_id, state={
         "deviceId": "6055F92FCFD2",
         "deviceType": "Plug Mini (US)",
         "hubDeviceId": "6055F92FCFD2",
@@ -71,7 +71,7 @@ def test_happy_user_iot_service_journey():
         "electricCurrent": 0,
         "version": "V1.4-1.4"
     })
-    api_client.post_to_report_state(secret=secret, state={
+    api_client.post_to_report_state(uid=user_id, state={
         "deviceId": "6055F930FF22",
         "deviceType": "Plug Mini (US)",
         "hubDeviceId": "6055F930FF22",

@@ -219,12 +219,9 @@ def report_state():
     try:
         # check request access token
         _check_api_access_token(http_request=request)
-        data = request.json
-
-        if not isinstance(data, dict):
-            return jsonify({}), HTTPStatus.BAD_REQUEST
-
-        cmd = commands.ReportState(uid=request.json.get('userId'), state=request.json.get("state"))
+        cmd = commands.ReportState(
+            uid=request.json.get('userId'),
+            state=request.json.get("state"))
         bus.handle(cmd)
         return jsonify({}), HTTPStatus.OK
 

@@ -2,11 +2,7 @@ import logging
 import uuid
 from typing import List
 from dataclasses import dataclass
-
 from marshmallow import Schema, fields, post_load, post_dump
-
-# from marshmallow import Schema, fields, post_load, post_dump
-
 from switchbot.domain import events
 
 logger = logging.getLogger(__name__)
@@ -117,7 +113,7 @@ class SwitchBotStatus:
 
     def __hash__(self):
         return hash(self.dump())
-        
+
     @classmethod
     def load(cls, data: dict):
         _schema = SwitchBotStatusSchema()

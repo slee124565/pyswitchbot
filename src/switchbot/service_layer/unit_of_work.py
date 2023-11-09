@@ -38,7 +38,7 @@ class JsonFileUnitOfWork(AbstractUnitOfWork):
         super().__init__()
         self._json_file = json_file
         self._origin = f'{json_file}.swap'
-        self.session_factory = orm_json.session_factory
+        self.session_factory = file_datastore.session_factory
 
     def __enter__(self):
         if os.path.exists(self._json_file):
