@@ -11,11 +11,24 @@ logger = logging.getLogger(__name__)
 
 
 class AbstractRepository(abc.ABC):
+    """
+    [seen] attribute 容器登記所有被呼叫的 User 物件，User events 就會被 bus handler 依序處理
+    what to do 的邏輯要在這個 class 裡實現，how to do it 的邏輯要讓繼承的 repo instant 實作
+    """
     def __init__(self):
         self.seen = set()  # type: Set[model.SwitchBotUserRepo]
 
+    @abc.abstractmethod
+    def _add(self, u: model.SwitchBotUserRepo):
+        raise NotImplementedError
+
     def register(self, user: model.SwitchBotUserRepo):
-        self._register(user=user)
+        u = self.get_by_secret(secret=user.secret)
+        if u:
+            logger.warning(f'register secret already exist for user {u.uid}, skip')
+        else:
+            self._add(u=user)
+            # self._register(user=user)
         self.seen.add(user)
 
     def get_dev(self, uid: str, dev_id: str) -> model.SwitchBotDevice:
@@ -24,8 +37,8 @@ class AbstractRepository(abc.ABC):
 
     def update_dev_state(self, uid: str, state: model.SwitchBotStatus):
         u = self.get_by_uid(uid=uid)
-        if not isinstance(u, model.SwitchBotUserRepo):
-            raise ValueError
+        if not u:
+            raise ValueError(f'user {uid} not exist')
         n = next((n for n, s in enumerate(u.states) if s.device_id == state.device_id), None)
         if n is not None:
             del u.states[n]
