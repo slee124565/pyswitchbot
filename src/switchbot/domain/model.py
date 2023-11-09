@@ -2,6 +2,9 @@ import logging
 import uuid
 from typing import List
 from dataclasses import dataclass
+
+from marshmallow import Schema, fields, post_load, post_dump
+
 # from marshmallow import Schema, fields, post_load, post_dump
 
 from switchbot.domain import events
@@ -25,6 +28,15 @@ class SwitchBotChangeReport:
         self.event_type = event_type
         self.event_version = event_version
         self.context = context
+
+    @classmethod
+    def load(cls, data: dict):
+        _schema = SwitchBotChangeReportSchema()
+        return _schema.load(data)
+
+    def dump(self):
+        _schema = SwitchBotChangeReportSchema()
+        return _schema.dump(self)
 
 
 class SwitchBotStatus:
@@ -85,6 +97,15 @@ class SwitchBotStatus:
         self.weight = weight
         self.electricity_of_day = electricity_of_day
         self.electric_current = electric_current
+
+    @classmethod
+    def load(cls, data: dict):
+        _schema = SwitchBotStatusSchema()
+        return _schema.load(data)
+
+    def dump(self):
+        _schema = SwitchBotStatusSchema()
+        return _schema.dump(self)
 
 
 class SwitchBotDevice:
@@ -163,6 +184,15 @@ class SwitchBotDevice:
     def execute(self, cmd_type, cmd_name, cmd_param):
         raise NotImplementedError
 
+    @classmethod
+    def load(cls, data: dict):
+        _schema = SwitchBotDeviceSchema()
+        return _schema.load(data)
+
+    def dump(self):
+        _schema = SwitchBotDeviceSchema()
+        return _schema.dump(self)
+
 
 class SwitchBotScene:
     scene_id: str
@@ -175,6 +205,15 @@ class SwitchBotScene:
     ):
         self.scene_id = scene_id
         self.scene_name = scene_name
+
+    @classmethod
+    def load(cls, data: dict):
+        _schema = SwitchBotSceneSchema()
+        return _schema.load(data)
+
+    def dump(self):
+        _schema = SwitchBotSceneSchema()
+        return _schema.dump(self)
 
 
 @dataclass
@@ -207,6 +246,15 @@ class SwitchBotUserRepo:
         self.scenes = scenes
         self.webhooks = webhooks
         self.events = []
+
+    @classmethod
+    def load(cls, data: dict):
+        _schema = SwitchBotUserRepoSchema()
+        return _schema.load(data)
+
+    def dump(self):
+        _schema = SwitchBotUserRepoSchema()
+        return _schema.dump(self)
 
     def __eq__(self, other):
         if not isinstance(other, SwitchBotUserRepo):
@@ -285,3 +333,122 @@ class SwitchBotUserFactory:
             uid=uid, secret=secret, token=token,
             devices=[], changes=[], states=[], scenes=[], webhooks=[]
         )
+
+
+class SwitchBotSceneSchema(Schema):
+    scene_id = fields.String(data_key="sceneId")
+    scene_name = fields.String(data_key="sceneName")
+
+    @post_load
+    def make_scene(self, data, **kwargs):
+        return SwitchBotScene(**data)
+
+
+class SwitchBotStatusSchema(Schema):
+    device_id = fields.String(data_key='deviceId', required=True)
+    device_type = fields.String(data_key='deviceType', required=True)
+    hub_device_id = fields.String(data_key='hubDeviceId', required=True)
+    power = fields.String(load_default=None)
+    battery = fields.Integer(load_default=None)
+    version = fields.String(load_default=None)
+    device_mode = fields.String(data_key='deviceMode', load_default=None)
+    calibrate = fields.Boolean(load_default=None)
+    group = fields.Boolean(load_default=None)
+    moving = fields.Boolean(load_default=None)
+    slide_position = fields.String(data_key='slidePosition', load_default=None)
+    temperature = fields.Float(load_default=None)
+    humidity = fields.Integer(load_default=None)
+    lock_state = fields.String(data_key='lockState', load_default=None)
+    door_state = fields.String(data_key='doorState', load_default=None)
+    working_status = fields.String(data_key='workingStatus', load_default=None)
+    online_status = fields.String(data_key='onlineStatus', load_default=None)
+    move_detected = fields.Boolean(data_key='moveDetected', load_default=None)
+    brightness = fields.String(load_default=None)
+    color = fields.String(load_default=None)
+    color_temperature = fields.Integer(data_key='colorTemperature', load_default=None)
+    voltage = fields.Float(load_default=None)
+    weight = fields.Float(load_default=None)
+    electricity_of_day = fields.Integer(data_key='electricityOfDay', load_default=None)
+    electric_current = fields.Float(data_key='electricCurrent', load_default=None)
+
+    @post_load
+    def make_status(self, data, **kwargs):
+        return SwitchBotStatus(**data)
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
+
+
+class SwitchBotChangeReportSchema(Schema):
+    event_type = fields.String(data_key="eventType", required=True)
+    event_version = fields.String(data_key="eventVersion", required=True)
+    context = fields.Dict(data_key="context", required=True)
+
+    @post_load
+    def make_change_report(self, data, **kwargs):
+        return SwitchBotChangeReport(**data)
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
+
+
+class SwitchBotDeviceSchema(Schema):
+    device_id = fields.String(data_key="deviceId")
+    device_name = fields.String(data_key="deviceName")
+    device_type = fields.String(data_key="deviceType")
+    enable_cloud_service = fields.Boolean(data_key="enableCloudService")
+    hub_device_id = fields.String(data_key="hubDeviceId")
+    curtain_devices_ids = fields.List(fields.String(), data_key="curtainDevicesIds", load_default=None)
+    calibrate = fields.Boolean(load_default=None)
+    group = fields.Boolean(load_default=None)
+    master = fields.Boolean(load_default=None)
+    open_direction = fields.String(data_key="openDirection", load_default=None)
+    lock_devices_ids = fields.List(fields.String(), data_key="lockDevicesIds", load_default=None)
+    group_name = fields.String(data_key="groupName", load_default=None)
+    lock_device_id = fields.String(data_key="lockDeviceId", load_default=None)
+    key_list = fields.Dict(data_key="keyList", load_default=None)
+    version = fields.Integer(load_default=None)
+    blind_tilt_devices_ids = fields.List(fields.String(), data_key="blindTiltDevicesIds", load_default=None)
+    direction = fields.String(load_default=None)
+    slide_position = fields.Integer(data_key="slidePosition", load_default=None)
+
+    @post_load
+    def make_device(self, data, **kwargs):
+        return SwitchBotDevice(**data)
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
+
+
+class SwitchBotUserRepoSchema(Schema):
+    uid = fields.String(data_key='userId')
+    secret = fields.String(data_key='userSecret')
+    token = fields.String(data_key='userToken')
+    devices = fields.List(fields.Nested(SwitchBotDeviceSchema()))
+    states = fields.List(fields.Nested(SwitchBotStatusSchema()))
+    changes = fields.List(fields.Nested(SwitchBotChangeReportSchema()))
+    scenes = fields.List(fields.Str(), load_default=None)
+    webhooks = fields.List(fields.Str(), load_default=None)
+
+    @post_load
+    def make_user_repo(self, data, **kwargs):
+        return SwitchBotUserRepo(**data)
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }

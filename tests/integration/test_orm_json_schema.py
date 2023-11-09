@@ -1,4 +1,6 @@
 import logging
+
+import switchbot.domain.model
 from switchbot.adapters import orm_json
 from switchbot.domain import model
 
@@ -60,7 +62,7 @@ _dev_motion_sensor_CDA5 = {
 
 def test_switchbot_device_schema():
     for data in [_dev_plug_mini_CFD2, _dev_motion_sensor_CDA5]:
-        _schema = orm_json.SwitchBotDeviceSchema()
+        _schema = switchbot.domain.model.SwitchBotDeviceSchema()
         obj = _schema.load(data)
         assert isinstance(obj, model.SwitchBotDevice)
         assert obj.device_id == data.get('deviceId')
@@ -73,7 +75,7 @@ def test_switchbot_device_schema():
 
 def test_switchbot_status_schema():
     for data in [_state_plug_mini_CFD2, _state_plug_mini_FF22]:
-        _schema = orm_json.SwitchBotStatusSchema()
+        _schema = switchbot.domain.model.SwitchBotStatusSchema()
         obj = _schema.load(data)
         assert isinstance(obj, model.SwitchBotStatus)
         assert obj.device_id == data.get('deviceId')
@@ -93,7 +95,7 @@ def test_switchbot_scene_schema():
         "sceneId": "T01-202309291436-01716250",
         "sceneName": "allOff"
     }
-    _schema = orm_json.SwitchBotSceneSchema()
+    _schema = switchbot.domain.model.SwitchBotSceneSchema()
     obj = _schema.load(data)
     assert isinstance(obj, model.SwitchBotScene)
     assert obj.scene_id == data.get('sceneId')
@@ -112,7 +114,7 @@ def test_switchbot_user_repo_schema():
         'scenes': [],
         'webhooks': []
     }
-    _schema = orm_json.SwitchBotUserRepoSchema()
+    _schema = switchbot.domain.model.SwitchBotUserRepoSchema()
     obj = _schema.load(data)
     logger.info(f'{type(obj)}')
     assert isinstance(obj, model.SwitchBotUserRepo)
@@ -132,7 +134,7 @@ def test_switchbot_webhook_report_change():
             "timeOfSample": 1698720698088
         }
     }
-    _schema = orm_json.SwitchBotChangeReportSchema()
+    _schema = switchbot.domain.model.SwitchBotChangeReportSchema()
     obj = _schema.load(data)
     logger.info(f'{type(obj)}')
     assert isinstance(obj, model.SwitchBotChangeReport)
