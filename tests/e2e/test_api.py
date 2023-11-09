@@ -117,10 +117,10 @@ def test_happy_user_iot_service_journey():
             "timeOfSample": 123456789
         }
     }
-    api_client.post_to_report_state(secret=secret, state=state)
+    api_client.post_to_report_state(uid=user_id, state=state)
 
     # 模擬系統因為 ReportChange 而啟動查詢用戶設備列表中的第一個設備狀態
-    api_client.post_to_report_state(secret=secret, state={
+    api_client.post_to_report_state(uid=user_id, state={
         "deviceId": f"{dev_id}",
         "deviceType": "Plug Mini (US)",
         "hubDeviceId": f"{dev_id}",

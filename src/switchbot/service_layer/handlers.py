@@ -117,7 +117,7 @@ def unregister_user(
     """register user iot service w/key-pair"""
     logger.debug(f'cmd: {cmd}')
     with uow:
-        uow.users.unregister(secret=cmd.secret)
+        uow.users.unregister(uid=cmd.uid)
         uow.commit()
 
 

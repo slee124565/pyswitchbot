@@ -51,11 +51,11 @@ class AbstractRepository(abc.ABC):
     def get_by_uid(self, uid: str) -> model.SwitchBotUserRepo:
         raise NotImplementedError
 
-    def unregister(self, secret: str = None):
+    def unregister(self, uid: str = None):
         """todo: 新增 user.account_status, 參考 slack 用戶帳號狀態 Active|Inactive|Deactivated
         todo: send UserAccountDeactivated event for publish
         """
-        u = self.get_by_secret(secret=secret)
+        u = self.get_by_uid(uid=uid)
         self._unregister(user=u)
 
     def subscribe(self, secret: str):

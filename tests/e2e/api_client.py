@@ -173,7 +173,7 @@ def post_to_subscribe(secret, token, expect_success=True):
 
 def post_to_unregister(secret, expect_success=True):
     url = config.get_api_url()
-    auth = HTTPBasicAuth('secret', secret)
+    auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/unregister",
         auth=auth,

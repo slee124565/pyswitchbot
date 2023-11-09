@@ -287,7 +287,7 @@ def unregister():
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
         cmd = commands.Unregister(
-            secret=data.get('userSecret'),
+            uid=data.get('userId'),
         )
         bus.handle(cmd)
         return jsonify({}), HTTPStatus.ACCEPTED

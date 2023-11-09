@@ -15,7 +15,7 @@ class Subscribe(Command):
 @dataclass
 class Unregister(Command):
     """要用系統移除用戶資料"""
-    secret: str
+    uid: str
 
 
 @dataclass

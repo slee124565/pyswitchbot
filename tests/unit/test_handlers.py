@@ -67,7 +67,7 @@ class TestRegister:
         bus.handle(commands.Register(secret='secret2', token='token2'))
         count = bus.uow.users.count()
         u1 = bus.uow.users.get_by_secret(secret='secret1')
-        bus.handle(commands.Unregister(secret=u1.secret))
+        bus.handle(commands.Unregister(uid=u1.uid))
         assert bus.uow.users.get_by_uid(uid=u1.uid) is None
         assert bus.uow.users.get_by_secret('secret2')
         assert count == bus.uow.users.count() + 1

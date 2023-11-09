@@ -34,7 +34,7 @@ class FileDatastore:
             fh.write(json.dumps(content, indent=2, ensure_ascii=False))
 
     def register_user(self, user: model.SwitchBotUserRepo):
-        n, u = next(((n, u) for n, u in enumerate(self._users) if u.secret == user.secret), (None, None))
+        n, u = next(((n, u) for n, u in enumerate(self._users) if u.uid == user.secret), (None, None))
         if u is None:
             self._users.append(user)
         else:
