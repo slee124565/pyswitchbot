@@ -10,9 +10,8 @@ import logging
 import requests
 from typing import List, Set, Union
 from http import HTTPStatus
-from dataclasses import asdict
-from switchbot.domain import model, commands
-from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
+from switchbot.domain import model
+# from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
 
 logger = logging.getLogger(__name__)
 SWITCHBOT_API_URI = os.getenv('SWITCHBOT_API_URI', 'https://api.switch-bot.com')
@@ -150,7 +149,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
         )
         _dev_list = []
         for _data in resp_body.get('deviceList'):
-            _dev_list.append(SwitchBotDevice.load(_data))
+            _dev_list.append(model.SwitchBotDevice.load(_data))
         for _data in resp_body.get('infraredRemoteList'):
             # assert isinstance(_data, dict)
             # _dev_list.append(model.SwitchBotDevice(**_data))
@@ -159,12 +158,15 @@ class SwitchBotApiServer(AbstractIotApiServer):
 
     def send_dev_ctrl_cmd(self, secret: str, token: str, dev_id: str, cmd_type: str, cmd_value: str,
                           cmd_param: Union[str, dict]):
-        _cmd = commands.SwitchBotDevCommand(cmd_type, cmd_value, cmd_param)
         resp_body = self._post(
             secret=secret,
             token=token,
             endpoint=f'/v1.1/devices/{dev_id}/commands',
-            data=asdict(_cmd)
+            data={
+                "commandType": cmd_type,
+                "command": cmd_type,
+                "parameter": cmd_param
+            }
         )
         return resp_body.values() if isinstance(resp_body, dict) else resp_body
 
@@ -174,7 +176,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
             secret=secret,
             token=token
         )
-        return SwitchBotStatus.load(resp_body)
+        return model.SwitchBotStatus.load(resp_body)
 
     def get_scene_list(self, secret: str, token: str) -> List[model.SwitchBotScene]:
         resp_body = self._get(
@@ -184,7 +186,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
         )
         if not isinstance(resp_body, list):
             raise SwitchBotAPIResponseError
-        return [SwitchBotScene.load(data) for data in resp_body]
+        return [model.SwitchBotScene.load(data) for data in resp_body]
 
     def exec_manual_scene(self, secret: str, token: str, scene_id: str):
         resp_body = self._post(
@@ -281,7 +283,7 @@ class FakeApiServer(AbstractIotApiServer):
                 "hubDeviceId": ""
             }
         ]
-        return [SwitchBotDevice.load(d) for d in devices]
+        return [model.SwitchBotDevice.load(d) for d in devices]
 
     def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotStatus:
         scenes = [
@@ -311,7 +313,7 @@ class FakeApiServer(AbstractIotApiServer):
         ]
         for d in scenes:
             if d.get('deviceId') == dev_id:
-                return SwitchBotStatus.load(d)
+                return model.SwitchBotStatus.load(d)
 
     def send_dev_ctrl_cmd(self, secret: str, token: str, dev_id: str, cmd_type: str, cmd_value: str,
                           cmd_param: Union[str, dict]):
@@ -324,7 +326,7 @@ class FakeApiServer(AbstractIotApiServer):
                 "sceneName": "allOff"
             }
         ]
-        return [SwitchBotScene.load(d) for d in scenes]
+        return [model.SwitchBotScene.load(d) for d in scenes]
 
     def exec_manual_scene(self, secret: str, token: str, scene_id: str):
         raise NotImplementedError
