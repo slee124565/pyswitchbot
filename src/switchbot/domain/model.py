@@ -29,6 +29,18 @@ class SwitchBotChangeReport:
         self.event_version = event_version
         self.context = context
 
+    def __eq__(self, other):
+        if not isinstance(other, SwitchBotChangeReport):
+            return False
+        return all([
+            self.event_type == other.event_type,
+            self.event_version == other.event_version,
+            self.context == other.context
+        ])
+
+    def __hash__(self):
+        return hash(self.dump())
+
     @classmethod
     def load(cls, data: dict):
         _schema = SwitchBotChangeReportSchema()
@@ -98,6 +110,14 @@ class SwitchBotStatus:
         self.electricity_of_day = electricity_of_day
         self.electric_current = electric_current
 
+    def __eq__(self, other):
+        if not isinstance(other, SwitchBotStatus):
+            return False
+        return self.dump() == other.dump()
+
+    def __hash__(self):
+        return hash(self.dump())
+        
     @classmethod
     def load(cls, data: dict):
         _schema = SwitchBotStatusSchema()
