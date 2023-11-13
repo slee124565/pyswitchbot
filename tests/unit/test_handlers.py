@@ -1,3 +1,4 @@
+import os
 import logging
 import pytest
 from switchbot import bootstrap
@@ -36,11 +37,14 @@ _dev_status_data = {
     "electricityOfDay": 3,
     "electricCurrent": 0.0
 }
+JSON_FILE = '.teststore'
 
 
 def bootstrap_test_app():
+    if os.path.exists(JSON_FILE):
+        os.remove(JSON_FILE)
     return bootstrap.bootstrap(
-        uow=unit_of_work.JsonFileUnitOfWork(),
+        uow=unit_of_work.JsonFileUnitOfWork(json_file=JSON_FILE),
         # uow=unit_of_work.MemoryUnitOfWork(),
         start_orm=False,
         iot=iot_api_server.FakeApiServer()
@@ -51,17 +55,10 @@ class TestRegister:
     def test_register(self):
         bus = bootstrap_test_app()
 
-        with pytest.raises(SwBotIotError) as err:
-            bus.handle(commands.Register(secret='secret1', token='token1'))
-            if err:
-                assert 'already exist' in str(err)
-        with pytest.raises(SwBotIotError) as err:
-            bus.handle(commands.Register(secret='secret2', token='token2'))
-            if err:
-                assert 'already exist' in str(err)
-
+        bus.handle(commands.Register(secret='secret1', token='token1'))
+        bus.handle(commands.Register(secret='secret2', token='token2'))
         count = bus.uow.users.count()
-        assert count >= 2
+        assert count == 2
         u1 = bus.uow.users.get_by_secret(secret='secret1')
         u2 = bus.uow.users.get_by_secret(secret='secret2')
         assert all([u1, u2])
@@ -75,22 +72,18 @@ class TestRegister:
 
     def test_unregister(self):
         bus = bootstrap_test_app()
-        with pytest.raises(SwBotIotError) as err:
-            bus.handle(commands.Register(secret='secret1', token='token1'))
-            if err:
-                assert 'already exist' in str(err)
-        with pytest.raises(SwBotIotError) as err:
-            bus.handle(commands.Register(secret='secret2', token='token2'))
-            if err:
-                assert 'already exist' in str(err)
+        bus.handle(commands.Register(secret='secret1', token='token1'))
+        bus.handle(commands.Register(secret='secret2', token='token2'))
         count = bus.uow.users.count()
+        assert count == 2
         u1 = bus.uow.users.get_by_secret(secret='secret1')
 
         bus.handle(commands.Unregister(uid=u1.uid))
 
         assert bus.uow.users.get_by_uid(uid=u1.uid) is None
         assert bus.uow.users.get_by_secret('secret2')
-        assert count == bus.uow.users.count() + 1
+        count = bus.uow.users.count()
+        assert count == 1
 
 
 class TestRequestSync:

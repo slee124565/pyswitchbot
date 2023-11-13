@@ -2,7 +2,6 @@ import abc
 import logging
 from typing import Set, List
 from switchbot.domain import model
-from switchbot.adapters import file_datastore
 
 logger = logging.getLogger(__name__)
 

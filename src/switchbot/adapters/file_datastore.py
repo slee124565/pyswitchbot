@@ -76,7 +76,7 @@ class FileDatastore:
         return len(self._users)
 
     def delete(self, uid):
-        n = next((n for u, n in enumerate(self._users) if u.uid == uid), None)
+        n = next((n for n, u in enumerate(self._users) if u.uid == uid), None)
         if n is not None:
             del self._users[n]
 
