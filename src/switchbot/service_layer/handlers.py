@@ -13,6 +13,10 @@ class InvalidSrcServer(Exception):
     pass
 
 
+class SwBotIotError(Exception):
+    pass
+
+
 def report_state(
         cmd: commands.ReportState,
         uow: unit_of_work.AbstractUnitOfWork
@@ -43,7 +47,8 @@ def report_state(
             electricity_of_day=cmd.state.get("electricityOfDay"),
             electric_current=cmd.state.get("electricCurrent")
         )
-        uow.users.update_dev_state(uid=cmd.uid, state=state)
+        u = uow.users.get_by_uid(uid=cmd.uid)
+        u.update_dev_state(state=state)
         uow.commit()
 
 
@@ -95,7 +100,9 @@ def unlink_user(
     """unlink user from service"""
     logger.debug(f'cmd: {cmd}')
     with uow:
-        uow.users.remove(user_id=cmd.user_id)
+        u = uow.users.get_by_uid(uid=cmd.user_id)
+        if u:
+            u.unsubscribe(cmd.subscriber_id)
         uow.commit()
 
 
@@ -106,7 +113,8 @@ def subscribe_user_iot(
     """3rd party service (aog) subscribe user iot service"""
     logger.debug(f'cmd: {cmd}')
     with uow:
-        uow.users.subscribe(secret=cmd.secret)
+        u = uow.users.get_by_uid(uid=cmd.uid)
+        u.subscribe(subscriber_id=cmd.subscriber_id)
         uow.commit()
 
 
@@ -117,7 +125,10 @@ def unregister_user(
     """register user iot service w/key-pair"""
     logger.debug(f'cmd: {cmd}')
     with uow:
-        uow.users.unregister(uid=cmd.uid)
+        u = uow.users.get_by_uid(uid=cmd.uid)
+        if not u:
+            raise SwBotIotError(f'user {cmd.uid} is not exist')
+        uow.users.delete(uid=cmd.uid)
         uow.commit()
 
 
@@ -128,11 +139,14 @@ def register_user(
     """register user iot service w/key-pair"""
     logger.debug(f'cmd: {cmd}')
     with uow:
+        u = uow.users.get_by_secret(secret=cmd.secret)
+        if u:
+            raise SwBotIotError(f'register secret already been used by user {u.uid}')
         user = model.SwitchBotUserFactory.create_user(
             secret=cmd.secret,
             token=cmd.token
         )
-        uow.users.register(user=user)
+        uow.users.add(u=user)
         uow.commit()
 
 

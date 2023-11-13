@@ -32,9 +32,9 @@ class TestJsonFileDatastore:
             uid='uid', secret='secret', token='token',
             devices=[d], changes=[c], states=[s], scenes=[], webhooks=[]
         )
-        repo.register(u)
+        repo.add(u)
         assert repo.get_by_secret('secret') == u
         assert repo.get_by_uid('uid') == u
         assert repo.get_by_dev_id('did-1') == u
-        assert repo.get_dev_last_change_report(uid='uid', dev_id='did-1') == c
-        assert repo.get_dev_state(uid='uid', dev_id='did-1') == s
+        assert u.get_dev_last_change_report(dev_id='did-1') == c
+        assert u.get_dev_state(dev_id='did-1') == s

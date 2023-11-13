@@ -1,8 +1,10 @@
 import logging
+import pytest
 from switchbot import bootstrap
 from switchbot.service_layer import unit_of_work
 from switchbot.adapters import iot_api_server
 from switchbot.domain import commands
+from switchbot.service_layer.handlers import SwBotIotError
 
 logger = logging.getLogger(__name__)
 
@@ -48,12 +50,17 @@ def bootstrap_test_app():
 class TestRegister:
     def test_register(self):
         bus = bootstrap_test_app()
-        bus.handle(commands.Register(secret='secret1', token='token1'))
-        bus.handle(commands.Register(secret='secret2', token='token2'))
+
+        with pytest.raises(SwBotIotError) as err:
+            bus.handle(commands.Register(secret='secret1', token='token1'))
+            if err:
+                assert 'already exist' in str(err)
+        with pytest.raises(SwBotIotError) as err:
+            bus.handle(commands.Register(secret='secret2', token='token2'))
+            if err:
+                assert 'already exist' in str(err)
+
         count = bus.uow.users.count()
-        bus.handle(commands.Register(secret='secret1', token='token1'))
-        bus.handle(commands.Register(secret='secret2', token='token2'))
-        assert count == bus.uow.users.count()
         assert count >= 2
         u1 = bus.uow.users.get_by_secret(secret='secret1')
         u2 = bus.uow.users.get_by_secret(secret='secret2')
@@ -61,13 +68,26 @@ class TestRegister:
         assert u1.token == 'token1'
         assert u2.token == 'token2'
 
+        bus.handle(commands.Unregister(uid=u1.uid))
+        assert bus.uow.users.get_by_uid(uid=u1.uid) is None
+        assert bus.uow.users.get_by_secret('secret2')
+        assert count == bus.uow.users.count() + 1
+
     def test_unregister(self):
         bus = bootstrap_test_app()
-        bus.handle(commands.Register(secret='secret1', token='token1'))
-        bus.handle(commands.Register(secret='secret2', token='token2'))
+        with pytest.raises(SwBotIotError) as err:
+            bus.handle(commands.Register(secret='secret1', token='token1'))
+            if err:
+                assert 'already exist' in str(err)
+        with pytest.raises(SwBotIotError) as err:
+            bus.handle(commands.Register(secret='secret2', token='token2'))
+            if err:
+                assert 'already exist' in str(err)
         count = bus.uow.users.count()
         u1 = bus.uow.users.get_by_secret(secret='secret1')
+
         bus.handle(commands.Unregister(uid=u1.uid))
+
         assert bus.uow.users.get_by_uid(uid=u1.uid) is None
         assert bus.uow.users.get_by_secret('secret2')
         assert count == bus.uow.users.count() + 1
@@ -152,7 +172,7 @@ class TestReportChange:
 
         dev_id = _dev_change_data.get("context").get("deviceMac")
         u = bus.uow.users.get_by_dev_id(dev_id=dev_id)
-        c = bus.uow.users.get_dev_last_change_report(uid=u.uid, dev_id=dev_id)
+        c = u.get_dev_last_change_report(dev_id=dev_id)
         assert c.context.get("timeOfSample") == _dev_change_data.get("context").get("timeOfSample")
 
 
@@ -168,7 +188,7 @@ class TestReportState:
         dev_id = _dev_status_data.get("deviceId")
         u = bus.uow.users.get_by_uid(uid=u.uid)
         assert len(u.states) == 1
-        dev_state = bus.uow.users.get_dev_state(uid=u.uid, dev_id=dev_id)
+        dev_state = u.get_dev_state(dev_id=dev_id)
         assert dev_state
         assert all([
             dev_state.device_id == _dev_status_data.get("deviceId"),

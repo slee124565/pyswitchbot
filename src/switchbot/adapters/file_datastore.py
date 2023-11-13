@@ -75,6 +75,18 @@ class FileDatastore:
     def count(self) -> int:
         return len(self._users)
 
+    def delete(self, uid):
+        n = next((n for u, n in enumerate(self._users) if u.uid == uid), None)
+        if n is not None:
+            del self._users[n]
+
+    def add(self, user):
+        u = next((u for u in self._users if u.secret == user.secret), None)
+        if u:
+            logger.warning(f'user secret already used by {u.uid}, skip')
+        else:
+            self._users.append(user)
+
 
 def session_factory(file: str):
     return FileDatastore(file)

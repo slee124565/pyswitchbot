@@ -10,6 +10,7 @@ class Command:
 class Subscribe(Command):
     """第三方系統訂閱用戶設備IoT服務"""
     uid: str
+    subscriber_id: str
 
 
 @dataclass
@@ -63,6 +64,7 @@ class ReportChange(Command):
 class Disconnect(Command):
     """訂閱用戶取消訂閱"""
     user_id: str
+    subscriber_id: str
 
 
 @dataclass

@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import List
+from typing import List, Set
 from dataclasses import dataclass
 from marshmallow import Schema, fields, post_load, post_dump
 from switchbot.domain import events
@@ -12,7 +12,12 @@ class SwitchBotChangeReport:
     """
     "eventType": "changeReport",
     "eventVersion": "1",
-    "context": {
+    "context":  {
+        "deviceType": "WoPlugUS",
+        "deviceMac": "6055F930FF22",
+        "powerState": "ON",
+        "timeOfSample": 1698720698088
+    }
     """
 
     def __init__(
@@ -242,6 +247,11 @@ class SwitchBotWebhook:
 
 
 class SwitchBotUserRepo:
+    """
+    todo: 新增 user.account_status, 參考 slack 用戶帳號狀態 Active|Inactive|Deactivated
+    todo: send UserAccountDeactivated event for publish
+    """
+
     def __init__(
             self,
             uid: str,
@@ -256,12 +266,13 @@ class SwitchBotUserRepo:
         self.uid = uid
         self.secret = secret
         self.token = token
-        self.devices = devices
-        self.changes = changes
-        self.states = states
-        self.scenes = scenes
-        self.webhooks = webhooks
+        self.devices = devices  # type: List[SwitchBotDevice]
+        self.changes = changes  # type: List[SwitchBotChangeReport]
+        self.states = states  # type: List[SwitchBotStatus]
+        self.scenes = scenes  # type: List[SwitchBotScene]
+        self.webhooks = webhooks  # type: List[SwitchBotWebhook]
         self.events = []
+        self.subscribers = set()  # type:Set
 
     @classmethod
     def load(cls, data: dict):
@@ -317,12 +328,36 @@ class SwitchBotUserRepo:
             events.UserDevFetched(user_id=self.uid)
         )
 
+    def get_dev_by_id(self, dev_id) -> SwitchBotDevice:
+        return next((d for d in self.devices if d.device_id == dev_id), None)
+
+    def get_dev_state(self, dev_id: str) -> SwitchBotStatus:
+        return next((s for s in self.states if s.device_id == dev_id), None)
+
+    def update_dev_state(self, state: SwitchBotStatus):
+        n = next((n for n, s in enumerate(self.states)
+                  if s.device_id == state.device_id), None)
+        if n is not None:
+            del self.states[n]
+        self.states.append(state)
+
     def add_change_report(self, change: SwitchBotChangeReport):
         self.changes.append(change)
+
+    def get_dev_last_change_report(self, dev_id: str) -> SwitchBotChangeReport:
+        dev_c_report = [c for c in self.changes if c.context.get('deviceMac') == dev_id]
+        sorted_changes = sorted(dev_c_report, key=lambda c: c.context.get('timeOfSample'))
+        return sorted_changes[-1] if len(sorted_changes) else None
 
     def disconnect(self):
         for dev_id in [dev.device_id for dev in self.devices]:
             self._remove_device(dev_id=dev_id)
+
+    def subscribe(self, subscriber_id: str):
+        self.subscribers.add(subscriber_id)
+
+    def unsubscribe(self, subscriber_id: str):
+        self.subscribers.remove(subscriber_id)
 
     def _update_device(self, device: SwitchBotDevice):
         index = next((n for n, origin in enumerate(self.devices) if origin.device_id == device.device_id),
