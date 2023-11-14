@@ -38,13 +38,15 @@ logging_config = {
         },
         'standard': {
             'format': '[%(levelname)s] %(name)s: %(message)s'
+            # 'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
         },
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "standard",
-            "level": "INFO"
+            "level": "DEBUG",
+            # "stream": "ext://sys.stdout"
         },
         "file": {
             "class": "logging.handlers.RotatingFileHandler",
@@ -66,6 +68,11 @@ logging_config = {
         "switchbot.adapters.iot_api_server": {
             "handlers": ["console", "file"],
             "level": "WARNING",
+            "propagate": False
+        },
+        "tests": {
+            "handlers": ["console"],
+            "level": "DEBUG",
             "propagate": False
         }
     }

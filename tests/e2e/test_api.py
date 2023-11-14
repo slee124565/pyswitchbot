@@ -82,15 +82,6 @@ def test_happy_user_iot_service_journey():
         "version": "V1.4-1.4"
     })
 
-    """
-    依據訂閱服務業務規則設計本服務 Testcase 
-    1. 尚未訂閱用戶 IoT 服務之前，第三方服務無法透過 API 查詢該用戶設備清單 (SYNC)。
-    2. 第三方服務訂閱用戶 IoT 服務成功之後，方可透過 Intent API 查詢該用戶 IoT 設備清單、方可查詢該用戶多個 IoT 設備的設備狀態、
-    方可傳遞設備執行指令控制設備狀態的改變，之後用戶設備狀態變更事件發生時，第三方服務會收到該用戶設備狀態更新事件通知 (Webhook)。
-    3. 第三方用戶訂閱本服務成功之後，接著取消訂閱該用戶 IoT 服務 (DISCONNECT) ，之後將無法使用 Intent API 查詢該用戶 IoT 設備清單，
-    之後用戶設備狀態變更事件發生時，第三方服務也不會收到該用戶設備狀態更新事件通知 (Webhook)。
-    """
-
     # todo: 模擬第三方服務 AoG 訂閱用戶iot intent服務
     sbsr_id = 'aog'  # subscriber_id
     api_client.post_to_subscribe(uid=user_id, sbsr_id=sbsr_id)
@@ -167,3 +158,58 @@ def test_happy_user_iot_service_journey():
     with pytest.raises(Exception) as err:
         api_client.post_to_query_user_dev_list(secret=secret)
         assert isinstance(err, ApiAccessTokenError)
+
+
+class TestSubscription:
+    """
+    依據訂閱服務業務規則設計本服務 Testcase
+    1. 尚未訂閱用戶 IoT 服務之前，第三方服務無法透過 API 查詢該用戶設備清單 (SYNC)。
+    test_aog_service_cannot_access_user_sync_intent_before_subscription
+    2. 第三方服務訂閱用戶 IoT 服務成功之後，方可透過 Intent API 查詢該用戶 IoT 設備清單：
+    test_aog_service_can_access_user_sync_intent_after_subscription
+    3. 第三方服務訂閱用戶 IoT 服務成功之後，方可查詢該用戶多個 IoT 設備的設備狀態：
+    test_aog_service_can_access_user_query_intent_after_subscription
+    4. 第三方服務訂閱用戶 IoT 服務成功之後，方可傳遞設備執行指令控制設備狀態的改變：
+    test_aog_service_can_access_user_exec_intent_after_subscription
+    5. 第三方服務訂閱用戶 IoT 服務成功之後，之後用戶設備狀態變更事件發生時，第三方服務會收到該用戶設備狀態更新事件通知 (Webhook)：
+    test_subscribed_user_dev_change_webhook_aog_notify_sent
+    6. 第三方服務取消訂閱該用戶 IoT 服務 (DISCONNECT) 之後，將無法使用 sync intent API 查詢該用戶 IoT 設備清單：
+    test_aog_sync_intent_api_fails_after_disconnect_intent_sent
+    7. 第三方服務取消訂閱該用戶 IoT 服務 (DISCONNECT) 之後，該用戶設備狀態變更事件發生時，
+    第三方服務也不會收到該用戶設備狀態更新事件通知 (Webhook)：
+    test_no_webhook_notify_sent_for_aog_on_disconnected_user_device_change
+    """
+
+    # def test_aog_service_cannot_access_user_sync_intent_before_subscription(self, setup_subscrb_user):
+    #     """todo"""
+    #     # raise NotImplementedError
+    #
+    # def test_aog_service_can_access_user_sync_intent_after_subscription(self, setup_subscrb_user):
+    #     """todo"""
+    #     # raise NotImplementedError
+    #
+    # def test_aog_service_can_access_user_query_intent_after_subscription(self, setup_subscrb_user):
+    #     """todo"""
+    #     # raise NotImplementedError
+    #
+    # def test_aog_service_can_access_user_exec_intent_after_subscription(self, setup_subscrb_user):
+    #     """todo"""
+    #     # raise NotImplementedError
+    #
+    # def test_subscribed_user_dev_change_webhook_aog_notify_sent(self, setup_subscrb_user):
+    #     """todo"""
+    #     # raise NotImplementedError
+    #
+    @pytest.mark.usefixtures("setup_subscrb_user")
+    def test_aog_sync_intent_api_fails_after_disconnect_intent_sent(self, setup_subscrb_user):
+        """todo"""
+        logger.debug(f'test_aog_sync_intent_api_fails_after_disconnect_intent_sent')
+        assert True
+        # raise NotImplementedError
+
+    @pytest.mark.usefixtures("setup_subscrb_user")
+    def test_no_webhook_notify_sent_for_aog_on_disconnected_user_device_change(self, setup_subscrb_user):
+        """todo"""
+        logger.info(f'test_no_webhook_notify_sent_for_aog_on_disconnected_user_device_change')
+        assert True
+        # raise NotImplementedError
