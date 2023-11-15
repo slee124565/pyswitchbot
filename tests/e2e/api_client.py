@@ -1,3 +1,4 @@
+import json
 import logging
 import requests
 from requests.auth import HTTPBasicAuth
@@ -139,9 +140,15 @@ def post_to_query_user_dev_list(secret):
     return r
 
 
-def post_to_unsubscribe(secret, expect_success=True):
+def post_to_unsubscribe(uid, subscriber_id, expect_success=True):
+    """todo: how to embedded uid & subscriber_id in HTTPBasicAuth"""
     url = config.get_api_url()
-    auth = HTTPBasicAuth('secret', secret)
+    token = {
+        'secret': API_KEY,
+        'uid': uid,
+        'subscriber_id': subscriber_id
+    }
+    auth = HTTPBasicAuth('OAUTH', json.dumps(token))
     r = requests.post(
         f'{url}/fulfillment',
         auth=auth,
@@ -171,14 +178,14 @@ def post_to_subscribe(uid, subscriber_id, expect_success=True):
         assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
 
 
-def post_to_unregister(secret, expect_success=True):
+def post_to_unregister(uid, expect_success=True):
     url = config.get_api_url()
     auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/unregister",
         auth=auth,
         json={
-            "userSecret": secret,
+            "userId": uid,
         }
     )
     if expect_success:

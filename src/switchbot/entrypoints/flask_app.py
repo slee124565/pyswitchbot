@@ -1,4 +1,5 @@
 import logging
+import json
 import base64
 from http import HTTPStatus
 
@@ -144,28 +145,35 @@ def _check_api_access_token(http_request: requests.Request):
     """basic auth with ('secret', {user switchbot secret})
     todo: revise to api access token instead of user secret
     """
-    # auth_header = http_request.headers.get('Authorization')
+    auth_header = http_request.headers.get('Authorization')
+    logger.debug(f'auth_header {auth_header}')
     # if not auth_header:
     #     raise ApiAccessTokenError
-    # auth_type, auth_string = auth_header.split(' ')
+    auth_type, auth_string = auth_header.split(' ')
     # if auth_type != 'Basic':
     #     raise ApiAccessTokenError
+    base64_bytes = base64.b64decode(auth_string)
+    decoded_string = base64_bytes.decode('utf-8')
+    api_key, user_secret = decoded_string.split(':', 1)
+    if api_key == 'OAUTH':
+        return json.loads(user_secret)
+    else:
+        return decoded_string
     # # Base64解碼
-    # base64_bytes = base64.b64decode(auth_string)
-    # decoded_string = base64_bytes.decode('utf-8')
     # # 獲取 api_key 和 user_secret
-    # api_key, user_secret = decoded_string.split(':')
     # if api_key != 'secret':
     #     raise ApiAccessTokenError
     # return api_key, user_secret
-    pass
 
 
 @app.route('/fulfillment', methods=['POST'])
 def fulfillment():
     try:
         # check request access token
-        _check_api_access_token(http_request=request)
+        token = _check_api_access_token(http_request=request)
+        logger.debug(f'token: {token}')
+        assert isinstance(token, dict)
+        uid = token.get('uid')
         data = request.json
 
         # create cmd according to IntentID
@@ -187,6 +195,8 @@ def fulfillment():
             response.get("payload").update(seudo_execute_payload)
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.DISCONNECT":
+            cmd = commands.Unsubscribe(uid=token.get('uid'), subscriber_id=token.get('subscriber_id'))
+            bus.handle(cmd)
             return jsonify({}), HTTPStatus.OK
         else:
             return jsonify({}), HTTPStatus.BAD_REQUEST
