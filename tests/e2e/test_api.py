@@ -160,6 +160,15 @@ def test_happy_user_iot_service_journey():
         assert isinstance(err, ApiAccessTokenError)
 
 
+class TestRegistration:
+    """
+    用戶系統 (Common Service) 可以透過用戶 SwitchBot KeyPairs 對本系統進行用戶註冊 (Register)，本系統會針對這個用戶，
+    產生一組 uid (userID)，(Registered) 之後、本系統會透過 OpenAPI 服務查詢用戶設備列表，設定用戶在 OpenAPI 系統中設備狀態通知
+    Webhook 的 URI 設定 (UpdateUserWebhook)，更新用戶在本系統內的設備清單 (RequestSync)，並且查詢用戶設備的狀態 (ReportState)
+    記錄在本系統資料庫中，藉以支援 AoG Intent API & Webhook 服務
+    """
+
+
 class TestSubscription:
     """
     依據訂閱服務業務規則設計本服務 Testcase
@@ -180,36 +189,37 @@ class TestSubscription:
     test_no_webhook_notify_sent_for_aog_on_disconnected_user_device_change
     """
 
-    # def test_aog_service_cannot_access_user_sync_intent_before_subscription(self, setup_subscrb_user):
-    #     """todo"""
-    #     # raise NotImplementedError
-    #
-    # def test_aog_service_can_access_user_sync_intent_after_subscription(self, setup_subscrb_user):
-    #     """todo"""
-    #     # raise NotImplementedError
-    #
-    # def test_aog_service_can_access_user_query_intent_after_subscription(self, setup_subscrb_user):
-    #     """todo"""
-    #     # raise NotImplementedError
-    #
-    # def test_aog_service_can_access_user_exec_intent_after_subscription(self, setup_subscrb_user):
-    #     """todo"""
-    #     # raise NotImplementedError
-    #
-    # def test_subscribed_user_dev_change_webhook_aog_notify_sent(self, setup_subscrb_user):
-    #     """todo"""
-    #     # raise NotImplementedError
-    #
+    @pytest.mark.usefixtures("setup_subscrb_user")
+    def test_aog_service_cannot_access_user_sync_intent_before_subscription(self, setup_subscrb_user):
+        """todo"""
+        # raise NotImplementedError
+
+    @pytest.mark.usefixtures("setup_subscrb_user")
+    def test_aog_service_can_access_user_sync_intent_after_subscription(self, setup_subscrb_user):
+        """todo"""
+        # raise NotImplementedError
+
+    @pytest.mark.usefixtures("setup_subscrb_user")
+    def test_aog_service_can_access_user_query_intent_after_subscription(self, setup_subscrb_user):
+        """todo"""
+        # raise NotImplementedError
+
+    @pytest.mark.usefixtures("setup_subscrb_user")
+    def test_aog_service_can_access_user_exec_intent_after_subscription(self, setup_subscrb_user):
+        """todo"""
+        # raise NotImplementedError
+
+    @pytest.mark.usefixtures("setup_subscrb_user")
+    def test_subscribed_user_dev_change_webhook_aog_notify_sent(self, setup_subscrb_user):
+        """todo"""
+        # raise NotImplementedError
+
     @pytest.mark.usefixtures("setup_subscrb_user")
     def test_aog_sync_intent_api_fails_after_disconnect_intent_sent(self, setup_subscrb_user):
         """todo"""
-        logger.debug(f'test_aog_sync_intent_api_fails_after_disconnect_intent_sent')
-        assert True
-        # raise NotImplementedError
+        raise NotImplementedError
 
     @pytest.mark.usefixtures("setup_subscrb_user")
     def test_no_webhook_notify_sent_for_aog_on_disconnected_user_device_change(self, setup_subscrb_user):
         """todo"""
-        logger.info(f'test_no_webhook_notify_sent_for_aog_on_disconnected_user_device_change')
-        assert True
-        # raise NotImplementedError
+        raise NotImplementedError

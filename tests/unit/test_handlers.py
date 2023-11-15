@@ -196,16 +196,22 @@ class TestReportState:
         ])
 
 
-class TestSubscribe:
+class TestSubscription:
     """todo: JTBD"""
-    # def test_subscribe(self):
-    #     bus = bootstrap_test_app()
-    #     bus.handle(commands.Register(secret='secret1', token='token1'))
-    #     u = bus.uow.users.get_by_secret('secret1')
-    #     bus.handle(commands.RequestSync(uid=u.uid, devices=_init_dev_data_list))
-    #
-    #     bus.handle(commands.Subscribe(uid=u.uid))
-    #     """subscriber 是否屬於另一個 aggregator?"""
-    #
-    # def test_unsubscribe(self):
-    #     pass
+
+    def test_subscription(self):
+        """第三方服務可以 [訂閱 Subscribe/取消訂閱 Unsubscribe] 本系統用戶IoT服務"""
+        bus = bootstrap_test_app()
+        bus.handle(commands.Register(secret='secret1', token='token1'))
+        u = bus.uow.users.get_by_secret('secret1')
+        bus.handle(commands.RequestSync(uid=u.uid, devices=_init_dev_data_list))
+        uid = u.uid
+        subscriber_id = 'aog'
+        bus.handle(commands.Subscribe(uid=uid, subscriber_id=subscriber_id))
+        bus.handle(commands.Subscribe(uid=uid, subscriber_id=subscriber_id))
+        u = bus.uow.users.get_by_uid(uid=uid)
+        assert len(u.get_subscribers()) == 1
+
+        bus.handle(commands.Unsubscribe(uid=uid, subscriber_id=subscriber_id))
+        u = bus.uow.users.get_by_uid(uid=uid)
+        assert len(u.get_subscribers()) == 0
