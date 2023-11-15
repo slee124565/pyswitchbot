@@ -1,6 +1,7 @@
 import logging
 import pytest
 import time
+import os
 import requests
 from pathlib import Path
 import logging.config as logging_config
@@ -18,6 +19,8 @@ def wait_for_webapp_to_come_up():
 
 @pytest.fixture
 def restart_api():
+    if os.path.exists('.datastore'):
+        os.remove('.datastore')
     (Path(__file__).parent / "../src/switchbot/entrypoints/flask_app.py").touch()
     time.sleep(0.5)
     wait_for_webapp_to_come_up()

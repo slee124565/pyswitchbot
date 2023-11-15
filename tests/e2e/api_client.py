@@ -156,15 +156,15 @@ def post_to_unsubscribe(secret, expect_success=True):
         assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
 
 
-def post_to_subscribe(secret, token, expect_success=True):
+def post_to_subscribe(uid, subscriber_id, expect_success=True):
     url = config.get_api_url()
-    auth = HTTPBasicAuth('secret', secret)
+    auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/subscribe",
         auth=auth,
         json={
-            "userSecret": secret,
-            "userToken": token
+            "userId": uid,
+            "subscriberId": subscriber_id
         }
     )
     if expect_success:

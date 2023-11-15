@@ -43,6 +43,7 @@ _test_devices = [
 ]
 
 
+@pytest.mark.usefixtures("restart_api")
 def test_happy_user_iot_service_journey():
     secret = 'secret'
     token = 'token'
@@ -83,8 +84,9 @@ def test_happy_user_iot_service_journey():
     })
 
     # todo: 模擬第三方服務 AoG 訂閱用戶iot intent服務
-    sbsr_id = 'aog'  # subscriber_id
-    api_client.post_to_subscribe(uid=user_id, sbsr_id=sbsr_id)
+    subscriber_id = 'aog'
+    api_client.post_to_subscribe(uid=user_id, subscriber_id=subscriber_id)
+    assert False
 
     # 模擬 AoG 查詢用戶設備列表 sync intent
     r = api_client.post_to_query_user_dev_list(secret=secret)

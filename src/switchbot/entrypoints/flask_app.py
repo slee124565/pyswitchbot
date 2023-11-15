@@ -265,7 +265,8 @@ def subscribe():
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
         cmd = commands.Subscribe(
-            uid=data.get('userId')
+            uid=data.get('userId'),
+            subscriber_id=data.get('subscriberId')
         )
         bus.handle(cmd)
         return jsonify({}), HTTPStatus.ACCEPTED
