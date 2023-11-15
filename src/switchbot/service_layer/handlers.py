@@ -118,6 +118,18 @@ def subscribe_user_iot(
         uow.commit()
 
 
+def unsubscribe_user_iot(
+        cmd: commands.Unsubscribe,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    """3rd party service (aog) subscribe user iot service"""
+    logger.debug(f'cmd: {cmd}')
+    with uow:
+        u = uow.users.get_by_uid(uid=cmd.uid)
+        u.unsubscribe(subscriber_id=cmd.subscriber_id)
+        uow.commit()
+
+
 def unregister_user(
         cmd: commands.Unregister,
         uow: unit_of_work.AbstractUnitOfWork
@@ -200,6 +212,7 @@ COMMAND_HANDLERS = {
     commands.Register: register_user,
     commands.Unregister: unregister_user,
     commands.Subscribe: subscribe_user_iot,
+    commands.Unsubscribe: unsubscribe_user_iot,
     commands.RequestSync: request_sync,
     commands.ReportState: report_state,
     commands.ReportChange: report_change,

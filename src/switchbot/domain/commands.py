@@ -14,6 +14,13 @@ class Subscribe(Command):
 
 
 @dataclass
+class Unsubscribe(Command):
+    """第三方系統取消用戶設備IoT訂閱服務"""
+    uid: str
+    subscriber_id: str
+
+
+@dataclass
 class Unregister(Command):
     """要用系統移除用戶資料"""
     uid: str

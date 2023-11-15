@@ -210,8 +210,8 @@ class TestSubscription:
         bus.handle(commands.Subscribe(uid=uid, subscriber_id=subscriber_id))
         bus.handle(commands.Subscribe(uid=uid, subscriber_id=subscriber_id))
         u = bus.uow.users.get_by_uid(uid=uid)
-        assert len(u.get_subscribers()) == 1
+        assert len(u.subscribers) == 1
 
         bus.handle(commands.Unsubscribe(uid=uid, subscriber_id=subscriber_id))
         u = bus.uow.users.get_by_uid(uid=uid)
-        assert len(u.get_subscribers()) == 0
+        assert len(u.subscribers) == 0

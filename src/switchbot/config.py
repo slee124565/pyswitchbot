@@ -65,6 +65,11 @@ logging_config = {
         "requests": {
             "level": "INFO"
         },
+        "switchbot": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False
+        },
         "switchbot.adapters.iot_api_server": {
             "handlers": ["console", "file"],
             "level": "WARNING",

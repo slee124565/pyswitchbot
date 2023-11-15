@@ -261,7 +261,8 @@ class SwitchBotUserRepo:
             changes: List[SwitchBotChangeReport],
             states: List[SwitchBotStatus],
             scenes: List[SwitchBotScene],
-            webhooks: List[SwitchBotWebhook]
+            webhooks: List[SwitchBotWebhook],
+            subscribers: Set
     ):
         self.uid = uid
         self.secret = secret
@@ -271,8 +272,8 @@ class SwitchBotUserRepo:
         self.states = states  # type: List[SwitchBotStatus]
         self.scenes = scenes  # type: List[SwitchBotScene]
         self.webhooks = webhooks  # type: List[SwitchBotWebhook]
+        self.subscribers = subscribers  # type: Set
         self.events = []
-        self.subscribers = set()  # type:Set
 
     @classmethod
     def load(cls, data: dict):
@@ -355,9 +356,11 @@ class SwitchBotUserRepo:
 
     def subscribe(self, subscriber_id: str):
         self.subscribers.add(subscriber_id)
+        logger.debug(f'user add subscriber {subscriber_id}, {self.subscribers}')
 
     def unsubscribe(self, subscriber_id: str):
         self.subscribers.remove(subscriber_id)
+        logger.debug(f'user remove subscriber {subscriber_id}, {self.subscribers}')
 
     def _update_device(self, device: SwitchBotDevice):
         index = next((n for n, origin in enumerate(self.devices) if origin.device_id == device.device_id),
@@ -382,7 +385,7 @@ class SwitchBotUserFactory:
         uid = str(uuid.uuid4()) if uid is None else uid
         return SwitchBotUserRepo(
             uid=uid, secret=secret, token=token,
-            devices=[], changes=[], states=[], scenes=[], webhooks=[]
+            devices=[], changes=[], states=[], scenes=[], webhooks=[], subscribers=set()
         )
 
 
@@ -490,11 +493,13 @@ class SwitchBotUserRepoSchema(Schema):
     devices = fields.List(fields.Nested(SwitchBotDeviceSchema()))
     states = fields.List(fields.Nested(SwitchBotStatusSchema()))
     changes = fields.List(fields.Nested(SwitchBotChangeReportSchema()))
-    scenes = fields.List(fields.Str(), load_default=None)
-    webhooks = fields.List(fields.Str(), load_default=None)
+    scenes = fields.List(fields.Str(), load_default=[])
+    webhooks = fields.List(fields.Str(), load_default=[])
+    subscribers = fields.List(fields.Str(), load_default=set())
 
     @post_load
     def make_user_repo(self, data, **kwargs):
+        data['subscribers'] = set(data['subscribers'])
         return SwitchBotUserRepo(**data)
 
     @post_dump
