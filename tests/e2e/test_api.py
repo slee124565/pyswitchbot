@@ -87,11 +87,11 @@ def test_happy_user_iot_service_journey():
     subscriber_id = 'aog'
     api_client.post_to_subscribe(uid=user_id, subscriber_id=subscriber_id)
 
-    # # 模擬 AoG 查詢用戶設備列表 sync intent
-    # r = api_client.post_to_query_user_dev_list(secret=secret)
-    # assert isinstance(r.json.get("payload").get("devices"), list)
-    # assert len(r.json.get("payload").get("devices")) == 2
-    #
+    # 模擬 AoG 查詢用戶設備列表 sync intent
+    r = api_client.post_to_query_user_dev_list(uid=user_id, subscriber_id=subscriber_id)
+    assert isinstance(r.json.get("payload").get("devices"), list)
+    assert len(r.json.get("payload").get("devices")) == 2
+
     # # 模擬 AoG 查詢用戶設備列表中的第一個設備狀態 query intent
     # dev = r.json.get("payload").get("devices")[0]
     # assert isinstance(dev, dict)
