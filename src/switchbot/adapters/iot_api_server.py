@@ -164,7 +164,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
             endpoint=f'/v1.1/devices/{dev_id}/commands',
             data={
                 "commandType": cmd_type,
-                "command": cmd_type,
+                "command": cmd_value,
                 "parameter": cmd_param
             }
         )

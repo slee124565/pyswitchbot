@@ -210,7 +210,20 @@ def fulfillment():
             response.get("payload").update(_payload)
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.EXECUTE":
-            response.get("payload").update(seudo_execute_payload)
+            aog_cmds_dto = post_data.get("inputs")[0].get("payload").get("commands")
+            cmd = commands.ExecAoGCmds(
+                uid=uid,
+                subscriber_id=subscriber_id,
+                aog_cmds_dto=aog_cmds_dto
+            )
+            bus.handle(cmd)
+            _payload = views.get_user_exec_intent_fulfillment(
+                uid=uid,
+                subscriber_id=subscriber_id,
+                aog_cmds_dto=aog_cmds_dto,
+                uow=bus.uow
+            )
+            response.get("payload").update(_payload)
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.DISCONNECT":
             cmd = commands.Unsubscribe(uid=uid, subscriber_id=subscriber_id)

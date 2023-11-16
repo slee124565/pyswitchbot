@@ -86,3 +86,12 @@ class ReportSubscriberDevState(Command):
     user_id: str
     dev_id: str
     state: dict
+
+
+@dataclass
+class ExecAoGCmds(Command):
+    """控制用戶設備指令"""
+    uid: str
+    subscriber_id: str
+    aog_cmds_dto: list
+

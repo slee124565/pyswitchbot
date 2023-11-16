@@ -63,11 +63,11 @@ def get_user_sync_intent_fulfillment(uid: str, subscriber_id: str, uow: unit_of_
         u = uow.users.get_by_uid(uid=uid)
         if subscriber_id not in u.subscribers:
             raise ValueError(f'{subscriber_id} not in user {uid} subscribers')
-        sync_payload = {
+        fulfillment = {
             "agentUserId": f"{uid}",
             "devices": [convert_dev_to_aog_sync_dto(dev) for dev in u.devices]
         }
-    return sync_payload
+    return fulfillment
 
 
 def convert_dev_to_aog_query_dto(user: model.SwitchBotUserRepo, dev: model.SwitchBotDevice) -> dict:
@@ -94,10 +94,30 @@ def get_user_query_intent_fulfillment(
         u = uow.users.get_by_uid(uid=uid)
         if subscriber_id not in u.subscribers:
             raise ValueError(f'{subscriber_id} not in user {uid} subscribers')
-        query_payload = {
+        fulfillment = {
             "devices": {
                 f"{dev.device_id}": convert_dev_to_aog_query_dto(user=u, dev=dev)
                 for dev in u.devices if dev.device_id in [d.get("id") for d in devices_dto]
             }
         }
-    return query_payload
+    return fulfillment
+
+
+def get_user_exec_intent_fulfillment(
+        uid: str, subscriber_id: str, aog_cmds_dto: list, uow: unit_of_work.AbstractUnitOfWork
+):
+    """todo"""
+    with uow:
+        u = uow.users.get_by_uid(uid=uid)
+        if subscriber_id not in u.subscribers:
+            raise ValueError(f'{subscriber_id} not in user {uid} subscribers')
+        for cmd_dto in aog_cmds_dto:
+            dev_ids = [d.get("id") for d in cmd_dto.get("devices")]
+            # execution = cmd_dto.get("execution")[0]
+            # _aog_dto =
+            raise NotImplementedError
+        fulfillment = {
+            "commands": [
+            ]
+        }
+    return fulfillment
