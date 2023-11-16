@@ -117,10 +117,15 @@ def post_to_query_user_dev_state(secret, dev_id):
     return r
 
 
-def post_to_query_user_dev_list(secret):
+def post_to_query_user_dev_list(uid: str, subscriber_id: str):
     """todo: embedded user_id into http request header"""
     url = config.get_api_url()
-    auth = HTTPBasicAuth('secret', secret)
+    token = {
+        'secret': API_KEY,
+        'uid': uid,
+        'subscriber_id': subscriber_id
+    }
+    auth = HTTPBasicAuth('OAUTH', json.dumps(token))
     r = requests.post(
         f'{url}/fulfillment',
         auth=auth,
@@ -132,11 +137,12 @@ def post_to_query_user_dev_list(secret):
         }
     )
     assert r.status_code in [HTTPStatus.OK]
-    assert isinstance(r.json, dict)
-    assert r.json.get("requestId") == "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
-    assert isinstance(r.json.get("payload"), dict)
-    assert r.json.get("payload").get("agentUserId") == secret
-    assert isinstance(r.json.get("payload").get("devices"), list)
+    resp = r.json()
+    assert isinstance(resp, dict)
+    assert resp.get("requestId") == "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
+    assert isinstance(resp.get("payload"), dict)
+    assert resp.get("payload").get("agentUserId") == uid
+    assert isinstance(resp.get("payload").get("devices"), list)
     return r
 
 

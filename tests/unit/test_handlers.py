@@ -273,3 +273,10 @@ class TestSubscription:
     # def test_no_webhook_notify_sent_for_aog_on_disconnected_user_device_change(self, setup_subscrb_user):
     #     """todo"""
     #     raise NotImplementedError
+
+
+class TestIntentSync:
+    """
+    todo:
+    """
+    pass

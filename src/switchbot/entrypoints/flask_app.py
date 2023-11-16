@@ -5,12 +5,14 @@ from http import HTTPStatus
 
 import requests
 from flask import Flask, jsonify, request, url_for, redirect
+import logging.config as logging_config
 from switchbot.domain import commands
 from switchbot.service_layer import unit_of_work
 from switchbot.adapters import iot_api_server
 from switchbot.service_layer.handlers import InvalidSrcServer
-from switchbot import bootstrap, views  # , config
+from switchbot import bootstrap, views, config
 
+logging_config.dictConfig(config.logging_config)
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
 bus = bootstrap.bootstrap(
@@ -173,8 +175,8 @@ def fulfillment():
         token = _check_api_access_token(http_request=request)
         logger.debug(f'token: {token}')
         assert isinstance(token, dict)
-        uid = token.get('uid')
         data = request.json
+        logger.debug(f'request data {data}')
 
         # create cmd according to IntentID
         request_id = data.get("requestId")

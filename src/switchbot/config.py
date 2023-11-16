@@ -66,9 +66,9 @@ logging_config = {
             "level": "WARNING",
             "propagate": False
         },
-        "requests": {
+        "werkzeug": {
             "handlers": ["console"],
-            "level": "WARNING",
+            "level": "DEBUG",
             "propagate": False
         },
         "switchbot": {
@@ -83,7 +83,7 @@ logging_config = {
         },
         "tests": {
             "handlers": ["console"],
-            "level": "INFO",
+            "level": "DEBUG",
             "propagate": False
         }
     }
