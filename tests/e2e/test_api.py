@@ -89,20 +89,22 @@ def test_happy_user_iot_service_journey():
 
     # 模擬 AoG 查詢用戶設備列表 sync intent
     r = api_client.post_to_query_user_dev_list(uid=user_id, subscriber_id=subscriber_id)
-    assert isinstance(r.json.get("payload").get("devices"), list)
-    assert len(r.json.get("payload").get("devices")) == 2
+    resp = r.json()
+    logger.debug(f'user sync response {resp}')
+    assert isinstance(resp.get("payload").get("devices"), list)
+    assert len(resp.get("payload").get("devices")) == 2
 
-    # # 模擬 AoG 查詢用戶設備列表中的第一個設備狀態 query intent
-    # dev = r.json.get("payload").get("devices")[0]
-    # assert isinstance(dev, dict)
-    # dev_id = dev.get("id")
-    # r = api_client.post_to_query_user_dev_state(secret=secret, dev_id=dev_id)
-    # keys = r.json.get("payload").get("devices").keys()
-    # assert len(keys) == 1
-    # assert keys[0] == dev_id
-    # assert len(r.json.get("payload").get("devices")[dev_id].keys()) > 0
-    # dev_onoff = r.json.get("payload").get("devices")[dev_id].get("on")
-    #
+    # 模擬 AoG 查詢用戶設備列表中的第一個設備狀態 query intent
+    dev = r.json.get("payload").get("devices")[0]
+    assert isinstance(dev, dict)
+    dev_id = dev.get("id")
+    r = api_client.post_to_query_user_dev_state(secret=secret, dev_id=dev_id)
+    keys = r.json.get("payload").get("devices").keys()
+    assert len(keys) == 1
+    assert keys[0] == dev_id
+    assert len(r.json.get("payload").get("devices")[dev_id].keys()) > 0
+    dev_onoff = r.json.get("payload").get("devices")[dev_id].get("on")
+
     # # 模擬 AoG 控制用戶設備列表中的第一個設備狀態ON/OFF, execute intent
     # ctr_onoff = not dev_onoff
     # api_client.post_to_ctrl_user_dev_onoff(secret=secret, dev_id=dev_id, dev_onoff=ctr_onoff)

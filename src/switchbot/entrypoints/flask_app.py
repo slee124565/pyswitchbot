@@ -176,7 +176,9 @@ def fulfillment():
         logger.debug(f'token: {token}')
         assert isinstance(token, dict)
         data = request.json
-        logger.debug(f'request data {data}')
+        uid = token.get('uid')
+        subscriber_id = token.get('subscriber_id')
+        logger.debug(f'request token (uid, subscriber_id) {uid, subscriber_id}')
 
         # create cmd according to IntentID
         request_id = data.get("requestId")
@@ -187,8 +189,15 @@ def fulfillment():
         }
 
         # response according to fulfillment
+        logger.info(f'request {request.json}')
         if intent_id == "action.devices.SYNC":
-            response.get("payload").update(seudo_sync_payload)
+            _payload = views.get_user_sync_intent_fulfillment(
+                uid=uid,
+                subscriber_id=subscriber_id,
+                uow=bus.uow
+            )
+            response.get("payload").update(_payload)
+            logger.info(f'response {response}')
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.QUERY":
             response.get("payload").update(seudo_query_payload)
@@ -197,7 +206,7 @@ def fulfillment():
             response.get("payload").update(seudo_execute_payload)
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.DISCONNECT":
-            cmd = commands.Unsubscribe(uid=token.get('uid'), subscriber_id=token.get('subscriber_id'))
+            cmd = commands.Unsubscribe(uid=uid, subscriber_id=subscriber_id)
             bus.handle(cmd)
             return jsonify({}), HTTPStatus.OK
         else:
@@ -328,9 +337,6 @@ def profile():
                 uid=user_id,
                 uow=bus.uow
             )), HTTPStatus.OK
-
-
-
     except ApiAccessTokenError:
         return jsonify({}), HTTPStatus.UNAUTHORIZED
     except InvalidSrcServer:
@@ -360,4 +366,5 @@ def register():
 
 
 if __name__ == '__main__':
+    """todo: debug flag should be assigned by config module"""
     app.run(debug=True)
