@@ -54,10 +54,15 @@ def post_to_request_sync(user_id, devices):
     return r
 
 
-def post_to_ctrl_user_dev_onoff(secret, dev_id, dev_onoff):
+def post_to_ctrl_user_dev_onoff(uid: str, subscriber_id: str, dev_id: str, dev_onoff: bool):
     """todo:"""
     url = config.get_api_url()
-    auth = HTTPBasicAuth('secret', secret)
+    token = {
+        'secret': API_KEY,
+        'uid': uid,
+        'subscriber_id': subscriber_id
+    }
+    auth = HTTPBasicAuth('OAUTH', json.dumps(token))
     r = requests.post(
         f'{url}/fulfillment',
         auth=auth,
@@ -88,6 +93,10 @@ def post_to_ctrl_user_dev_onoff(secret, dev_id, dev_onoff):
         }
     )
     assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
+    resp = r.json()
+    assert resp.get("requestId") == "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
+    assert isinstance(resp.get("payload"), dict)
+    assert isinstance(resp.get("payload").get("commands"), list)
     return r
 
 
