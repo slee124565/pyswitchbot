@@ -103,14 +103,16 @@ def test_happy_user_iot_service_journey():
     logger.debug(f'query fulfillment: {resp}')
     keys = resp.get("payload").get("devices").keys()
     assert len(keys) == 1
-    for _dev_id in resp.get("payload").get("devices"):
-        dev_onoff = resp.get("payload").get("devices")[_dev_id].get("on")
-        logger.debug(f'target dev power {dev_onoff}')
+    dto = resp.get("payload").get("devices")
+    logger.debug(f'state dto {dto}')
+    assert isinstance(dto, dict)
+    dev_onoff = next((dto[_id].get("on") for _id in dto))
+    logger.debug(f'target dev power {dev_onoff}')
 
-    # # 模擬 AoG 控制用戶設備列表中的第一個設備狀態ON/OFF, execute intent
-    # ctr_onoff = not dev_onoff
-    # api_client.post_to_ctrl_user_dev_onoff(secret=secret, dev_id=dev_id, dev_onoff=ctr_onoff)
-    #
+    # 模擬 AoG 控制用戶設備列表中的第一個設備狀態ON/OFF, execute intent
+    ctr_onoff = not dev_onoff
+    api_client.post_to_ctrl_user_dev_onoff(uid=uid, subscriber_id=subscriber_id, dev_id=dev_id, dev_onoff=ctr_onoff)
+
     # # 模擬系統接收到SwitchBot Webhook ReportChange 設備狀態更新資料
     # state = {
     #     "eventType": "changeReport",

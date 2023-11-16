@@ -74,7 +74,7 @@ def convert_dev_to_aog_query_dto(user: model.SwitchBotUserRepo, dev: model.Switc
     if dev.device_type in ['Plug Mini (US)']:
         state = user.get_dev_state(dev_id=dev.device_id)
         return {
-            "on": state.power,
+            "on": True if state.power == "on" else False,
             "online": True,
             "status": "SUCCESS"
         }
