@@ -175,14 +175,15 @@ def fulfillment():
         token = _check_api_access_token(http_request=request)
         logger.debug(f'token: {token}')
         assert isinstance(token, dict)
-        data = request.json
+        post_data = request.json
+        assert isinstance(post_data, dict)
         uid = token.get('uid')
         subscriber_id = token.get('subscriber_id')
         logger.debug(f'request token (uid, subscriber_id) {uid, subscriber_id}')
 
         # create cmd according to IntentID
-        request_id = data.get("requestId")
-        intent_id = data.get("inputs")[0].get("intent")
+        request_id = post_data.get("requestId")
+        intent_id = post_data.get("inputs")[0].get("intent")
         response = {
             "requestId": request_id,
             "payload": {},
@@ -200,7 +201,13 @@ def fulfillment():
             logger.info(f'response {response}')
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.QUERY":
-            response.get("payload").update(seudo_query_payload)
+            _payload = views.get_user_query_intent_fulfillment(
+                uid=uid,
+                subscriber_id=subscriber_id,
+                devices_dto=post_data.get("inputs")[0].get("payload").get("devices"),
+                uow=bus.uow
+            )
+            response.get("payload").update(_payload)
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.EXECUTE":
             response.get("payload").update(seudo_execute_payload)

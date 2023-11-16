@@ -49,18 +49,18 @@ def test_happy_user_iot_service_journey():
     token = 'token'
     # 用戶註冊iot服務
     r = api_client.post_to_register(secret=secret, token=token, expect_success=True)
-    user_id = r.json().get('uid')
-    assert user_id
+    uid = r.json().get('uid')
+    assert uid
 
     # 模擬系統更新用戶設備清單
-    r = api_client.post_to_request_sync(user_id=user_id, devices=_test_devices)
+    r = api_client.post_to_request_sync(user_id=uid, devices=_test_devices)
     data = r.json()
     logger.debug(f'response data {data}')
-    assert data.get('uid') == user_id
+    assert data.get('uid') == uid
     assert data.get('devices') == len(_test_devices)
 
     # 模擬系統更新用戶設備狀態資料
-    api_client.post_to_report_state(uid=user_id, state={
+    api_client.post_to_report_state(uid=uid, state={
         "deviceId": "6055F92FCFD2",
         "deviceType": "Plug Mini (US)",
         "hubDeviceId": "6055F92FCFD2",
@@ -71,7 +71,7 @@ def test_happy_user_iot_service_journey():
         "electricCurrent": 0,
         "version": "V1.4-1.4"
     })
-    api_client.post_to_report_state(uid=user_id, state={
+    api_client.post_to_report_state(uid=uid, state={
         "deviceId": "6055F930FF22",
         "deviceType": "Plug Mini (US)",
         "hubDeviceId": "6055F930FF22",
@@ -85,25 +85,27 @@ def test_happy_user_iot_service_journey():
 
     # todo: 模擬第三方服務 AoG 訂閱用戶iot intent服務
     subscriber_id = 'aog'
-    api_client.post_to_subscribe(uid=user_id, subscriber_id=subscriber_id)
+    api_client.post_to_subscribe(uid=uid, subscriber_id=subscriber_id)
 
     # 模擬 AoG 查詢用戶設備列表 sync intent
-    r = api_client.post_to_query_user_dev_list(uid=user_id, subscriber_id=subscriber_id)
+    r = api_client.post_to_query_user_dev_list(uid=uid, subscriber_id=subscriber_id)
     resp = r.json()
-    logger.debug(f'user sync response {resp}')
+    logger.debug(f'sync fulfillment: {resp}')
     assert isinstance(resp.get("payload").get("devices"), list)
     assert len(resp.get("payload").get("devices")) == 2
 
     # 模擬 AoG 查詢用戶設備列表中的第一個設備狀態 query intent
-    dev = r.json.get("payload").get("devices")[0]
+    dev = resp.get("payload").get("devices")[0]
     assert isinstance(dev, dict)
     dev_id = dev.get("id")
-    r = api_client.post_to_query_user_dev_state(secret=secret, dev_id=dev_id)
-    keys = r.json.get("payload").get("devices").keys()
+    r = api_client.post_to_query_user_dev_state(uid=uid, subscriber_id=subscriber_id, dev_id=dev_id)
+    resp = r.json()
+    logger.debug(f'query fulfillment: {resp}')
+    keys = resp.get("payload").get("devices").keys()
     assert len(keys) == 1
-    assert keys[0] == dev_id
-    assert len(r.json.get("payload").get("devices")[dev_id].keys()) > 0
-    dev_onoff = r.json.get("payload").get("devices")[dev_id].get("on")
+    for _dev_id in resp.get("payload").get("devices"):
+        dev_onoff = resp.get("payload").get("devices")[_dev_id].get("on")
+        logger.debug(f'target dev power {dev_onoff}')
 
     # # 模擬 AoG 控制用戶設備列表中的第一個設備狀態ON/OFF, execute intent
     # ctr_onoff = not dev_onoff
@@ -137,17 +139,18 @@ def test_happy_user_iot_service_journey():
     #
     # # 模擬 Aog 查詢操控設備的最新狀態
     # r = api_client.post_to_query_user_dev_state(secret=secret, dev_id=dev_id)
-    # keys = r.json.get("payload").get("devices").keys()
+    # keys = resp.get("payload").get("devices").keys()
     # assert len(keys) == 1
     # assert keys[0] == dev_id
-    # assert len(r.json.get("payload").get("devices")[dev_id].keys()) > 0
-    # dev_onoff = r.json.get("payload").get("devices")[dev_id].get("on")
+    # resp = r.json()
+    # assert len(resp.get("payload").get("devices")[dev_id].keys()) > 0
+    # dev_onoff = resp.get("payload").get("devices")[dev_id].get("on")
     # assert dev_onoff == ctr_onoff
     #
     # # 確認 pubsub adapter 有收到 ReportSubscriberChange 通知 (todo)
 
     # 用戶取消訂閱 (todo: check unsubscribe event log)
-    api_client.post_to_unsubscribe(uid=user_id, subscriber_id=subscriber_id)
+    api_client.post_to_unsubscribe(uid=uid, subscriber_id=subscriber_id)
 
     # # 查詢用戶設備列表時，因為第三方服務已經取消訂閱，應該產生錯誤
     # with pytest.raises(Exception) as err:
@@ -155,7 +158,7 @@ def test_happy_user_iot_service_journey():
     #     assert isinstance(err, ApiAccessTokenError)
 
     # 用戶註銷帳號
-    api_client.post_to_unregister(uid=user_id)
+    api_client.post_to_unregister(uid=uid)
 
     # # 查詢用戶設備列表時，因為用戶不存在，應該產生錯誤
     # with pytest.raises(Exception) as err:

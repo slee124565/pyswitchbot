@@ -4,6 +4,7 @@ from switchbot.domain import model
 
 logger = logging.getLogger(__name__)
 
+
 def user_profile_by_uid(uid: str, uow: unit_of_work.AbstractUnitOfWork) -> dict:
     with uow:
         u = uow.users.get_by_uid(uid=uid)
@@ -67,3 +68,36 @@ def get_user_sync_intent_fulfillment(uid: str, subscriber_id: str, uow: unit_of_
             "devices": [convert_dev_to_aog_sync_dto(dev) for dev in u.devices]
         }
     return sync_payload
+
+
+def convert_dev_to_aog_query_dto(user: model.SwitchBotUserRepo, dev: model.SwitchBotDevice) -> dict:
+    if dev.device_type in ['Plug Mini (US)']:
+        state = user.get_dev_state(dev_id=dev.device_id)
+        return {
+            "on": state.power,
+            "online": True,
+            "status": "SUCCESS"
+        }
+    else:
+        logger.warning(f'device object: {dev.dump()}')
+        raise NotImplementedError
+
+
+def get_user_query_intent_fulfillment(
+        uid: str, subscriber_id: str, devices_dto: dict, uow: unit_of_work.AbstractUnitOfWork
+) -> dict:
+    """
+    1. 檢查 subscriber_id 是否屬於 user.subscribers
+    2.
+    """
+    with uow:
+        u = uow.users.get_by_uid(uid=uid)
+        if subscriber_id not in u.subscribers:
+            raise ValueError(f'{subscriber_id} not in user {uid} subscribers')
+        query_payload = {
+            "devices": {
+                f"{dev.device_id}": convert_dev_to_aog_query_dto(user=u, dev=dev)
+                for dev in u.devices if dev.device_id in [d.get("id") for d in devices_dto]
+            }
+        }
+    return query_payload

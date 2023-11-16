@@ -91,9 +91,14 @@ def post_to_ctrl_user_dev_onoff(secret, dev_id, dev_onoff):
     return r
 
 
-def post_to_query_user_dev_state(secret, dev_id):
+def post_to_query_user_dev_state(uid: str, subscriber_id: str, dev_id: str):
     url = config.get_api_url()
-    auth = HTTPBasicAuth('secret', secret)
+    token = {
+        'secret': API_KEY,
+        'uid': uid,
+        'subscriber_id': subscriber_id
+    }
+    auth = HTTPBasicAuth('OAUTH', json.dumps(token))
     r = requests.post(
         f'{url}/fulfillment',
         auth=auth,
@@ -110,10 +115,11 @@ def post_to_query_user_dev_state(secret, dev_id):
         }
     )
     assert r.status_code == HTTPStatus.OK
-    assert isinstance(r.json, dict)
-    assert r.json.get("requestId") == "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
-    assert isinstance(r.json.get("payload"), dict)
-    assert isinstance(r.json.get("payload").get("devices"), dict)
+    resp = r.json()
+    assert isinstance(resp, dict)
+    assert resp.get("requestId") == "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
+    assert isinstance(resp.get("payload"), dict)
+    assert isinstance(resp.get("payload").get("devices"), dict)
     return r
 
 
