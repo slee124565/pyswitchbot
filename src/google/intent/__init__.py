@@ -1,4 +1,4 @@
-from .model_execute import ExecuteRequest, ExecuteResponse
+from .model import ExecuteRequest, ExecuteResponse
 
 __all__ = [
     'ExecuteRequest',

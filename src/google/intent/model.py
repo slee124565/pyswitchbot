@@ -1,5 +1,5 @@
-from typing import List
-from marshmallow import Schema, fields, post_load, post_dump
+from typing import List, Optional, Dict
+from marshmallow import Schema, INCLUDE, fields, post_load, post_dump
 
 
 class ExecutionItemSchema(Schema):
@@ -184,7 +184,150 @@ class ExecuteResponse:
         return ExecuteResponseSchema().dump(self)
 
 
-if __name__ == '__main__':
+class QueryDeviceItemSchema(Schema):
+    id = fields.Str(required=True)
+    customData = fields.Dict()
+
+    @post_load
+    def make_query_device_item(self, data, **kwargs):
+        return QueryDeviceItem(**data)
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
+
+
+class QueryPayloadSchema(Schema):
+    devices = fields.List(fields.Nested(QueryDeviceItemSchema()), required=True)
+
+    @post_load
+    def make_query_payload(self, data, **kwargs):
+        return QueryPayload(**data)
+
+
+class QueryInputItemSchema(Schema):
+    intent = fields.Str(required=True)
+    payload = fields.Nested(QueryPayloadSchema(), required=True)
+
+    @post_load
+    def make_query_input_item(self, data, **kwargs):
+        return QueryInputItem(**data)
+
+
+class QueryRequestSchema(Schema):
+    requestId = fields.Str(required=True)
+    inputs = fields.List(fields.Nested(QueryInputItemSchema()), required=True)
+
+    @post_load
+    def make_query_request(self, data, **kwargs):
+        return QueryRequest(**data)
+
+
+class QueryDeviceItem:
+    def __init__(self, id: str, customData: Optional[Dict] = None):
+        self.id = id
+        self.customData = customData
+
+
+class QueryPayload:
+    def __init__(self, devices: List[QueryDeviceItem]):
+        self.devices = devices
+
+
+class QueryInputItem:
+    def __init__(self, intent: str, payload: QueryPayload):
+        self.intent = intent
+        self.payload = payload
+
+
+class QueryRequest:
+    def __init__(self, requestId: str, inputs: List[QueryInputItem]):
+        self.requestId = requestId
+        self.inputs = inputs
+
+    @classmethod
+    def load(cls, data: dict):
+        return QueryRequestSchema().load(data)
+
+    def dump(self) -> dict:
+        return QueryRequestSchema().dump(self)
+
+
+class QueryDeviceStatusSchema(Schema):
+    online = fields.Bool(required=True)
+    status = fields.Str(required=True)
+    errorCode = fields.Str(required=False)
+    extra_fields = fields.Dict()
+
+    class Meta:
+        unknown = INCLUDE
+        # additional = fields.Dict()
+
+    @post_load
+    def make_query_device_status(self, data, **kwargs):
+        defined_fields = ['online', 'status', 'errorCode']
+        extra_fields = {k: v for k, v in data.items() if k not in defined_fields}
+        filtered_data = {k: data[k] for k in defined_fields if k in data}
+        return QueryDeviceStatus(**filtered_data, extra_fields=extra_fields)
+
+    @post_dump
+    def add_extra_fields(self, data, **kwargs):
+        if 'extra_fields' in data and data['extra_fields']:
+            # 合併 extra_fields 到 data
+            merged = {**data, **data['extra_fields']}
+            # 移除原始的 extra_fields 鍵
+            merged.pop('extra_fields', None)
+            return merged
+        return data
+
+
+class QueryResponsePayloadSchema(Schema):
+    devices = fields.Dict(keys=fields.Str(), values=fields.Nested(QueryDeviceStatusSchema()), required=True)
+
+    @post_load
+    def make_query_response_payload(self, data, **kwargs):
+        return QueryResponsePayload(**data)
+
+
+class QueryResponseSchema(Schema):
+    requestId = fields.Str(required=True)
+    payload = fields.Nested(QueryResponsePayloadSchema(), required=True)
+
+    @post_load
+    def make_query_response(self, data, **kwargs):
+        return QueryResponse(**data)
+
+
+class QueryDeviceStatus:
+    def __init__(self, online: bool, status: str, error_code: str = None, extra_fields: dict = None):
+        self.online = online
+        self.status = status
+        self.error_code = error_code
+        self.extra_fields = extra_fields if extra_fields else {}
+
+
+class QueryResponsePayload:
+    def __init__(self, **kwargs):
+        self.devices = kwargs.get("devices")
+
+
+class QueryResponse:
+    def __init__(self, requestId: str, payload: QueryResponsePayload):
+        self.requestId = requestId
+        self.payload = payload
+
+    @classmethod
+    def load(cls, data: dict):
+        return QueryResponseSchema().load(data)
+
+    def dump(self) -> dict:
+        return QueryResponseSchema().dump(self)
+
+
+def _test_execute_intent():
     request = {
         "requestId": "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
         "inputs": [
@@ -257,4 +400,62 @@ if __name__ == '__main__':
     obj = ExecuteResponse.load(response)
     assert isinstance(obj, ExecuteResponse)
     assert obj.dump() == response
-    pass
+
+
+if __name__ == '__main__':
+    request = {
+        "requestId": "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
+        "inputs": [
+            {
+                "intent": "action.devices.QUERY",
+                "payload": {
+                    "devices": [
+                        {
+                            "id": "123",
+                            "customData": {
+                                "fooValue": 74,
+                                "barValue": True,
+                                "bazValue": "foo"
+                            }
+                        },
+                        {
+                            "id": "456",
+                            "customData": {
+                                "fooValue": 12,
+                                "barValue": False,
+                                "bazValue": "bar"
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+    obj = QueryRequest.load(request)
+    assert isinstance(obj, QueryRequest)
+    assert obj.dump() == request
+
+    response = {
+        "requestId": "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
+        "payload": {
+            "devices": {
+                "123": {
+                    "on": True,
+                    "online": True,
+                    "status": "SUCCESS"
+                },
+                "456": {
+                    "on": True,
+                    "online": True,
+                    "status": "SUCCESS",
+                    "brightness": 80,
+                    "color": {
+                        "spectrumRgb": 16711935
+                    }
+                }
+            }
+        }
+    }
+    obj = QueryResponse.load(response)
+    assert isinstance(obj, QueryResponse)
+    assert obj.dump() == response
