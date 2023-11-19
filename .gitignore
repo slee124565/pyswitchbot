@@ -163,3 +163,4 @@ cython_debug/
 .repository
 .datastore
 .teststore
+.DS_Store
