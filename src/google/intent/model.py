@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from marshmallow import Schema, INCLUDE, fields, post_load, post_dump
 
 
@@ -18,13 +18,13 @@ class ExecutionItemSchema(Schema):
         }
 
 
-class DeviceItemSchema(Schema):
+class ExecuteDeviceItemSchema(Schema):
     id = fields.Str(required=True)
     customData = fields.Dict()
 
     @post_load
     def make_device_item(self, data, **kwargs):
-        return DeviceItem(**data)
+        return ExecuteDeviceItem(**data)
 
     @post_dump
     def remove_skip_values(self, data, **kwargs):
@@ -34,35 +34,35 @@ class DeviceItemSchema(Schema):
         }
 
 
-class CommandItemSchema(Schema):
-    devices = fields.List(fields.Nested(DeviceItemSchema()), required=True)
+class ExecuteCommandItemSchema(Schema):
+    devices = fields.List(fields.Nested(ExecuteDeviceItemSchema()), required=True)
     execution = fields.List(fields.Nested(ExecutionItemSchema()), required=True)
 
     @post_load
     def make_command_item(self, data, **kwargs):
-        return CommandItem(**data)
+        return ExecuteCommandItem(**data)
 
 
-class _PayloadSchema(Schema):
-    commands = fields.List(fields.Nested(CommandItemSchema()), required=True)
+class ExecutePayloadSchema(Schema):
+    commands = fields.List(fields.Nested(ExecuteCommandItemSchema()), required=True)
 
     @post_load
     def make_payload(self, data, **kwargs):
-        return _Payload(**data)
+        return ExecutePayload(**data)
 
 
-class InputItemSchema(Schema):
+class ExecuteInputItemSchema(Schema):
     intent = fields.Str(required=True)
-    payload = fields.Nested(_PayloadSchema(), required=True)
+    payload = fields.Nested(ExecutePayloadSchema(), required=True)
 
     @post_load
     def make_input_item(self, data, **kwargs):
-        return InputItem(**data)
+        return ExecuteInputItem(**data)
 
 
 class ExecuteRequestSchema(Schema):
     requestId = fields.Str(required=True)
-    inputs = fields.List(fields.Nested(InputItemSchema()), required=True)
+    inputs = fields.List(fields.Nested(ExecuteInputItemSchema()), required=True)
 
     @post_load
     def make_execute_request(self, data, **kwargs):
@@ -75,24 +75,24 @@ class ExecutionItem:
         self.params = params if params else {}  # type:dict
 
 
-class DeviceItem:
+class ExecuteDeviceItem:
     def __init__(self, id, customData=None):
         self.id = id  # type:str
         self.customData = customData if customData else {}  # type:dict
 
 
-class CommandItem:
+class ExecuteCommandItem:
     def __init__(self, devices, execution):
-        self.devices = devices  # type:List[DeviceItem]
+        self.devices = devices  # type:List[ExecuteDeviceItem]
         self.execution = execution  # type:List[ExecutionItem]
 
 
-class _Payload:
+class ExecutePayload:
     def __init__(self, commands):
-        self.commands = commands  # type:List[CommandItem]
+        self.commands = commands  # type:List[ExecuteCommandItem]
 
 
-class InputItem:
+class ExecuteInputItem:
     def __init__(self, intent, payload):
         self.intent = intent  # type:str
         self.payload = payload  # Payload is an object of Payload class
@@ -101,7 +101,7 @@ class InputItem:
 class ExecuteRequest:
     def __init__(self, requestId, inputs):
         self.requestId = requestId  # type:str
-        self.inputs = inputs  # type:List[InputItem]
+        self.inputs = inputs  # type:List[ExecuteInputItem]
 
     @classmethod
     def load(cls, data: dict):
@@ -112,7 +112,7 @@ class ExecuteRequest:
 
 
 # 以下為 Response 部分
-class CommandResponseItemSchema(Schema):
+class ExecuteCommandResponseItemSchema(Schema):
     ids = fields.List(fields.Str(), required=True)
     status = fields.Str(required=True)
     states = fields.Dict()
@@ -120,7 +120,7 @@ class CommandResponseItemSchema(Schema):
 
     @post_load
     def make_command_response_item(self, data, **kwargs):
-        return CommandResponseItem(**data)
+        return ExecuteCommandResponseItem(**data)
 
     @post_dump
     def remove_skip_values(self, data, **kwargs):
@@ -130,14 +130,14 @@ class CommandResponseItemSchema(Schema):
         }
 
 
-class ResponsePayloadSchema(Schema):
+class ExecuteResponsePayloadSchema(Schema):
     errorCode = fields.Str()
     debugString = fields.Str()
-    commands = fields.List(fields.Nested(CommandResponseItemSchema()))
+    commands = fields.List(fields.Nested(ExecuteCommandResponseItemSchema()))
 
     @post_load
     def make_response_payload(self, data, **kwargs):
-        return ResponsePayload(**data)
+        return ExecuteResponsePayload(**data)
 
     @post_dump
     def remove_skip_values(self, data, **kwargs):
@@ -149,14 +149,14 @@ class ResponsePayloadSchema(Schema):
 
 class ExecuteResponseSchema(Schema):
     requestId = fields.Str(required=True)
-    payload = fields.Nested(ResponsePayloadSchema(), required=True)
+    payload = fields.Nested(ExecuteResponsePayloadSchema(), required=True)
 
     @post_load
     def make_execute_response(self, data, **kwargs):
         return ExecuteResponse(**data)
 
 
-class CommandResponseItem:
+class ExecuteCommandResponseItem:
     def __init__(self, ids, status, states=None, errorCode=None):
         self.ids = ids  # type:List[str]
         self.status = status  # type:str
@@ -164,17 +164,17 @@ class CommandResponseItem:
         self.errorCode = errorCode  # type:str
 
 
-class ResponsePayload:
+class ExecuteResponsePayload:
     def __init__(self, errorCode=None, debugString=None, commands=None):
         self.errorCode = errorCode  # type:str
         self.debugString = debugString  # type:str
-        self.commands = commands if commands else []  # type:CommandResponseItem
+        self.commands = commands if commands else []  # type:ExecuteCommandResponseItem
 
 
 class ExecuteResponse:
     def __init__(self, requestId, payload):
         self.requestId = requestId  # type:str
-        self.payload = payload  # type:ResponsePayload
+        self.payload = payload  # type:ExecuteResponsePayload
 
     @classmethod
     def load(cls, data: dict):
@@ -327,6 +327,207 @@ class QueryResponse:
         return QueryResponseSchema().dump(self)
 
 
+class SyncInputSchema(Schema):
+    intent = fields.Str(required=True)
+
+    @post_load
+    def make_sync_intent_input(self, data, **kwargs):
+        return SyncInput(**data)
+
+
+class SyncRequestSchema(Schema):
+    requestId = fields.Str(required=True)
+    inputs = fields.List(fields.Nested(SyncInputSchema()), required=True)
+
+    @post_load
+    def make_sync_intent_request(self, data, **kwargs):
+        return SyncRequest(**data)
+
+
+class SyncInput:
+    def __init__(self, intent: str):
+        self.intent = intent
+
+
+class SyncRequest:
+    def __init__(self, requestId: str, inputs: List[SyncInput]):
+        self.requestId = requestId
+        self.inputs = inputs
+
+    @classmethod
+    def load(cls, data: dict):
+        return SyncRequestSchema().load(data)
+
+    def dump(self) -> dict:
+        return SyncRequestSchema().dump(self)
+
+
+class SyncDeviceInfoSchema(Schema):
+    manufacturer = fields.Str()
+    model = fields.Str()
+    hwVersion = fields.Str()
+    swVersion = fields.Str()
+
+    @post_load
+    def make_device_info(self, data, **kwargs):
+        return SyncDeviceInfo(**data)
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
+
+
+class SyncDeviceNameSchema(Schema):
+    """{
+                        "defaultNames": [
+                            "My Outlet 1234"
+                        ],
+                        "name": "Night light",
+                        "nicknames": [
+                            "wall plug"
+                        ]
+                    }"""
+    name = fields.Str(required=True)
+    defaultNames = fields.List(fields.Str())
+    nicknames = fields.List(fields.Str())
+
+    @post_load
+    def make_device_name(self, data, **kwargs):
+        return SyncDeviceName(**data)
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
+
+
+class SyncDeviceSchema(Schema):
+    device_id = fields.Str(required=True, data_key='id')
+    device_type = fields.Str(required=True, data_key='type')
+    traits = fields.List(fields.Str(), required=True)
+    name = fields.Nested(SyncDeviceNameSchema(), required=True)
+    will_report_state = fields.Bool(required=True, data_key='willReportState')
+    room_hint = fields.Str(data_key='roomHint')
+    device_info = fields.Nested(SyncDeviceInfoSchema(), data_key='deviceInfo')
+    attributes = fields.Dict()
+    custom_data = fields.Dict(data_key='customData')
+    other_device_ids = fields.List(fields.Dict(keys=fields.Str(), values=fields.Str()), data_key='otherDeviceIds')
+    notification_supported_by_agent = fields.Bool(data_key='notificationSupportedByAgent')
+
+    @post_load
+    def make_sync_device(self, data, **kwargs):
+        return SyncDevice(**data)
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
+
+
+class SyncResponsePayloadSchema(Schema):
+    agentUserId = fields.Str(required=True)
+    devices = fields.List(fields.Nested(SyncDeviceSchema()), required=True)
+    errorCode = fields.Str()
+    debugString = fields.Str()
+
+    @post_load
+    def make_sync_response_payload(self, data, **kwargs):
+        return SyncResponsePayload(**data)
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
+
+
+class SyncResponseSchema(Schema):
+    requestId = fields.Str(required=True)
+    payload = fields.Nested(SyncResponsePayloadSchema(), required=True)
+
+    @post_load
+    def make_sync_response(self, data, **kwargs):
+        return SyncResponse(**data)
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
+
+
+class SyncDeviceInfo:
+    def __init__(
+            self,
+            manufacturer: Optional[str] = None,
+            model: Optional[str] = None,
+            hwVersion: Optional[str] = None,
+            swVersion: Optional[str] = None
+    ):
+        self.manufacturer = manufacturer
+        self.model = model
+        self.hwVersion = hwVersion
+        self.swVersion = swVersion
+
+
+class SyncDeviceName:
+    def __init__(self, name: str, defaultNames: Optional[List[str]] = None, nicknames: Optional[List[str]] = None):
+        self.defaultNames = defaultNames
+        self.name = name
+        self.nicknames = nicknames
+
+
+class SyncDevice:
+    def __init__(self, device_id: str, device_type: str, traits: List[str], name: SyncDeviceName,
+                 will_report_state: bool,
+                 room_hint: Optional[str] = None, device_info: Optional[SyncDeviceInfo] = None,
+                 attributes: Optional[Dict[str, Any]] = None, custom_data: Optional[Dict[str, Any]] = None,
+                 other_device_ids: Optional[List[Dict[str, str]]] = None,
+                 notification_supported_by_agent: Optional[bool] = None):
+        self.device_id = device_id
+        self.device_type = device_type
+        self.traits = traits
+        self.name = name
+        self.will_report_state = will_report_state
+        self.room_hint = room_hint
+        self.device_info = device_info
+        self.attributes = attributes
+        self.custom_data = custom_data
+        self.other_device_ids = other_device_ids
+        self.notification_supported_by_agent = notification_supported_by_agent
+
+
+class SyncResponsePayload:
+    def __init__(self, agentUserId: str, devices: List[SyncDevice], errorCode: Optional[str] = None,
+                 debugString: Optional[str] = None):
+        self.agentUserId = agentUserId
+        self.devices = devices
+        self.errorCode = errorCode
+        self.debugString = debugString
+
+
+class SyncResponse:
+    def __init__(self, requestId: str, payload: SyncResponsePayload):
+        self.requestId = requestId
+        self.payload = payload
+
+    @classmethod
+    def load(cls, data: dict):
+        return SyncResponseSchema().load(data)
+
+    def dump(self) -> dict:
+        return SyncResponseSchema().dump(self)
+
+
 def _test_execute_intent():
     request = {
         "requestId": "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
@@ -402,7 +603,7 @@ def _test_execute_intent():
     assert obj.dump() == response
 
 
-if __name__ == '__main__':
+def _test_query_intent():
     request = {
         "requestId": "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
         "inputs": [
@@ -459,3 +660,109 @@ if __name__ == '__main__':
     obj = QueryResponse.load(response)
     assert isinstance(obj, QueryResponse)
     assert obj.dump() == response
+
+
+def _test_sync_intent():
+    request = {
+        "requestId": "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
+        "inputs": [
+            {
+                "intent": "action.devices.SYNC"
+            }
+        ]
+    }
+    obj = SyncRequest.load(request)
+    assert isinstance(obj, SyncRequest)
+    assert obj.dump() == request
+
+    response = {
+        "requestId": "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
+        "payload": {
+            "agentUserId": "1836.15267389",
+            "devices": [
+                {
+                    "id": "123",
+                    "type": "action.devices.types.OUTLET",
+                    "traits": [
+                        "action.devices.traits.OnOff"
+                    ],
+                    "name": {
+                        "defaultNames": [
+                            "My Outlet 1234"
+                        ],
+                        "name": "Night light",
+                        "nicknames": [
+                            "wall plug"
+                        ]
+                    },
+                    "willReportState": False,
+                    "roomHint": "kitchen",
+                    "deviceInfo": {
+                        "manufacturer": "lights-out-inc",
+                        "model": "hs1234",
+                        "hwVersion": "3.2",
+                        "swVersion": "11.4"
+                    },
+                    "otherDeviceIds": [
+                        {
+                            "deviceId": "local-device-id"
+                        }
+                    ],
+                    "customData": {
+                        "fooValue": 74,
+                        "barValue": False,
+                        "bazValue": "foo"
+                    }
+                },
+                {
+                    "id": "456",
+                    "type": "action.devices.types.LIGHT",
+                    "traits": [
+                        "action.devices.traits.OnOff",
+                        "action.devices.traits.Brightness",
+                        "action.devices.traits.ColorSetting"
+                    ],
+                    "name": {
+                        "defaultNames": [
+                            "lights out inc. bulb A19 color hyperglow"
+                        ],
+                        "name": "lamp1",
+                        "nicknames": [
+                            "reading lamp"
+                        ]
+                    },
+                    "willReportState": False,
+                    "roomHint": "office",
+                    "attributes": {
+                        "colorModel": "rgb",
+                        "colorTemperatureRange": {
+                            "temperatureMinK": 2000,
+                            "temperatureMaxK": 9000
+                        },
+                        "commandOnlyColorSetting": False
+                    },
+                    "deviceInfo": {
+                        "manufacturer": "lights out inc.",
+                        "model": "hg11",
+                        "hwVersion": "1.2",
+                        "swVersion": "5.4"
+                    },
+                    "customData": {
+                        "fooValue": 12,
+                        "barValue": False,
+                        "bazValue": "bar"
+                    }
+                }
+            ]
+        }
+    }
+    obj = SyncResponse.load(response)
+    assert isinstance(obj, SyncResponse)
+    assert obj.dump() == response
+
+
+if __name__ == '__main__':
+    _test_sync_intent()
+    _test_query_intent()
+    _test_execute_intent()
+    pass
