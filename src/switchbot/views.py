@@ -1,6 +1,7 @@
 import logging
 from switchbot.service_layer import unit_of_work
 from switchbot.domain import model
+from switchbot import gh_intent
 
 logger = logging.getLogger(__name__)
 
@@ -33,27 +34,30 @@ def user_profile_by_secret(secret: str, uow: unit_of_work.AbstractUnitOfWork) ->
         return data
 
 
-def convert_dev_to_aog_sync_dto(dev: model.SwitchBotDevice) -> dict:
+def _convert_dev_to_aog_sync_dto(dev: model.SwitchBotDevice) -> gh_intent.SyncDevice:
     if dev.device_type in ['Plug Mini (US)']:
         _dev_id = dev.device_id
         _dev_type = "action.devices.types.OUTLET"
         _dev_traits = ["action.devices.traits.OnOff"]
-        _name = {"name": dev.device_name}
+        _name = dev.device_name
         _will_report_state = True
+        sync_dev = gh_intent.SyncDevice(
+            device_id=_dev_id,
+            name=gh_intent.SyncDeviceName(name=_name),
+            device_type=_dev_type,
+            traits=_dev_traits,
+            will_report_state=_will_report_state
+        )
     else:
         logger.warning(f'device object: {dev.dump()}')
         raise NotImplementedError
 
-    return {
-        "id": _dev_id,
-        "type": _dev_type,
-        "traits": _dev_traits,
-        "name": _name,
-        "willReportState": _will_report_state,
-    }
+    return sync_dev
 
 
-def get_user_sync_intent_fulfillment(uid: str, subscriber_id: str, uow: unit_of_work.AbstractUnitOfWork):
+def get_user_sync_intent_fulfillment(
+        uid: str, subscriber_id: str, request_id: str, uow: unit_of_work.AbstractUnitOfWork
+):
     """
     0. 檢查 subscriber_id 是否屬於 user.subscribers
     1. 設定 agentUserId = uid
@@ -63,11 +67,15 @@ def get_user_sync_intent_fulfillment(uid: str, subscriber_id: str, uow: unit_of_
         u = uow.users.get_by_uid(uid=uid)
         if subscriber_id not in u.subscribers:
             raise ValueError(f'{subscriber_id} not in user {uid} subscribers')
-        fulfillment = {
-            "agentUserId": f"{uid}",
-            "devices": [convert_dev_to_aog_sync_dto(dev) for dev in u.devices]
-        }
-    return fulfillment
+
+        sync_dto = gh_intent.SyncResponse(
+            requestId=request_id,
+            payload=gh_intent.SyncResponsePayload(
+                agentUserId=f"{u.uid}",
+                devices=[_convert_dev_to_aog_sync_dto(dev) for dev in u.devices]
+            )
+        )
+    return sync_dto.dump()
 
 
 def convert_dev_to_aog_query_dto(user: model.SwitchBotUserRepo, dev: model.SwitchBotDevice) -> dict:

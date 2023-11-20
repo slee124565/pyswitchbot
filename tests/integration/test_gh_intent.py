@@ -1,4 +1,4 @@
-from switchbot.adapters import gh_intent
+from switchbot import gh_intent
 
 
 def test_execute_intent():

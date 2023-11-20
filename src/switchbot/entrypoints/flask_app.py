@@ -195,6 +195,7 @@ def fulfillment():
             _payload = views.get_user_sync_intent_fulfillment(
                 uid=uid,
                 subscriber_id=subscriber_id,
+                request_id=request_id,
                 uow=bus.uow
             )
             response.get("payload").update(_payload)

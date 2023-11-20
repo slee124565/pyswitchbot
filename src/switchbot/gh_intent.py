@@ -507,6 +507,13 @@ class SyncDevice:
         self.other_device_ids = other_device_ids
         self.notification_supported_by_agent = notification_supported_by_agent
 
+    @classmethod
+    def load(cls, data: dict):
+        return SyncResponseSchema().load(data)
+
+    def dump(self) -> dict:
+        return SyncResponseSchema().dump(self)
+
 
 class SyncResponsePayload:
     def __init__(self, agentUserId: str, devices: List[SyncDevice], errorCode: Optional[str] = None,
