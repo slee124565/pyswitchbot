@@ -1,7 +1,7 @@
 import logging
 
-import switchbot.domain.model
-from switchbot.adapters import file_datastore
+# import switchbot.domain.model
+# from switchbot.adapters import file_datastore
 from switchbot.domain import model
 
 logger = logging.getLogger(__name__)
@@ -109,6 +109,7 @@ def test_switchbot_user_repo_schema():
         'states': [_state_plug_mini_CFD2, _state_plug_mini_FF22],
         'changes': [_change_plug_mini_FF22],
         'scenes': [],
+        'subscribers': [],
         'webhooks': []
     }
     obj = model.SwitchBotUserRepo.load(data)

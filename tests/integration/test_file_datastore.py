@@ -30,7 +30,7 @@ class TestJsonFileDatastore:
         )
         u = model.SwitchBotUserRepo(
             uid='uid', secret='secret', token='token',
-            devices=[d], changes=[c], states=[s], scenes=[], webhooks=[]
+            devices=[d], changes=[c], states=[s], scenes=[], subscribers=set(),  webhooks=[]
         )
         repo.add(u)
         assert repo.get_by_secret('secret') == u

@@ -1,16 +1,14 @@
 from typing import List, Optional, Dict, Any
 from marshmallow import Schema, INCLUDE, fields, post_load, post_dump
 
-from tests.integration.test_gh_intent import test_execute_intent, test_query_intent, test_sync_intent
 
-
-class ExecutionItemSchema(Schema):
+class ExecuteCmdExecItemSchema(Schema):
     command = fields.Str(required=True)
     params = fields.Dict()
 
     @post_load
     def make_execution_item(self, data, **kwargs):
-        return ExecutionItem(**data)
+        return ExecuteCmdExecItem(**data)
 
     @post_dump
     def remove_skip_values(self, data, **kwargs):
@@ -20,13 +18,13 @@ class ExecutionItemSchema(Schema):
         }
 
 
-class ExecuteDeviceItemSchema(Schema):
+class ExecuteCmdDevItemSchema(Schema):
     id = fields.Str(required=True)
     customData = fields.Dict()
 
     @post_load
     def make_device_item(self, data, **kwargs):
-        return ExecuteDeviceItem(**data)
+        return ExecuteCmdDevItem(**data)
 
     @post_dump
     def remove_skip_values(self, data, **kwargs):
@@ -36,17 +34,17 @@ class ExecuteDeviceItemSchema(Schema):
         }
 
 
-class ExecuteCommandItemSchema(Schema):
-    devices = fields.List(fields.Nested(ExecuteDeviceItemSchema()), required=True)
-    execution = fields.List(fields.Nested(ExecutionItemSchema()), required=True)
+class ExecuteCmdItemSchema(Schema):
+    devices = fields.List(fields.Nested(ExecuteCmdDevItemSchema()), required=True)
+    execution = fields.List(fields.Nested(ExecuteCmdExecItemSchema()), required=True)
 
     @post_load
     def make_command_item(self, data, **kwargs):
-        return ExecuteCommandItem(**data)
+        return ExecuteCmdItem(**data)
 
 
 class ExecutePayloadSchema(Schema):
-    commands = fields.List(fields.Nested(ExecuteCommandItemSchema()), required=True)
+    commands = fields.List(fields.Nested(ExecuteCmdItemSchema()), required=True)
 
     @post_load
     def make_payload(self, data, **kwargs):
@@ -71,37 +69,37 @@ class ExecuteRequestSchema(Schema):
         return ExecuteRequest(**data)
 
 
-class ExecutionItem:
-    def __init__(self, command, params=None):
+class ExecuteCmdExecItem:
+    def __init__(self, command: str, params: Optional[Dict] = None):
         self.command = command  # type:str
         self.params = params if params else {}  # type:dict
 
 
-class ExecuteDeviceItem:
-    def __init__(self, id, customData=None):
+class ExecuteCmdDevItem:
+    def __init__(self, id: str, customData: Optional[Dict] = None):
         self.id = id  # type:str
         self.customData = customData if customData else {}  # type:dict
 
 
-class ExecuteCommandItem:
-    def __init__(self, devices, execution):
-        self.devices = devices  # type:List[ExecuteDeviceItem]
-        self.execution = execution  # type:List[ExecutionItem]
+class ExecuteCmdItem:
+    def __init__(self, devices: List[ExecuteCmdDevItem], execution: List[ExecuteCmdExecItem]):
+        self.devices = devices  # type:List[ExecuteCmdDevItem]
+        self.execution = execution  # type:List[ExecuteCmdExecItem]
 
 
 class ExecutePayload:
     def __init__(self, commands):
-        self.commands = commands  # type:List[ExecuteCommandItem]
+        self.commands = commands  # type:List[ExecuteCmdItem]
 
 
 class ExecuteInputItem:
-    def __init__(self, intent, payload):
+    def __init__(self, intent: str, payload: ExecutePayload):
         self.intent = intent  # type:str
-        self.payload = payload  # Payload is an object of Payload class
+        self.payload = payload  # type: ExecutePayload
 
 
 class ExecuteRequest:
-    def __init__(self, requestId, inputs):
+    def __init__(self, requestId: str, inputs: List[ExecuteInputItem]):
         self.requestId = requestId  # type:str
         self.inputs = inputs  # type:List[ExecuteInputItem]
 

@@ -67,7 +67,6 @@ def get_user_sync_intent_fulfillment(
         u = uow.users.get_by_uid(uid=uid)
         if subscriber_id not in u.subscribers:
             raise ValueError(f'{subscriber_id} not in user {uid} subscribers')
-
         sync_dto = gh_intent.SyncResponse(
             requestId=request_id,
             payload=gh_intent.SyncResponsePayload(
@@ -78,21 +77,22 @@ def get_user_sync_intent_fulfillment(
     return sync_dto.dump()
 
 
-def convert_dev_to_aog_query_dto(user: model.SwitchBotUserRepo, dev: model.SwitchBotDevice) -> dict:
-    if dev.device_type in ['Plug Mini (US)']:
-        state = user.get_dev_state(dev_id=dev.device_id)
-        return {
-            "on": True if state.power == "on" else False,
-            "online": True,
-            "status": "SUCCESS"
-        }
+def _convert_dev_state_to_dev_state_dto(dev_state: model.SwitchBotStatus) -> gh_intent.QueryDeviceStatus:
+    if dev_state.device_type in ['Plug Mini (US)']:
+        return gh_intent.QueryDeviceStatus(
+            online=True,
+            status="SUCCESS",
+            extra_fields={
+                "on": True if dev_state.power == "on" else False
+            }
+        )
     else:
-        logger.warning(f'device object: {dev.dump()}')
+        logger.warning(f'device status object: {dev_state.dump()}')
         raise NotImplementedError
 
 
 def get_user_query_intent_fulfillment(
-        uid: str, subscriber_id: str, devices_dto: dict, uow: unit_of_work.AbstractUnitOfWork
+        uid: str, subscriber_id: str, gh_query_dto: gh_intent.QueryRequest, uow: unit_of_work.AbstractUnitOfWork
 ) -> dict:
     """
     1. 檢查 subscriber_id 是否屬於 user.subscribers
@@ -102,13 +102,15 @@ def get_user_query_intent_fulfillment(
         u = uow.users.get_by_uid(uid=uid)
         if subscriber_id not in u.subscribers:
             raise ValueError(f'{subscriber_id} not in user {uid} subscribers')
-        fulfillment = {
-            "devices": {
-                f"{dev.device_id}": convert_dev_to_aog_query_dto(user=u, dev=dev)
-                for dev in u.devices if dev.device_id in [d.get("id") for d in devices_dto]
-            }
-        }
-    return fulfillment
+        dev_dto_ids = [dev_dto.id for dev_dto in gh_query_dto.inputs[0].payload.devices]
+        dev_dto_states = [_convert_dev_state_to_dev_state_dto(u.get_dev_state(dev_id=_id)) for _id in dev_dto_ids]
+        query_dto = gh_intent.QueryResponse(
+            requestId=gh_query_dto.requestId,
+            payload=gh_intent.QueryResponsePayload(
+                devices=dev_dto_states
+            )
+        )
+    return query_dto.dump()
 
 
 def get_user_exec_intent_fulfillment(

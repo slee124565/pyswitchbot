@@ -10,7 +10,7 @@ from switchbot.domain import commands
 from switchbot.service_layer import unit_of_work
 from switchbot.adapters import iot_api_server
 from switchbot.service_layer.handlers import InvalidSrcServer
-from switchbot import bootstrap, views, config
+from switchbot import bootstrap, views, config, gh_intent
 
 logging_config.dictConfig(config.logging_config)
 logger = logging.getLogger(__name__)
@@ -202,29 +202,56 @@ def fulfillment():
             logger.info(f'response {response}')
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.QUERY":
+            gh_query_dto = gh_intent.QueryRequest.load(post_data)
             _payload = views.get_user_query_intent_fulfillment(
                 uid=uid,
                 subscriber_id=subscriber_id,
-                devices_dto=post_data.get("inputs")[0].get("payload").get("devices"),
+                gh_query_dto=gh_query_dto,
                 uow=bus.uow
             )
             response.get("payload").update(_payload)
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.EXECUTE":
-            aog_cmds_dto = post_data.get("inputs")[0].get("payload").get("commands")
-            cmd = commands.ExecAoGCmds(
-                uid=uid,
-                subscriber_id=subscriber_id,
-                aog_cmds_dto=aog_cmds_dto
-            )
-            bus.handle(cmd)
-            _payload = views.get_user_exec_intent_fulfillment(
-                uid=uid,
-                subscriber_id=subscriber_id,
-                aog_cmds_dto=aog_cmds_dto,
-                uow=bus.uow
-            )
-            response.get("payload").update(_payload)
+            gh_execute_dto = gh_intent.ExecuteRequest.load(post_data)
+            assert isinstance(gh_execute_dto, gh_intent.ExecuteRequest)
+            assert len(gh_execute_dto.inputs) == 1
+            _responses_dto = []
+            for cmd_dto in gh_execute_dto.inputs[0].payload.commands:
+                assert isinstance(cmd_dto, gh_intent.ExecuteCmdItem)
+                cmd_exec_dto = cmd_dto.execution
+                assert isinstance(cmd_exec_dto, gh_intent.ExecuteCmdExecItem)
+                if cmd_exec_dto.command == "action.devices.commands.OnOff":
+                    _cmd_type = 'command'
+                    _cmd_value = 'turnOn' if cmd_exec_dto.params.get("on") else 'turnOff'
+                    _cmd_param = 'default'
+                    cmd_devs_dto = cmd_dto.devices
+                    for cmd_dev_dto in cmd_devs_dto:
+                        cmd = commands.SendDevCtrlCmd(
+                            uid=uid,
+                            subscriber_id=subscriber_id,
+                            dev_id=cmd_dev_dto.id,
+                            cmd_type=_cmd_type,
+                            cmd_value=_cmd_value,
+                            cmd_param=_cmd_param
+                        )
+                        bus.handle(cmd)
+                        _cmd_resp_dto = gh_intent.ExecuteCommandResponseItem(
+                            ids=[],
+                            status="PENDING",
+                            states={
+                                "online": True,
+                                "on": True if cmd_exec_dto.params.get("on") else False
+                            }
+                        )
+                        _responses_dto.append(_cmd_resp_dto)
+                else:
+                    raise NotImplementedError
+            response = gh_intent.ExecuteResponse(
+                requestId=gh_execute_dto.requestId,
+                payload=gh_intent.ExecuteResponsePayload(
+                    commands=_responses_dto
+                )
+            ).dump()
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.DISCONNECT":
             cmd = commands.Unsubscribe(uid=uid, subscriber_id=subscriber_id)
