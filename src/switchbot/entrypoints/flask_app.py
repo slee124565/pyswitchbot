@@ -192,14 +192,12 @@ def fulfillment():
         # response according to fulfillment
         logger.info(f'request {request.json}')
         if intent_id == "action.devices.SYNC":
-            _payload = views.get_user_sync_intent_fulfillment(
+            response = views.get_user_sync_intent_fulfillment(
                 uid=uid,
                 subscriber_id=subscriber_id,
                 request_id=request_id,
                 uow=bus.uow
             )
-            response.get("payload").update(_payload)
-            logger.info(f'response {response}')
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.QUERY":
             gh_query_dto = gh_intent.QueryRequest.load(post_data)

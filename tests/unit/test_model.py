@@ -1,5 +1,8 @@
+import logging
 from typing import List
 from switchbot.domain import model
+
+logger = logging.getLogger(__name__)
 
 
 def _make_fake_dev_states() -> List[model.SwitchBotStatus]:
@@ -125,6 +128,8 @@ def test_request_sync_with_new_device_added():
 
     assert len(user.devices) == 2
     assert set([dev.device_id for dev in user.devices]) == {'6055F92FCFD2', '6055F930FF22'}
+    logger.debug(f'log debug')
+    logger.info(f'log info')
 
 
 def test_request_sync_with_device_name_changed():

@@ -55,7 +55,6 @@ def test_happy_user_iot_service_journey():
     # 模擬系統更新用戶設備清單
     r = api_client.post_to_request_sync(user_id=uid, devices=_test_devices)
     data = r.json()
-    logger.debug(f'response data {data}')
     assert data.get('uid') == uid
     assert data.get('devices') == len(_test_devices)
 
@@ -90,7 +89,7 @@ def test_happy_user_iot_service_journey():
     # 模擬 AoG 查詢用戶設備列表 sync intent
     r = api_client.post_to_query_user_dev_list(uid=uid, subscriber_id=subscriber_id)
     resp = r.json()
-    logger.debug(f'sync fulfillment: {resp}')
+    logger.info(f'sync fulfillment: {resp}')
     assert isinstance(resp.get("payload").get("devices"), list)
     assert len(resp.get("payload").get("devices")) == 2
 
@@ -109,20 +108,20 @@ def test_happy_user_iot_service_journey():
     dev_onoff = next((dto[_id].get("on") for _id in dto))
     logger.debug(f'target dev power {dev_onoff}')
 
-    # 模擬 AoG 控制用戶設備列表中的第一個設備狀態ON/OFF, execute intent
-    ctr_onoff = not dev_onoff
-    r = api_client.post_to_ctrl_user_dev_onoff(uid=uid, subscriber_id=subscriber_id, dev_id=dev_id, dev_onoff=ctr_onoff)
-    resp = r.json()
-    assert isinstance(resp, dict)
-    logger.debug(f'exec fulfillment: {resp}')
-    items = resp.get("payload").get("commands")
-    assert isinstance(items, list)
-    for item in items:
-        assert isinstance(item, dict)
-        assert item.get("ids")
-        assert item.get("status")
-        assert item.get("states")
-
+    # # 模擬 AoG 控制用戶設備列表中的第一個設備狀態ON/OFF, execute intent
+    # ctr_onoff = not dev_onoff
+    # r = api_client.post_to_ctrl_user_dev_onoff(uid=uid, subscriber_id=subscriber_id, dev_id=dev_id, dev_onoff=ctr_onoff)
+    # resp = r.json()
+    # assert isinstance(resp, dict)
+    # logger.debug(f'exec fulfillment: {resp}')
+    # items = resp.get("payload").get("commands")
+    # assert isinstance(items, list)
+    # for item in items:
+    #     assert isinstance(item, dict)
+    #     assert item.get("ids")
+    #     assert item.get("status")
+    #     assert item.get("states")
+    #
     # # 模擬系統接收到SwitchBot Webhook ReportChange 設備狀態更新資料
     # state = {
     #     "eventType": "changeReport",

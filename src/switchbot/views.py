@@ -104,13 +104,13 @@ def get_user_query_intent_fulfillment(
             raise ValueError(f'{subscriber_id} not in user {uid} subscribers')
         dev_dto_ids = [dev_dto.id for dev_dto in gh_query_dto.inputs[0].payload.devices]
         dev_dto_states = [_convert_dev_state_to_dev_state_dto(u.get_dev_state(dev_id=_id)) for _id in dev_dto_ids]
-        query_dto = gh_intent.QueryResponse(
+        query_resp_dto = gh_intent.QueryResponse(
             requestId=gh_query_dto.requestId,
             payload=gh_intent.QueryResponsePayload(
                 devices=dev_dto_states
             )
         )
-    return query_dto.dump()
+    return query_resp_dto.dump()
 
 
 def get_user_exec_intent_fulfillment(

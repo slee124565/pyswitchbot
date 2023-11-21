@@ -153,6 +153,7 @@ def post_to_query_user_dev_list(uid: str, subscriber_id: str):
     )
     assert r.status_code in [HTTPStatus.OK]
     resp = r.json()
+    logger.debug(f'resp {resp}')
     assert isinstance(resp, dict)
     assert resp.get("requestId") == "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
     assert isinstance(resp.get("payload"), dict)
