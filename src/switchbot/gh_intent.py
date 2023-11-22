@@ -394,14 +394,14 @@ class SyncDeviceInfoSchema(Schema):
 
 class SyncDeviceNameSchema(Schema):
     """{
-                        "defaultNames": [
-                            "My Outlet 1234"
-                        ],
-                        "name": "Night light",
-                        "nicknames": [
-                            "wall plug"
-                        ]
-                    }"""
+        "defaultNames": [
+            "My Outlet 1234"
+        ],
+        "name": "Night light",
+        "nicknames": [
+            "wall plug"
+        ]
+    }"""
     name = fields.Str(required=True)
     defaultNames = fields.List(fields.Str())
     nicknames = fields.List(fields.Str())

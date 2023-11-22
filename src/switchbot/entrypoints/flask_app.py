@@ -184,10 +184,6 @@ def fulfillment():
         # create cmd according to IntentID
         request_id = post_data.get("requestId")
         intent_id = post_data.get("inputs")[0].get("intent")
-        response = {
-            "requestId": request_id,
-            "payload": {},
-        }
 
         # response according to fulfillment
         logger.info(f'request {request.json}')
@@ -201,13 +197,12 @@ def fulfillment():
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.QUERY":
             gh_query_dto = gh_intent.QueryRequest.load(post_data)
-            _payload = views.user_query_intent_fulfillment(
+            response = views.user_query_intent_fulfillment(
                 uid=uid,
                 subscriber_id=subscriber_id,
                 gh_query_dto=gh_query_dto,
                 uow=bus.uow
             )
-            response.get("payload").update(_payload)
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.EXECUTE":
             gh_execute_dto = gh_intent.ExecuteRequest.load(post_data)

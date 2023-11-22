@@ -5,8 +5,8 @@ dotenv.load_dotenv()
 
 
 def get_api_url():
-    host = os.environ.get("API_HOST", "localhost")
-    port = 5000 if host == "localhost" else 80
+    host = os.environ.get("API_HOST", "127.0.0.1")
+    port = 5000 if host == "127.0.0.1" else 80
     return f"http://{host}:{port}"
 
 
@@ -73,7 +73,7 @@ logging_config = {
         },
         "switchbot": {
             "handlers": ["console"],
-            "level": "INFO",
+            "level": "DEBUG",
             "propagate": False
         },
         "switchbot.adapters.iot_api_server": {

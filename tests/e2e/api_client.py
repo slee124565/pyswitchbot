@@ -125,6 +125,7 @@ def post_to_query_user_dev_state(uid: str, subscriber_id: str, dev_id: str):
     )
     assert r.status_code == HTTPStatus.OK
     resp = r.json()
+    logger.debug(f"QUERY fulfillment: {resp}")
     assert isinstance(resp, dict)
     assert resp.get("requestId") == "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
     assert isinstance(resp.get("payload"), dict)
@@ -236,7 +237,7 @@ def post_to_register(secret, token, expect_success=True):
     #     logger.warning(f"{r.content}, {r.url}")
     #     logger.warning(f"{r.json()}, {r.url}")
     #
-    # logger.debug(f'response status code {r.status_code}')
+    logger.debug(f'post_to_register resp {r.status_code}')
     if expect_success:
         assert r.status_code in [HTTPStatus.OK, HTTPStatus.ACCEPTED]
     return r
