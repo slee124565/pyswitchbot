@@ -284,8 +284,14 @@ class QueryDeviceStatusSchema(Schema):
             merged = {**data, **data['extra_fields']}
             # 移除原始的 extra_fields 鍵
             merged.pop('extra_fields', None)
-            return merged
-        return data
+            return {
+                key: value for key, value in merged.items()
+                if value is not None
+            }
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
 
 
 class QueryResponsePayloadSchema(Schema):
@@ -314,8 +320,8 @@ class QueryDeviceStatus:
 
 
 class QueryResponsePayload:
-    def __init__(self, **kwargs):
-        self.devices = kwargs.get("devices")
+    def __init__(self, devices: dict):
+        self.devices = devices
 
 
 class QueryResponse:

@@ -230,15 +230,16 @@ def test_user_execute_intent_fulfillment_view(memory_bus):
     data = views.user_exec_intent_fulfillment(
         uid=u.uid, subscriber_id='aog', gh_exec_dto=intent, uow=memory_bus.uow
     )
+    logger.debug(f'data {data}')
     assert gh_intent.ExecuteResponse.load(data)
     obj = gh_intent.ExecuteResponse.load(data)
     assert isinstance(obj, gh_intent.ExecuteResponse)
     assert obj.requestId == 'testId'
     assert len(obj.payload.commands) == 1
     exec_cmd = obj.payload.commands[0]
-    assert isinstance(exec_cmd, dict)
-    assert exec_cmd.get("ids") == ["6055F92FCFD2"]
-    assert exec_cmd.get("status") in ["SUCCESS", "PENDING", "OFFLINE", "EXCEPTIONS", "ERROR"]
-    assert isinstance(exec_cmd.get("states"), dict)
-    assert exec_cmd.get("states", None).get("online") is not None
-    assert exec_cmd.get("states", None).get("on") is not None
+    assert isinstance(exec_cmd, gh_intent.ExecuteCommandResponseItem)
+    assert exec_cmd.ids == ["6055F92FCFD2"]
+    assert exec_cmd.status in ["SUCCESS", "PENDING", "OFFLINE", "EXCEPTIONS", "ERROR"]
+    assert isinstance(exec_cmd.states, dict)
+    assert exec_cmd.states.get("online") is not None
+    assert exec_cmd.states.get("on") is not None
