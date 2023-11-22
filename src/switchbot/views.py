@@ -55,7 +55,7 @@ def _convert_dev_to_aog_sync_dto(dev: model.SwitchBotDevice) -> gh_intent.SyncDe
     return sync_dev
 
 
-def get_user_sync_intent_fulfillment(
+def user_sync_intent_fulfillment(
         uid: str, subscriber_id: str, request_id: str, uow: unit_of_work.AbstractUnitOfWork
 ):
     """
@@ -91,7 +91,7 @@ def _convert_dev_state_to_dev_state_dto(dev_state: model.SwitchBotStatus) -> gh_
         raise NotImplementedError
 
 
-def get_user_query_intent_fulfillment(
+def user_query_intent_fulfillment(
         uid: str, subscriber_id: str, gh_query_dto: gh_intent.QueryRequest, uow: unit_of_work.AbstractUnitOfWork
 ) -> dict:
     """
@@ -113,21 +113,43 @@ def get_user_query_intent_fulfillment(
     return query_resp_dto.dump()
 
 
-def get_user_exec_intent_fulfillment(
-        uid: str, subscriber_id: str, aog_cmds_dto: list, uow: unit_of_work.AbstractUnitOfWork
-):
-    """todo"""
+def _convert_dev_state_to_dev_exec_cmd_state(dev_state: model.SwitchBotStatus) -> gh_intent.ExecuteCommandResponseItem:
+    if dev_state.device_type in ['Plug Mini (US)']:
+        return gh_intent.ExecuteCommandResponseItem(
+            ids=[dev_state.device_id],
+            status="PENDING",
+            states={
+                "online": True,
+                "on": True if dev_state.power == "on" else False
+            }
+        )
+    else:
+        raise NotImplementedError
+
+
+def user_exec_intent_fulfillment(
+        uid: str, subscriber_id: str, gh_exec_dto: gh_intent.ExecuteRequest, uow: unit_of_work.AbstractUnitOfWork
+) -> dict:
     with uow:
         u = uow.users.get_by_uid(uid=uid)
         if subscriber_id not in u.subscribers:
             raise ValueError(f'{subscriber_id} not in user {uid} subscribers')
-        for cmd_dto in aog_cmds_dto:
-            dev_ids = [d.get("id") for d in cmd_dto.get("devices")]
-            # execution = cmd_dto.get("execution")[0]
-            # _aog_dto =
+        if gh_exec_dto.inputs[0].intent != gh_intent.ExecuteInputItem.INTENT:
+            raise ValueError
+        if len(gh_exec_dto.inputs) != 1:
             raise NotImplementedError
-        fulfillment = {
-            "commands": [
-            ]
-        }
-    return fulfillment
+        if len(gh_exec_dto.inputs[0].payload.commands) != 1:
+            raise NotImplementedError
+        req_cmd = gh_exec_dto.inputs[0].payload.commands[0]
+        _commands = [
+            _convert_dev_state_to_dev_exec_cmd_state(
+                u.get_dev_state(dev_id=_dev.id))
+            for _dev in req_cmd.devices
+        ]
+        exec_resp_dto = gh_intent.ExecuteResponse(
+            requestId=gh_exec_dto.requestId,
+            payload=gh_intent.ExecuteResponsePayload(
+                commands=_commands
+            )
+        )
+    return exec_resp_dto.dump()

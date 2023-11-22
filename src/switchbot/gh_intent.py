@@ -88,11 +88,13 @@ class ExecuteCmdItem:
 
 
 class ExecutePayload:
-    def __init__(self, commands):
+    def __init__(self, commands: List[ExecuteCmdItem]):
         self.commands = commands  # type:List[ExecuteCmdItem]
 
 
 class ExecuteInputItem:
+    INTENT = "action.devices.EXECUTE"
+
     def __init__(self, intent: str, payload: ExecutePayload):
         self.intent = intent  # type:str
         self.payload = payload  # type: ExecutePayload
@@ -157,7 +159,7 @@ class ExecuteResponseSchema(Schema):
 
 
 class ExecuteCommandResponseItem:
-    def __init__(self, ids, status, states=None, errorCode=None):
+    def __init__(self, ids: List[str], status: str, states: Optional[dict] = None, errorCode: str = None):
         self.ids = ids  # type:List[str]
         self.status = status  # type:str
         self.states = states  # type:dict
@@ -165,14 +167,14 @@ class ExecuteCommandResponseItem:
 
 
 class ExecuteResponsePayload:
-    def __init__(self, errorCode=None, debugString=None, commands=None):
+    def __init__(self, commands: List[ExecuteCommandResponseItem], errorCode: str = None, debugString: str = None):
         self.errorCode = errorCode  # type:str
         self.debugString = debugString  # type:str
-        self.commands = commands if commands else []  # type:ExecuteCommandResponseItem
+        self.commands = commands if commands else []
 
 
 class ExecuteResponse:
-    def __init__(self, requestId, payload):
+    def __init__(self, requestId: str, payload: ExecuteResponsePayload):
         self.requestId = requestId  # type:str
         self.payload = payload  # type:ExecuteResponsePayload
 
@@ -238,6 +240,8 @@ class QueryPayload:
 
 
 class QueryInputItem:
+    INTENT = "action.devices.QUERY"
+
     def __init__(self, intent: str, payload: QueryPayload):
         self.intent = intent
         self.payload = payload
@@ -345,6 +349,8 @@ class SyncRequestSchema(Schema):
 
 
 class SyncInput:
+    INTENT = "action.devices.SYNC"
+
     def __init__(self, intent: str):
         self.intent = intent
 
