@@ -214,34 +214,35 @@ def fulfillment():
             _responses_dto = []
             for cmd_dto in gh_execute_dto.inputs[0].payload.commands:
                 assert isinstance(cmd_dto, gh_intent.ExecuteCmdItem)
-                cmd_exec_dto = cmd_dto.execution
-                assert isinstance(cmd_exec_dto, gh_intent.ExecuteCmdExecItem)
-                if cmd_exec_dto.command == "action.devices.commands.OnOff":
-                    _cmd_type = 'command'
-                    _cmd_value = 'turnOn' if cmd_exec_dto.params.get("on") else 'turnOff'
-                    _cmd_param = 'default'
-                    cmd_devs_dto = cmd_dto.devices
-                    for cmd_dev_dto in cmd_devs_dto:
-                        cmd = commands.SendDevCtrlCmd(
-                            uid=uid,
-                            subscriber_id=subscriber_id,
-                            dev_id=cmd_dev_dto.id,
-                            cmd_type=_cmd_type,
-                            cmd_value=_cmd_value,
-                            cmd_param=_cmd_param
-                        )
-                        bus.handle(cmd)
-                        _cmd_resp_dto = gh_intent.ExecuteCommandResponseItem(
-                            ids=[],
-                            status="PENDING",
-                            states={
-                                "online": True,
-                                "on": True if cmd_exec_dto.params.get("on") else False
-                            }
-                        )
-                        _responses_dto.append(_cmd_resp_dto)
-                else:
-                    raise NotImplementedError
+                for cmd_exec_dto in cmd_dto.execution[:1]:
+                    # logger.debug(f"cmd_exec_dto type {type(cmd_exec_dto)}")
+                    assert isinstance(cmd_exec_dto, gh_intent.ExecuteCmdExecItem)
+                    if cmd_exec_dto.command == "action.devices.commands.OnOff":
+                        _cmd_type = 'command'
+                        _cmd_value = 'turnOn' if cmd_exec_dto.params.get("on") else 'turnOff'
+                        _cmd_param = 'default'
+                        cmd_devs_dto = cmd_dto.devices
+                        for cmd_dev_dto in cmd_devs_dto:
+                            cmd = commands.SendDevCtrlCmd(
+                                uid=uid,
+                                subscriber_id=subscriber_id,
+                                dev_id=cmd_dev_dto.id,
+                                cmd_type=_cmd_type,
+                                cmd_value=_cmd_value,
+                                cmd_param=_cmd_param
+                            )
+                            bus.handle(cmd)
+                            _cmd_resp_dto = gh_intent.ExecuteCommandResponseItem(
+                                ids=[],
+                                status="PENDING",
+                                states={
+                                    "online": True,
+                                    "on": True if cmd_exec_dto.params.get("on") else False
+                                }
+                            )
+                            _responses_dto.append(_cmd_resp_dto)
+                    else:
+                        raise NotImplementedError
             response = gh_intent.ExecuteResponse(
                 requestId=gh_execute_dto.requestId,
                 payload=gh_intent.ExecuteResponsePayload(

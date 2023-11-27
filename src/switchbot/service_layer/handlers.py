@@ -1,7 +1,7 @@
 import logging
 from typing import List, Dict, Callable, Type  # , TYPE_CHECKING
 from switchbot.domain import commands, events, model
-from switchbot.adapters import iot_api_server
+from switchbot.adapters.iot_api_server import SwitchBotApiServer
 # if TYPE_CHECKING:
 #     from . import unit_of_work
 from . import unit_of_work
@@ -15,6 +15,36 @@ class InvalidSrcServer(Exception):
 
 class SwBotIotError(Exception):
     pass
+
+
+def send_dev_ctrl_cmd(
+        cmd: commands.SendDevCtrlCmd,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    logger.debug(f'cmd: {cmd}')
+    with uow:
+        u = uow.users.get_by_uid(uid=cmd.uid)
+        if u is None:
+            raise ValueError(f"uid {cmd.uid} not exist in users")
+        if cmd.subscriber_id not in u.subscribers:
+            raise ValueError(f"subscriber {cmd.subscriber_id} not in user {cmd.uid} subscribers")
+        api_server = SwitchBotApiServer()
+        api_server.send_dev_ctrl_cmd(
+            secret=u.secret,
+            token=u.token,
+            dev_id=cmd.dev_id,
+            cmd_type=cmd.cmd_type,
+            cmd_value=cmd.cmd_value,
+            cmd_param=cmd.cmd_param
+        )
+        u.set_dev_ctrl_cmd_sent(
+            dev_id=cmd.dev_id,
+            cmd=model.SwitchBotCommand(
+                commandType=cmd.cmd_type,
+                command=cmd.cmd_value,
+                parameter=cmd.cmd_param)
+        )
+        uow.commit()
 
 
 def report_state(
@@ -216,5 +246,6 @@ COMMAND_HANDLERS = {
     commands.RequestSync: request_sync,
     commands.ReportState: report_state,
     commands.ReportChange: report_change,
+    commands.SendDevCtrlCmd: send_dev_ctrl_cmd,
     commands.Disconnect: unlink_user,
 }  # type: Dict[Type[commands.Command], Callable]

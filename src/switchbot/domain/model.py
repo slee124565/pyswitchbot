@@ -313,12 +313,12 @@ class SwitchBotUserRepo:
         self.subscribers = subscribers  # type: Set
         self.events = []
 
-    def set_dev_ctrl_cmd_sent(self, dev_id: str, cmd_type: str, cmd_value: str, cmd_param: Optional[str | dict]):
+    def set_dev_ctrl_cmd_sent(self, dev_id: str, cmd: SwitchBotCommand):
         logger.warning(f"todo: set_dev_ctrl_cmd_sent")
         dev = next((d for d in self.devices if d.device_id == dev_id), None)
         if dev:
-            if cmd_type == "command" and cmd_value in ["turnOn", "turnOff"]:
-                dev.target_state.update({"power": "on"} if cmd_value else {"power": "off"})
+            if cmd.commandType == "command" and cmd.command in ["turnOn", "turnOff"]:
+                dev.target_state.update({"power": "on"} if cmd.command == "turnOn" else {"power": "off"})
             else:
                 raise NotImplementedError
         else:
