@@ -186,7 +186,8 @@ def fulfillment():
         intent_id = post_data.get("inputs")[0].get("intent")
 
         # response according to fulfillment
-        logger.info(f'request {request.json}')
+        logger.debug(f'request {request.json}')
+        logger.info(f"{intent_id}, {subscriber_id}, {uid}, {request_id}")
         if intent_id == "action.devices.SYNC":
             response = views.user_sync_intent_fulfillment(
                 uid=uid,
@@ -194,6 +195,7 @@ def fulfillment():
                 request_id=request_id,
                 uow=bus.uow
             )
+            logger.info(f"FULFILLMENT {request_id}, {response}")
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.QUERY":
             gh_query_dto = gh_intent.QueryRequest.load(post_data)
@@ -203,6 +205,7 @@ def fulfillment():
                 gh_query_dto=gh_query_dto,
                 uow=bus.uow
             )
+            logger.info(f"FULFILLMENT {request_id}, {response}")
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.EXECUTE":
             gh_execute_dto = gh_intent.ExecuteRequest.load(post_data)
@@ -245,12 +248,15 @@ def fulfillment():
                     commands=_responses_dto
                 )
             ).dump()
+            logger.info(f"FULFILLMENT {request_id}, {response}")
             return jsonify(response), HTTPStatus.OK
         elif intent_id == "action.devices.DISCONNECT":
             cmd = commands.Unsubscribe(uid=uid, subscriber_id=subscriber_id)
             bus.handle(cmd)
+            logger.info(f"FULFILLMENT {request_id}")
             return jsonify({}), HTTPStatus.OK
         else:
+            logger.warning(f"INTENT_ID invalid, {post_data}")
             return jsonify({}), HTTPStatus.BAD_REQUEST
 
     except ApiAccessTokenError:
@@ -406,6 +412,10 @@ def register():
         return jsonify({}), HTTPStatus.UNAUTHORIZED
 
 
+def main():
+    app.run(debug=True)
+
+
 if __name__ == '__main__':
     """todo: debug flag should be assigned by config module"""
-    app.run(debug=True)
+    main()
