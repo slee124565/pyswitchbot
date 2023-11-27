@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import List, Set
+from typing import List, Set, Dict, Optional
 from dataclasses import dataclass
 from marshmallow import Schema, fields, post_load, post_dump
 from switchbot.domain import events
@@ -130,6 +130,16 @@ class SwitchBotStatus:
 
 
 class SwitchBotDevice:
+    """
+    _target_state 的設計來源自 homekit device current/target state 概念，
+    current_state 意思是設備目前的實際狀態
+    target_state 意思是設備上一個指令執行之後，期望設備的狀態
+    例如：
+    系統針對 plug 設備，傳送了一個 turnOn 指令之後，就可以記錄目前該設備的 target_state = {"power": "on"}，
+    之後系統可以針對 target/current state 做後續的邏輯處理，比如：
+    1. 再一定的時間範圍內，重新傳送指令，直到完成目標狀態為止
+    2. 依據目前時間，判斷給用戶查詢的狀態是 current/target power state
+    """
     state: SwitchBotStatus
 
     def __init__(
@@ -171,7 +181,8 @@ class SwitchBotDevice:
         self.blind_tilt_devices_ids = blind_tilt_devices_ids
         self.direction = direction
         self.slide_position = slide_position
-        self.events = []
+        self.target_state = {}
+        # self.events = []
 
     def __eq__(self, other):
         if not isinstance(other, SwitchBotDevice):
@@ -237,6 +248,32 @@ class SwitchBotScene:
         return _schema.dump(self)
 
 
+class SwitchBotCommandSchema(Schema):
+    commandType = fields.Str(required=True)
+    command = fields.Str(required=True)
+    parameter = fields.Raw(required=False, allow_none=True)
+
+    @post_load
+    def make_switch_bot_command(self, data, **kwargs):
+        return SwitchBotCommand(**data)
+
+
+class SwitchBotCommand:
+    def __init__(self, commandType: str, command: str, parameter: Optional[str | dict] = None):
+        self.commandType = commandType
+        self.command = command
+        self.parameter = parameter
+
+    @classmethod
+    def load(cls, data: dict):
+        _schema = SwitchBotCommandSchema()
+        return _schema.load(data)
+
+    def dump(self):
+        _schema = SwitchBotCommandSchema()
+        return _schema.dump(self)
+
+
 @dataclass
 class SwitchBotWebhook:
     url: str
@@ -270,10 +307,22 @@ class SwitchBotUserRepo:
         self.devices = devices  # type: List[SwitchBotDevice]
         self.changes = changes  # type: List[SwitchBotChangeReport]
         self.states = states  # type: List[SwitchBotStatus]
+        self._states = []  # type: List[Dict]
         self.scenes = scenes  # type: List[SwitchBotScene]
         self.webhooks = webhooks  # type: List[SwitchBotWebhook]
         self.subscribers = subscribers  # type: Set
         self.events = []
+
+    def set_dev_ctrl_cmd_sent(self, dev_id: str, cmd_type: str, cmd_value: str, cmd_param: Optional[str | dict]):
+        logger.warning(f"todo: set_dev_ctrl_cmd_sent")
+        dev = next((d for d in self.devices if d.device_id == dev_id), None)
+        if dev:
+            if cmd_type == "command" and cmd_value in ["turnOn", "turnOff"]:
+                dev.target_state.update({"power": "on"} if cmd_value else {"power": "off"})
+            else:
+                raise NotImplementedError
+        else:
+            raise ValueError
 
     @classmethod
     def load(cls, data: dict):
@@ -305,8 +354,12 @@ class SwitchBotUserRepo:
         return [dev.state for dev in targets]
 
     def report_state(self, state: SwitchBotStatus):
+        """todo: target_state clean up"""
         dev = next((dev for dev in self.devices if dev.device_id == state.device_id))
         dev.state = state
+        # for k in dev.target_state.keys():
+        if dev.target_state:
+            logger.warning("todo: dev target_state not clean up yet")
 
     def request_sync(self, devices: List[SwitchBotDevice]):
         sync_dev_id_list = [dev.device_id for dev in devices]

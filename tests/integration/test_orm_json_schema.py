@@ -138,3 +138,35 @@ def test_switchbot_webhook_report_change():
     assert obj.event_version == data.get("eventVersion")
     assert obj.context == data.get("context")
     assert obj.dump() == data
+
+
+def test_switchbot_command_schema():
+    testdatas = [{
+        "commandType": "command",
+        "command": "createKey",
+        "parameter": {
+            "name": "Guest Code",
+            "type": "timeLimit",
+            "password": "12345678",
+            "startTime": 1664640056,
+            "endTime": 1665331432
+        }
+    },
+        {
+            "command": "turnOn",
+            "parameter": "default",
+            "commandType": "command"
+        },
+        {
+            "command": "setColor",
+            "parameter": "122:80:20",
+            "commandType": "command"
+        }
+    ]
+    for data in testdatas:
+        obj = model.SwitchBotCommand.load(data)
+        assert isinstance(obj, model.SwitchBotCommand)
+        assert obj.command == data.get("command")
+        assert obj.commandType == data.get("commandType")
+        assert obj.parameter == data.get("parameter")
+        assert obj.dump() == data
