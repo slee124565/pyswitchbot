@@ -58,6 +58,7 @@ class TestRegister:
     Webhook 的 URI 設定 (UpdateUserWebhook)，更新用戶在本系統內的設備清單 (RequestSync)，並且查詢用戶設備的狀態 (ReportState)
     記錄在本系統資料庫中，藉以支援 AoG Intent API & Webhook 服務
     """
+
     def test_register(self):
         bus = bootstrap_test_app()
 
@@ -275,8 +276,6 @@ class TestSubscription:
     #     raise NotImplementedError
 
 
-class TestIntentSync:
-    """
-    todo:
-    """
-    pass
+class TestUserRegistered:
+    """todo: 測試用戶註冊事件，啟動用戶設備列表讀取"""
+    raise NotImplementedError

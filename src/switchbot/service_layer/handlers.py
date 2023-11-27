@@ -1,7 +1,7 @@
 import logging
 from typing import List, Dict, Callable, Type  # , TYPE_CHECKING
 from switchbot.domain import commands, events, model
-from switchbot.adapters.iot_api_server import SwitchBotApiServer
+from switchbot.adapters import iot_api_server
 # if TYPE_CHECKING:
 #     from . import unit_of_work
 from . import unit_of_work
@@ -19,7 +19,8 @@ class SwBotIotError(Exception):
 
 def send_dev_ctrl_cmd(
         cmd: commands.SendDevCtrlCmd,
-        uow: unit_of_work.AbstractUnitOfWork
+        uow: unit_of_work.AbstractUnitOfWork,
+        iot: iot_api_server.AbstractIotApiServer
 ):
     logger.debug(f'cmd: {cmd}')
     with uow:
@@ -28,8 +29,7 @@ def send_dev_ctrl_cmd(
             raise ValueError(f"uid {cmd.uid} not exist in users")
         if cmd.subscriber_id not in u.subscribers:
             raise ValueError(f"subscriber {cmd.subscriber_id} not in user {cmd.uid} subscribers")
-        api_server = SwitchBotApiServer()
-        api_server.send_dev_ctrl_cmd(
+        iot.send_dev_ctrl_cmd(
             secret=u.secret,
             token=u.token,
             dev_id=cmd.dev_id,
@@ -194,17 +194,17 @@ def register_user(
 
 def pull_user_devices(
         event: events.UserRegistered,
-        uow: unit_of_work.AbstractUnitOfWork
-        # iot: iot_api_server.AbstractIotApiServer
+        uow: unit_of_work.AbstractUnitOfWork,
+        iot: iot_api_server.AbstractIotApiServer
 ):
     """todo: Register >> pull user device from switchbot openapi"""
     with uow:
-        user = uow.users.get(user_id=event.user_id)
-        devices = uow.api_server.get_dev_list(
-            secret=user.secret,
-            token=user.token,
+        u = uow.users.get_by_uid(uid=event.user_id)
+        devices = iot.get_dev_list(
+            secret=u.secret,
+            token=u.token,
         )
-        user.request_sync(devices=devices)
+        u.request_sync(devices=devices)
         uow.commit()
 
 

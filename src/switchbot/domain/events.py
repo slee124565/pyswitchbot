@@ -9,7 +9,7 @@ class Event:
 
 @dataclass
 class UserRegistered(Event):
-    """代表系統已經把新增一筆訂閱用戶資訊"""
+    """代表系統已經新增了一個用戶資訊"""
     user_id: str
 
 
