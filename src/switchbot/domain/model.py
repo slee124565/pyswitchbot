@@ -311,7 +311,7 @@ class SwitchBotUserRepo:
         self.scenes = scenes  # type: List[SwitchBotScene]
         self.webhooks = webhooks  # type: List[SwitchBotWebhook]
         self.subscribers = subscribers  # type: Set
-        self.events = []
+        self.events = []  # type: List[events.Event]
 
     def set_dev_ctrl_cmd_sent(self, dev_id: str, cmd: SwitchBotCommand):
         logger.warning(f"todo: set_dev_ctrl_cmd_sent")
@@ -379,7 +379,7 @@ class SwitchBotUserRepo:
             if user_dev_id not in sync_dev_id_list:
                 self._remove_device(dev_id=user_dev_id)
         self.events.append(
-            events.UserDevFetched(user_id=self.uid)
+            events.UserDevStatesFetched(uid=self.uid)
         )
 
     def get_dev_by_id(self, dev_id) -> SwitchBotDevice:

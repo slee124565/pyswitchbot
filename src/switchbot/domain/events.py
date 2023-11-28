@@ -10,13 +10,13 @@ class Event:
 @dataclass
 class UserRegistered(Event):
     """代表系統已經新增了一個用戶資訊"""
-    user_id: str
+    uid: str
 
 
 @dataclass
-class UserDevFetched(Event):
+class UserDevListFetched(Event):
     """代表系統已經訂閱用戶的設備清單更新"""
-    user_id: str
+    uid: str
 
 
 @dataclass
@@ -34,6 +34,6 @@ class DevStateChanged(Event):
 
 
 @dataclass
-class UserDevSynced(Event):
+class UserDevStatesFetched(Event):
     """表示訂閱用戶設備已經全部更新狀態，需要 pub RequestSubscriberToSync"""
-    user_id: str
+    uid: str

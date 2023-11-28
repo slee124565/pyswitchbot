@@ -12,7 +12,7 @@ Message = Union[commands.Command, events.Event]
 
 
 class MessageBus:
-    queue: list
+    queue: List[Message]
 
     def __init__(
             self,
@@ -25,7 +25,7 @@ class MessageBus:
         self.command_handlers = command_handlers
 
     def handle(self, message: Message):
-        self.queue = [message]
+        self.queue = [message]  # type:List[Message]
         while self.queue:
             message = self.queue.pop(0)
             if isinstance(message, events.Event):
@@ -36,6 +36,7 @@ class MessageBus:
                 raise Exception(f"{message} was not an Event or Command")
 
     def handle_event(self, event: events.Event):
+        logger.info(f"handling event {event}")
         for handler in self.event_handlers[type(event)]:
             try:
                 logger.debug("handling event %s with handler %s", event, handler)
@@ -46,7 +47,7 @@ class MessageBus:
                 continue
 
     def handle_command(self, command: commands.Command):
-        logger.debug("handling command %s", command)
+        logger.info(f"handling command {command}")
         try:
             handler = self.command_handlers[type(command)]
             handler(command)

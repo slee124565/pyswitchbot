@@ -20,9 +20,9 @@ class AbstractUnitOfWork(abc.ABC):
         self._commit()
 
     def collect_new_events(self):
-        for dev in self.users.seen:
-            while dev.events:
-                yield dev.events.pop(0)
+        for u in self.users.seen:
+            while u.events:
+                yield u.events.pop(0)
 
     @abc.abstractmethod
     def _commit(self):

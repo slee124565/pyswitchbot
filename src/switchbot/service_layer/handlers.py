@@ -184,40 +184,44 @@ def register_user(
         u = uow.users.get_by_secret(secret=cmd.secret)
         if u:
             raise SwBotIotError(f'register secret already been used by user {u.uid}')
-        user = model.SwitchBotUserFactory.create_user(
+        u = model.SwitchBotUserFactory.create_user(
             secret=cmd.secret,
             token=cmd.token
         )
-        uow.users.add(u=user)
+        u.events.append(events.UserRegistered(uid=u.uid))
+        uow.users.add(u=u)
         uow.commit()
+        logger.info(f"new user registered, uid {u.uid}")
 
 
-def pull_user_devices(
+def fetch_user_dev_list(
         event: events.UserRegistered,
         uow: unit_of_work.AbstractUnitOfWork,
         iot: iot_api_server.AbstractIotApiServer
 ):
-    """todo: Register >> pull user device from switchbot openapi"""
     with uow:
-        u = uow.users.get_by_uid(uid=event.user_id)
+        u = uow.users.get_by_uid(uid=event.uid)
         devices = iot.get_dev_list(
             secret=u.secret,
             token=u.token,
         )
         u.request_sync(devices=devices)
         uow.commit()
+        logger.info(f"user devices synced, {devices}")
 
 
-def pull_user_dev_states(
-        event: events.UserDevFetched,
+def fetch_user_dev_states(
+        event: events.UserDevListFetched,
+        uow: unit_of_work.AbstractUnitOfWork,
         iot: iot_api_server.AbstractIotApiServer
 ):
-    """todo: pull user devices state from switchbot openapi"""
-    logger.warning('todo: pull_dev_states')
+    with uow:
+        u = uow.users.get_by_uid(uid=event.uid)
+        uow.commit()
 
 
-def pub_user_synced(
-        event: events.UserDevSynced,
+def pub_request_sync_if_user_updated(
+        event: events.UserDevStatesFetched,
         publish: Callable
 ):
     """todo: publish user devices synced event for other system"""
@@ -225,7 +229,7 @@ def pub_user_synced(
 
 
 def setup_user_switchbot_webhook(
-        event: events.UserDevSynced,
+        event: events.UserDevStatesFetched,
         iot: iot_api_server.AbstractIotApiServer
 ):
     """todo: config user webhook config for switchbot open-api"""
@@ -233,9 +237,9 @@ def setup_user_switchbot_webhook(
 
 
 EVENT_HANDLERS = {
-    events.UserRegistered: [pull_user_devices],
-    events.UserDevFetched: [pull_user_dev_states],
-    events.UserDevSynced: [pub_user_synced, setup_user_switchbot_webhook],
+    events.UserRegistered: [fetch_user_dev_list],
+    events.UserDevListFetched: [fetch_user_dev_states],
+    events.UserDevStatesFetched: [pub_request_sync_if_user_updated, setup_user_switchbot_webhook],
 }  # type: Dict[Type[events.Event], List[Callable]]
 
 COMMAND_HANDLERS = {

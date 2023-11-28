@@ -16,16 +16,26 @@ class AbstractRepository(abc.ABC):
         self.seen = set()  # type: Set[model.SwitchBotUserRepo]
 
     def get_by_dev_id(self, dev_id: str) -> model.SwitchBotUserRepo:
-        return self._get_by_dev_id(dev_id=dev_id)
+        u = self._get_by_dev_id(dev_id=dev_id)
+        if u:
+            self.seen.add(u)
+        return u
 
     def get_by_secret(self, secret: str) -> model.SwitchBotUserRepo:
-        return self._get_by_secret(secret=secret)
+        u = self._get_by_secret(secret=secret)
+        if u:
+            self.seen.add(u)
+        return u
 
     def get_by_uid(self, uid: str) -> model.SwitchBotUserRepo:
-        return self._get_by_uid(uid=uid)
+        u = self._get_by_uid(uid=uid)
+        if u:
+            self.seen.add(u)
+        return u
 
     def add(self, u):
         self._add(u=u)
+        self.seen.add(u)
 
     def delete(self, uid):
         self._delete(uid=uid)
