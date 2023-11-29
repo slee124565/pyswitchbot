@@ -36,16 +36,18 @@ _dev_status_data = {
     "electricCurrent": 0.0
 }
 JSON_FILE = '.teststore'
+_test_uow = unit_of_work.JsonFileUnitOfWork(json_file=JSON_FILE)
+_test_iot = iot_api_server.FakeApiServer()
 
 
 def bootstrap_test_app():
     if os.path.exists(JSON_FILE):
         os.remove(JSON_FILE)
     return bootstrap.bootstrap(
-        uow=unit_of_work.JsonFileUnitOfWork(json_file=JSON_FILE),
+        uow=_test_uow,
         # uow=unit_of_work.MemoryUnitOfWork(),
         start_orm=False,
-        iot=iot_api_server.FakeApiServer()
+        iot=_test_iot
     )
 
 
@@ -219,5 +221,20 @@ class TestSubscription:
         assert len(u.subscribers) == 0
 
 
-def test_sent_dev_ctrl_cmd():
-    pass
+def test_send_dev_ctrl_cmd():
+    bus = bootstrap_test_app()
+    bus.handle(commands.Register(secret='secret1', token='token1'))
+    u = bus.uow.users.get_by_secret('secret1')
+    subscriber_id = 'aog'
+    bus.handle(commands.Subscribe(uid=u.uid, subscriber_id=subscriber_id))
+
+    d = u.devices[0]
+    s = u.get_dev_state(dev_id=d.device_id)
+    cmd_value = 'turnOn' if s.power == "on" else "turnOff"
+    bus.handle(
+        commands.SendDevCtrlCmd(
+            uid=u.uid, subscriber_id=subscriber_id, dev_id=d.device_id,
+            cmd_type="command", cmd_value=cmd_value, cmd_param="default"
+        )
+    )
+    assert _test_iot.dev_ctrl_cmd_sent

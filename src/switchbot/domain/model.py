@@ -316,6 +316,7 @@ class SwitchBotUserRepo:
     def set_dev_ctrl_cmd_sent(self, dev_id: str, cmd: SwitchBotCommand):
         logger.debug(f"dev {dev_id}, cmd {cmd}")
         logger.warning(f"todo: set_dev_ctrl_cmd_sent")
+        logger.debug(f"user device {self.devices}")
         dev = next((d for d in self.devices if d.device_id == dev_id), None)
         if dev:
             if cmd.commandType == "command" and cmd.command in ["turnOn", "turnOff"]:

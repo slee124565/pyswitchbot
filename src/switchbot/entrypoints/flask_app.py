@@ -186,8 +186,8 @@ def fulfillment():
         intent_id = post_data.get("inputs")[0].get("intent")
 
         # response according to fulfillment
-        logger.debug(f'request {request.json}')
-        logger.info(f"{intent_id}, {subscriber_id}, {uid}, {request_id}")
+        logger.info(f'post_data {post_data}')
+        logger.debug(f"{intent_id}, {subscriber_id}, {uid}, {request_id}")
         if intent_id == "action.devices.SYNC":
             response = views.user_sync_intent_fulfillment(
                 uid=uid,
@@ -215,7 +215,7 @@ def fulfillment():
             for cmd_dto in gh_execute_dto.inputs[0].payload.commands:
                 assert isinstance(cmd_dto, gh_intent.ExecuteCmdItem)
                 for cmd_exec_dto in cmd_dto.execution[:1]:
-                    # logger.debug(f"cmd_exec_dto type {type(cmd_exec_dto)}")
+                    logger.debug(f"cmd_exec_dto type {type(cmd_exec_dto)}")
                     assert isinstance(cmd_exec_dto, gh_intent.ExecuteCmdExecItem)
                     if cmd_exec_dto.command == "action.devices.commands.OnOff":
                         _cmd_type = 'command'
@@ -233,7 +233,7 @@ def fulfillment():
                             )
                             bus.handle(cmd)
                             _cmd_resp_dto = gh_intent.ExecuteCommandResponseItem(
-                                ids=[],
+                                ids=[f"{cmd_dev_dto.id}"],
                                 status="PENDING",
                                 states={
                                     "online": True,
@@ -416,7 +416,8 @@ def register():
 def main():
     app.run(
         host="localhost",
-        debug=True
+        debug=True,
+        threaded=True
     )
 
 

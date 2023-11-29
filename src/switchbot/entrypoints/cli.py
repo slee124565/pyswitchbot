@@ -149,16 +149,14 @@ def cmd(command, dev_id, cmd_type, cmd_param):
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     try:
-        with bus.uow:
-            # dev = bus.uow.devices.get(dev_id=dev_id)
-            bus.uow.api_server.send_dev_ctrl_cmd(
-                secret=secret,
-                token=token,
-                dev_id=dev_id,
-                cmd_type=cmd_type,
-                cmd_value=command,
-                cmd_param=cmd_param
-            )
+        open_api.send_dev_ctrl_cmd(
+            secret=secret,
+            token=token,
+            dev_id=dev_id,
+            cmd_type=cmd_type,
+            cmd_value=command,
+            cmd_param=cmd_param
+        )
         click.echo(f'OK')
     except ValueError as err:
         click.echo(f'{err}')

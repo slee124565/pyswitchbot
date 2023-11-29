@@ -71,7 +71,7 @@ def test_user_iot_service():
     assert len(resp.get("payload").get("devices")) == dev_count
 
     # 模擬 AoG 查詢用戶設備列表中的第一個設備狀態 query intent
-    dev = resp.get("payload").get("devices")[0]
+    dev = resp.get("payload").get("devices")[-1]
     assert isinstance(dev, dict)
     dev_id = dev.get("id")
     r = api_client.post_to_query_user_dev_state(uid=uid, subscriber_id=subscriber_id, dev_id=dev_id)
@@ -87,6 +87,7 @@ def test_user_iot_service():
 
     # 模擬 AoG 控制用戶設備列表中的第一個設備狀態ON/OFF, execute intent
     ctr_onoff = not dev_onoff
+    logger.debug(f"set target dev power {ctr_onoff}")
     r = api_client.post_to_ctrl_user_dev_onoff(
         uid=uid, subscriber_id=subscriber_id, dev_id=dev_id, dev_onoff=ctr_onoff
     )

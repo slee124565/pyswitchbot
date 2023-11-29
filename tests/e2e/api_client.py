@@ -75,14 +75,14 @@ def post_to_ctrl_user_dev_onoff(uid: str, subscriber_id: str, dev_id: str, dev_o
                         {
                             "devices": [
                                 {
-                                    "id": f"{dev_id})"
+                                    "id": f"{dev_id}"
                                 },
                             ],
                             "execution": [
                                 {
                                     "command": "action.devices.commands.OnOff",
                                     "params": {
-                                        "on": f"{dev_onoff}"
+                                        "on": dev_onoff
                                     }
                                 }
                             ]
@@ -92,6 +92,7 @@ def post_to_ctrl_user_dev_onoff(uid: str, subscriber_id: str, dev_id: str, dev_o
             }]
         }
     )
+    logger.debug(f"status_code {r.status_code}")
     assert r.status_code in [HTTPStatus.ACCEPTED, HTTPStatus.OK]
     resp = r.json()
     assert resp.get("requestId") == "ff36a3cc-ec34-11e6-b1a0-64510650abcf"

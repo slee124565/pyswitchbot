@@ -45,6 +45,7 @@ def send_dev_ctrl_cmd(
                 parameter=cmd.cmd_param)
         )
         uow.commit()
+        pass
 
 
 def report_state(
@@ -183,11 +184,13 @@ def register_user(
     with uow:
         u = uow.users.get_by_secret(secret=cmd.secret)
         if u:
-            raise SwBotIotError(f'register secret already been used by user {u.uid}')
-        u = model.SwitchBotUserFactory.create_user(
-            secret=cmd.secret,
-            token=cmd.token
-        )
+            logger.warning(f"register secret already been used by user {u.uid}")
+            # raise SwBotIotError(f'register secret already been used by user {u.uid}')
+        else:
+            u = model.SwitchBotUserFactory.create_user(
+                secret=cmd.secret,
+                token=cmd.token
+            )
         u.events.append(events.UserRegistered(uid=u.uid))
         uow.users.add(u=u)
         uow.commit()
