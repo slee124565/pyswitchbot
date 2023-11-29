@@ -3,11 +3,13 @@ import pytest
 import time
 import os
 import requests
+import dotenv
 from pathlib import Path
 import logging.config as logging_config
 from tenacity import retry, stop_after_delay
 from switchbot import config
 
+dotenv.load_dotenv()
 logging_config.dictConfig(config.logging_config)
 logger = logging.getLogger(__name__)
 

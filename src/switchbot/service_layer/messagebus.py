@@ -26,6 +26,7 @@ class MessageBus:
 
     def handle(self, message: Message):
         self.queue = [message]  # type:List[Message]
+        logger.debug(f"handling {message} in queue {len(self.queue)}")
         while self.queue:
             message = self.queue.pop(0)
             if isinstance(message, events.Event):
@@ -36,10 +37,8 @@ class MessageBus:
                 raise Exception(f"{message} was not an Event or Command")
 
     def handle_event(self, event: events.Event):
-        logger.info(f"handling event {event}")
         for handler in self.event_handlers[type(event)]:
             try:
-                logger.debug("handling event %s with handler %s", event, handler)
                 handler(event)
                 self.queue.extend(self.uow.collect_new_events())
             except Exception:
@@ -47,7 +46,6 @@ class MessageBus:
                 continue
 
     def handle_command(self, command: commands.Command):
-        logger.info(f"handling command {command}")
         try:
             handler = self.command_handlers[type(command)]
             handler(command)

@@ -414,7 +414,10 @@ def register():
 
 
 def main():
-    app.run(debug=True)
+    app.run(
+        host="localhost",
+        debug=True
+    )
 
 
 if __name__ == '__main__':

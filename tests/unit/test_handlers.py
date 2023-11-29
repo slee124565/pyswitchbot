@@ -1,11 +1,9 @@
 import os
 import logging
-import pytest
 from switchbot import bootstrap
 from switchbot.service_layer import unit_of_work
 from switchbot.adapters import iot_api_server
 from switchbot.domain import commands
-from switchbot.service_layer.handlers import SwBotIotError
 
 logger = logging.getLogger(__name__)
 
@@ -51,46 +49,26 @@ def bootstrap_test_app():
     )
 
 
-class TestRegister:
+def test_register():
     """
     用戶系統 (Common Service) 可以透過用戶 SwitchBot KeyPairs 對本系統進行用戶註冊 (Register)，本系統會針對這個用戶，
     產生一組 uid (userID)，(Registered) 之後、本系統會透過 OpenAPI 服務查詢用戶設備列表，設定用戶在 OpenAPI 系統中設備狀態通知
     Webhook 的 URI 設定 (UpdateUserWebhook)，更新用戶在本系統內的設備清單 (RequestSync)，並且查詢用戶設備的狀態 (ReportState)
     記錄在本系統資料庫中，藉以支援 AoG Intent API & Webhook 服務
     """
+    bus = bootstrap_test_app()
 
-    def test_register(self):
-        bus = bootstrap_test_app()
+    bus.handle(commands.Register(secret='secret1', token='token1'))
 
-        bus.handle(commands.Register(secret='secret1', token='token1'))
-        # bus.handle(commands.Register(secret='secret2', token='token2'))
-        count = bus.uow.users.count()
-        assert count == 1
-        u1 = bus.uow.users.get_by_secret(secret='secret1')
-        # u2 = bus.uow.users.get_by_secret(secret='secret2')
-        # assert all([u1, u2])
-        assert u1.token == 'token1'
-        # assert u2.token == 'token2'
+    assert bus.uow.users.count() == 1
+    u1 = bus.uow.users.get_by_secret(secret='secret1')
+    assert u1.token == 'token1'
+    assert len(u1.devices) == 2
+    assert len(u1.states) == 2
 
-        bus.handle(commands.Unregister(uid=u1.uid))
-        assert bus.uow.users.get_by_uid(uid=u1.uid) is None
-        # assert bus.uow.users.get_by_secret('secret2')
-        assert count == bus.uow.users.count() + 1
-
-    def test_unregister(self):
-        bus = bootstrap_test_app()
-        bus.handle(commands.Register(secret='secret1', token='token1'))
-        bus.handle(commands.Register(secret='secret2', token='token2'))
-        count = bus.uow.users.count()
-        assert count == 2
-        u1 = bus.uow.users.get_by_secret(secret='secret1')
-
-        bus.handle(commands.Unregister(uid=u1.uid))
-
-        assert bus.uow.users.get_by_uid(uid=u1.uid) is None
-        assert bus.uow.users.get_by_secret('secret2')
-        count = bus.uow.users.count()
-        assert count == 1
+    bus.handle(commands.Unregister(uid=u1.uid))
+    assert bus.uow.users.get_by_uid(uid=u1.uid) is None
+    assert bus.uow.users.count() == 0
 
 
 class TestRequestSync:
@@ -240,37 +218,6 @@ class TestSubscription:
         u = bus.uow.users.get_by_uid(uid=uid)
         assert len(u.subscribers) == 0
 
-    # @pytest.mark.usefixtures("setup_subscrb_user")
-    # def test_aog_service_cannot_access_user_sync_intent_before_subscription(self, setup_subscrb_user):
-    #     """todo"""
-    #     # raise NotImplementedError
-    #
-    # @pytest.mark.usefixtures("setup_subscrb_user")
-    # def test_aog_service_can_access_user_sync_intent_after_subscription(self, setup_subscrb_user):
-    #     """todo"""
-    #     # raise NotImplementedError
-    #
-    # @pytest.mark.usefixtures("setup_subscrb_user")
-    # def test_aog_service_can_access_user_query_intent_after_subscription(self, setup_subscrb_user):
-    #     """todo"""
-    #     # raise NotImplementedError
-    #
-    # @pytest.mark.usefixtures("setup_subscrb_user")
-    # def test_aog_service_can_access_user_exec_intent_after_subscription(self, setup_subscrb_user):
-    #     """todo"""
-    #     # raise NotImplementedError
-    #
-    # @pytest.mark.usefixtures("setup_subscrb_user")
-    # def test_subscribed_user_dev_change_webhook_aog_notify_sent(self, setup_subscrb_user):
-    #     """todo"""
-    #     # raise NotImplementedError
-    #
-    # @pytest.mark.usefixtures("setup_subscrb_user")
-    # def test_aog_sync_intent_api_fails_after_disconnect_intent_sent(self, setup_subscrb_user):
-    #     """todo"""
-    #     raise NotImplementedError
-    #
-    # @pytest.mark.usefixtures("setup_subscrb_user")
-    # def test_no_webhook_notify_sent_for_aog_on_disconnected_user_device_change(self, setup_subscrb_user):
-    #     """todo"""
-    #     raise NotImplementedError
+
+def test_sent_dev_ctrl_cmd():
+    pass

@@ -3,8 +3,10 @@ from __future__ import annotations
 import abc
 import os
 import shutil
+import logging
 from switchbot.adapters import repository, file_datastore
-from switchbot.adapters.iot_api_server import AbstractIotApiServer, SwitchBotApiServer, FakeApiServer
+
+logger = logging.getLogger(__name__)
 
 
 class AbstractUnitOfWork(abc.ABC):
@@ -21,6 +23,7 @@ class AbstractUnitOfWork(abc.ABC):
 
     def collect_new_events(self):
         for u in self.users.seen:
+            logger.debug(f"current existing unhandled events {u.events} ")
             while u.events:
                 yield u.events.pop(0)
 
@@ -71,7 +74,6 @@ class MemoryUnitOfWork(AbstractUnitOfWork):
 
     def rollback(self):
         pass
-
 
 # class CliUnitOfWork(AbstractUnitOfWork):
 #     def __init__(self, file: str):

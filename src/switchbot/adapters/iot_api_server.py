@@ -95,7 +95,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
         headers['t'] = str(t)
         headers['sign'] = str(sign, 'utf-8')
         headers['nonce'] = str(nonce)
-        logger.debug(f'API headers {json.dumps(headers)}')
+        logger.debug(f'http headers {json.dumps(headers)}')
         return headers
 
     def _get(self, endpoint: str, secret: str, token: str, params: dict = None):
@@ -116,8 +116,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
             if resp.status_code != HTTPStatus.OK:
                 resp.raise_for_status()
 
-            logger.debug(f'{resp.status_code}, {resp.json()}')
-            logger.info(f'GET,{endpoint},{params},{resp.json()}')
+            logger.debug(f'GET,{endpoint},{params},{resp.json()}')
             return resp.json().get('body')
         except Exception:
             raise SwitchBotAPIServerError
@@ -125,18 +124,17 @@ class SwitchBotApiServer(AbstractIotApiServer):
     def _post(self, secret: str, token: str, endpoint: str, data: dict):
         try:
             headers = self._get_auth_headers(secret, token)
-            logger.debug(f'API payload: {data}')
+            # logger.debug(f'POST request {data}')
             resp = requests.post(
                 url=f'{self.api_uri}{endpoint}',
                 headers=headers,
                 json=data
             )
-            logger.debug(f'POST response {resp.status_code}, {resp.content}')
 
             if resp.status_code != HTTPStatus.OK:
                 resp.raise_for_status()
 
-            logger.info(f'POST,{endpoint},{data},{resp.json()}')
+            logger.debug(f'POST,{endpoint},{data},{resp.json()}')
             return resp.json().get('body')
         except Exception:
             raise SwitchBotAPIServerError

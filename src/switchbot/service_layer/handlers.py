@@ -215,17 +215,25 @@ def fetch_user_dev_states(
         uow: unit_of_work.AbstractUnitOfWork,
         iot: iot_api_server.AbstractIotApiServer
 ):
+    logger.info(f"event")
     with uow:
         u = uow.users.get_by_uid(uid=event.uid)
+        for d in u.devices:
+            u.update_dev_state(
+                state=iot.get_dev_status(
+                    secret=u.secret, token=u.token, dev_id=d.device_id)
+            )
+        u.events.append(events.UserDevStatesFetched(uid=u.uid))
         uow.commit()
 
 
 def pub_request_sync_if_user_updated(
         event: events.UserDevStatesFetched,
-        publish: Callable
+        # publish: Callable
 ):
     """todo: publish user devices synced event for other system"""
-    logger.warning('todo: pub_user_synced')
+    logger.warning('todo: pub_request_sync_if_user_updated')
+    pass
 
 
 def setup_user_switchbot_webhook(
@@ -239,7 +247,8 @@ def setup_user_switchbot_webhook(
 EVENT_HANDLERS = {
     events.UserRegistered: [fetch_user_dev_list],
     events.UserDevListFetched: [fetch_user_dev_states],
-    events.UserDevStatesFetched: [pub_request_sync_if_user_updated, setup_user_switchbot_webhook],
+    events.UserDevStatesFetched: [setup_user_switchbot_webhook,
+                                  pub_request_sync_if_user_updated],
 }  # type: Dict[Type[events.Event], List[Callable]]
 
 COMMAND_HANDLERS = {

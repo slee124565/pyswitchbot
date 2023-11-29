@@ -314,6 +314,7 @@ class SwitchBotUserRepo:
         self.events = []  # type: List[events.Event]
 
     def set_dev_ctrl_cmd_sent(self, dev_id: str, cmd: SwitchBotCommand):
+        logger.debug(f"dev {dev_id}, cmd {cmd}")
         logger.warning(f"todo: set_dev_ctrl_cmd_sent")
         dev = next((d for d in self.devices if d.device_id == dev_id), None)
         if dev:
@@ -378,9 +379,7 @@ class SwitchBotUserRepo:
         for user_dev_id in user_dev_id_list:
             if user_dev_id not in sync_dev_id_list:
                 self._remove_device(dev_id=user_dev_id)
-        self.events.append(
-            events.UserDevStatesFetched(uid=self.uid)
-        )
+        self.events.append(events.UserDevListFetched(uid=self.uid))
 
     def get_dev_by_id(self, dev_id) -> SwitchBotDevice:
         return next((d for d in self.devices if d.device_id == dev_id), None)
