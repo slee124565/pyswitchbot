@@ -48,7 +48,11 @@ _test_devices = [
 def test_user_iot_service():
     secret = os.environ.get("SWITCHBOTAPI_SECRET_KEY")
     token = os.environ.get("SWITCHBOTAPI_TOKEN")
-    dev_count = int(os.environ.get("SWITCHBOT_DEVICE_COUNT"))
+    dev_count = os.environ.get("SWITCHBOT_DEVICE_COUNT")
+    if dev_count is None:
+        logger.warning(f"missing SWITCHBOT_DEVICE_COUNT env value for assert checking")
+    else:
+        dev_count = int(dev_count)
 
     # 用戶註冊iot服務
     r = api_client.post_to_register(secret=secret, token=token, expect_success=True)
@@ -56,8 +60,11 @@ def test_user_iot_service():
     uid = data.get('uid')
     assert uid
     assert data.get('uid') == uid
-    assert data.get('devices') == dev_count
-    assert data.get('states') == dev_count
+    if dev_count is not None:
+        assert data.get('devices') == dev_count
+        assert data.get('states') == dev_count
+    else:
+        assert len(data.get("devices")) > 0
 
     # 第三方服務 aog 訂閱用戶 iot 服務
     subscriber_id = 'aog'
