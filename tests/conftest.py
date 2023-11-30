@@ -27,12 +27,3 @@ def restart_api():
     (Path(__file__).parent / "../src/switchbot/entrypoints/flask_app.py").touch()
     time.sleep(0.5)
     wait_for_webapp_to_come_up()
-
-
-@pytest.fixture(scope="class")
-def setup_subscrb_user():
-    """todo"""
-    logger.info(f'setup test users for subscription')
-    users = ['user1', 'user2', 'user3']
-    yield users
-    logger.info(f'teardown test users for subscription')
