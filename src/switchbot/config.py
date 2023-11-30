@@ -16,6 +16,14 @@ def get_switchbot_key_pair():
     return secret, token
 
 
+def get_webhook_uri():
+    host = os.environ.get("WEBHOOK_URI", "127.0.0.1")
+    if host != "127.0.0.1":
+        return host
+    port = 5000 if host in ["127.0.0.1", "localhost"] else 80
+    return f"https://{host}:{port}"
+
+
 def get_postgres_uri():
     host = os.environ.get("DB_HOST", "localhost")
     port = 54321 if host == "localhost" else 5432
@@ -73,7 +81,7 @@ logging_config = {
         },
         "switchbot.adapters.iot_api_server": {
             "handlers": ["console", "file"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": False
         },
         "switchbot": {
