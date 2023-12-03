@@ -3,25 +3,23 @@ import logging
 import logging.config as logging_config
 import os
 import json
-
-from switchbot.domain import commands
-from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
-from switchbot import bootstrap
+# from switchbot import bootstrap
 from switchbot import config
+from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
 from switchbot.adapters import iot_api_server
 from switchbot.adapters.iot_api_server import SwitchBotAPIServerError
-from switchbot.service_layer import unit_of_work
+
+# from switchbot.service_layer import unit_of_work
 
 logging_config.dictConfig(config.logging_config)
 logger = logging.getLogger(__name__)
-bus = bootstrap.bootstrap(
-    uow=unit_of_work.JsonFileUnitOfWork(),
-    start_orm=False,
-    iot=iot_api_server.SwitchBotApiServer()
-)
+# bus = bootstrap.bootstrap(
+#     uow=unit_of_work.JsonFileUnitOfWork(),
+#     start_orm=False,
+#     iot=iot_api_server.SwitchBotApiServer()
+# )
 env_secret, env_token = config.get_switchbot_key_pair()
 open_api = iot_api_server.SwitchBotApiServer()
-
 
 # 主命令
 @click.group()
@@ -55,9 +53,6 @@ def config(secret, token, envfile):
     ]
     with open(envfile, 'w') as fh:
         fh.writelines(lines)
-    with bus.uow:
-        bus.handle(commands.Register(secret=secret, token=token))
-        bus.uow.commit()
     click.echo(f"Configured authentication with secret: {secret} and token: {token}")
 
 
@@ -76,6 +71,11 @@ def listall(envfile):
 def check(secret, token):
     """Check authentication status."""
     try:
+        # r = open_api.get_scene_list(
+        #     secret=secret,
+        #     token=token
+        # )
+        assert isinstance(open_api, iot_api_server.AbstractIotApiServer)
         r = open_api.get_scene_list(
             secret=secret,
             token=token
