@@ -17,10 +17,11 @@ def get_switchbot_key_pair():
 
 
 def get_webhook_uri():
-    host = os.environ.get("WEBHOOK_URI", "127.0.0.1")
-    if host != "127.0.0.1":
+    host = os.getenv("WEBHOOK_URI")
+    if host is not None:
         return host
-    port = 5000 if host in ["127.0.0.1", "localhost"] else 80
+    host = '127.0.0.1'
+    port = 5000
     return f"https://{host}:{port}"
 
 

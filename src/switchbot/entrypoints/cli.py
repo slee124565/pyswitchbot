@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 #     iot=iot_api_server.SwitchBotApiServer()
 # )
 env_secret, env_token = config.get_switchbot_key_pair()
+webhook_uri = config.get_webhook_uri()
 open_api = iot_api_server.SwitchBotApiServer()
 
 # 主命令
@@ -255,8 +256,10 @@ def read_detail(url):
 
 
 @webhook.command()
-@click.argument('url')
-@click.argument('enabled')
+# @click.argument('url')
+# @click.argument('enabled')
+@click.option('--url', default=webhook_uri, help="User webhook uri.")
+@click.option('--enabled', default=True, help="User webhook enable flag.")
 def update(url, enabled):
     """Update a webhook."""
     click.echo(f"Updating webhook {url}")

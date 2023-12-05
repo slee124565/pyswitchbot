@@ -1,5 +1,6 @@
-import logging
+import  logging
 from typing import List, Dict, Callable, Type  # , TYPE_CHECKING
+from switchbot import config
 from switchbot.domain import commands, events, model
 from switchbot.adapters import iot_api_server
 # if TYPE_CHECKING:
@@ -202,6 +203,7 @@ def fetch_user_dev_list(
         uow: unit_of_work.AbstractUnitOfWork,
         iot: iot_api_server.AbstractIotApiServer
 ):
+    logger.info(f"event: {event}")
     with uow:
         u = uow.users.get_by_uid(uid=event.uid)
         devices = iot.get_dev_list(
@@ -218,7 +220,7 @@ def fetch_user_dev_states(
         uow: unit_of_work.AbstractUnitOfWork,
         iot: iot_api_server.AbstractIotApiServer
 ):
-    logger.info(f"event")
+    logger.info(f"event: {event}")
     with uow:
         u = uow.users.get_by_uid(uid=event.uid)
         for d in u.devices:
@@ -235,16 +237,28 @@ def pub_request_sync_if_user_updated(
         # publish: Callable
 ):
     """todo: publish user devices synced event for other system"""
+    logger.info(f"event: {event}")
     logger.warning('todo: pub_request_sync_if_user_updated')
     pass
 
 
 def setup_user_switchbot_webhook(
         event: events.UserDevStatesFetched,
+        uow: unit_of_work.AbstractUnitOfWork,
         iot: iot_api_server.AbstractIotApiServer
 ):
-    """todo: config user webhook config for switchbot open-api"""
-    logger.warning('todo: setup_user_switchbot_webhook')
+    logger.info(f"event: {event}")
+    with uow:
+        u = uow.users.get_by_uid(uid=event.uid)
+        iot.update_webhook_config(
+            secret=u.secret,
+            token=u.token,
+            url=config.get_webhook_uri(),
+            enable=True
+        )
+        u.webhooks = [config.get_webhook_uri()]
+        # u.events.append(events.UserWebhookConfigured(uid=u.uid))
+        uow.commit()
 
 
 EVENT_HANDLERS = {
