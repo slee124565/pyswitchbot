@@ -34,6 +34,13 @@ class DevStateChanged(Event):
 
 
 @dataclass
-class UserDevStatesFetched(Event):
+class UserDevStatesAllFetched(Event):
     """表示訂閱用戶設備已經全部更新狀態，需要 pub RequestSubscriberToSync"""
     uid: str
+
+
+@dataclass
+class IotStateChanged(Event):
+    """表示IoT系統通知有設備狀態變更（webhook）"""
+    change: dict
+
