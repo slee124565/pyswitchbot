@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @retry(stop=stop_after_delay(10))
 def wait_for_webapp_to_come_up():
-    return requests.get(config.get_api_url())
+    return requests.get(config.get_api_uri())
 
 
 @pytest.fixture

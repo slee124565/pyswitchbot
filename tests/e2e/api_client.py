@@ -11,7 +11,7 @@ API_KEY = 'test_api_key'
 
 def post_to_report_state(uid, state):
     """todo: only localhost and ALLOWED_REPORT_STATE_HOST requests should be accepted"""
-    url = config.get_api_url()
+    url = config.get_api_uri()
     auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/state",
@@ -26,7 +26,7 @@ def post_to_report_state(uid, state):
 
 def post_to_report_change(secret, change):
     """todo: only localhost and ALLOWED_REPORT_STATE_HOST requests should be accepted"""
-    url = config.get_api_url()
+    url = config.get_api_uri()
     auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/change",
@@ -40,7 +40,7 @@ def post_to_report_change(secret, change):
 
 def post_to_request_sync(user_id, devices):
     """todo: user_id as API SECRET KEY"""
-    url = config.get_api_url()
+    url = config.get_api_uri()
     auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/sync",
@@ -56,7 +56,7 @@ def post_to_request_sync(user_id, devices):
 
 def post_to_ctrl_user_dev_onoff(uid: str, subscriber_id: str, dev_id: str, dev_onoff: bool):
     """todo:"""
-    url = config.get_api_url()
+    url = config.get_api_uri()
     token = {
         'secret': API_KEY,
         'uid': uid,
@@ -102,7 +102,7 @@ def post_to_ctrl_user_dev_onoff(uid: str, subscriber_id: str, dev_id: str, dev_o
 
 
 def post_to_query_user_dev_state(uid: str, subscriber_id: str, dev_id: str):
-    url = config.get_api_url()
+    url = config.get_api_uri()
     token = {
         'secret': API_KEY,
         'uid': uid,
@@ -136,7 +136,7 @@ def post_to_query_user_dev_state(uid: str, subscriber_id: str, dev_id: str):
 
 def post_to_query_user_dev_list(uid: str, subscriber_id: str):
     """todo: embedded user_id into http request header"""
-    url = config.get_api_url()
+    url = config.get_api_uri()
     token = {
         'secret': API_KEY,
         'uid': uid,
@@ -166,7 +166,7 @@ def post_to_query_user_dev_list(uid: str, subscriber_id: str):
 
 def post_to_unsubscribe(uid, subscriber_id, expect_success=True):
     """todo: how to embedded uid & subscriber_id in HTTPBasicAuth"""
-    url = config.get_api_url()
+    url = config.get_api_uri()
     token = {
         'secret': API_KEY,
         'uid': uid,
@@ -188,7 +188,7 @@ def post_to_unsubscribe(uid, subscriber_id, expect_success=True):
 
 
 def post_to_subscribe(uid, subscriber_id, expect_success=True):
-    url = config.get_api_url()
+    url = config.get_api_uri()
     auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/subscribe",
@@ -203,7 +203,7 @@ def post_to_subscribe(uid, subscriber_id, expect_success=True):
 
 
 def post_to_unregister(uid, expect_success=True):
-    url = config.get_api_url()
+    url = config.get_api_uri()
     auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/unregister",
@@ -217,7 +217,7 @@ def post_to_unregister(uid, expect_success=True):
 
 
 def post_to_register(secret, token, expect_success=True):
-    url = config.get_api_url()
+    url = config.get_api_uri()
     auth = HTTPBasicAuth('secret', API_KEY)
     r = requests.post(
         f"{url}/register",

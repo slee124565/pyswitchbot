@@ -4,10 +4,8 @@ import dotenv
 dotenv.load_dotenv()
 
 
-def get_api_url():
-    host = os.environ.get("API_HOST", "127.0.0.1")
-    port = 5000 if host == "127.0.0.1" else 80
-    return f"http://{host}:{port}"
+def get_api_uri():
+    return os.getenv("API_HOST_URI", "http://127.0.0.1:5000")
 
 
 def get_switchbot_key_pair():
@@ -17,12 +15,7 @@ def get_switchbot_key_pair():
 
 
 def get_webhook_uri():
-    host = os.getenv("WEBHOOK_URI")
-    if host is not None:
-        return host
-    host = '127.0.0.1'
-    port = 5000
-    return f"https://{host}:{port}"
+    return f"{get_api_uri()}/change"
 
 
 def get_postgres_uri():
@@ -83,6 +76,11 @@ logging_config = {
         "switchbot.adapters.iot_api_server": {
             "handlers": ["console", "file"],
             "level": "INFO",
+            "propagate": False
+        },
+        "switchbot.service_layer.handlers": {
+            "handlers": ["console"],
+            "level": "DEBUG",
             "propagate": False
         },
         "switchbot": {

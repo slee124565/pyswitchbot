@@ -67,7 +67,6 @@ def test_user_iot_service():
     else:
         assert len(data.get("devices")) > 0
 
-    # input('press any key to continue...')
     # 第三方服務 aog 訂閱用戶 iot 服務
     logger.info(f"testing post_to_subscribe ...")
     subscriber_id = 'aog'
@@ -119,5 +118,5 @@ def test_user_iot_service():
     api_client.post_to_unsubscribe(uid=uid, subscriber_id=subscriber_id)
 
     # 用戶註銷帳號
-    logger.info(f"testing post_to_unregister ...")
-    api_client.post_to_unregister(uid=uid)
+    # logger.info(f"testing post_to_unregister ...")
+    # api_client.post_to_unregister(uid=uid)

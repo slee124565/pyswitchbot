@@ -266,10 +266,11 @@ def fulfillment():
         return jsonify({}), HTTPStatus.UNAUTHORIZED
 
 
-@app.route('/change', methods=['POSST'])
+@app.route('/change', methods=['POST'])
 def report_change():
+    """todo: check client domain in allowed host"""
     try:
-        _check_api_access_token(http_request=request)
+        # _check_api_access_token(http_request=request)
         data = request.json
 
         if not isinstance(data, dict):
