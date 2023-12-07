@@ -26,9 +26,9 @@ class MessageBus:
 
     def handle(self, message: Message):
         self.queue = [message]  # type:List[Message]
-        logger.info(f"handling msg {message} ...")
         while self.queue:
             message = self.queue.pop(0)
+            logger.info(f"handling msg {message} ...")
             if isinstance(message, events.Event):
                 self.handle_event(message)
             elif isinstance(message, commands.Command):

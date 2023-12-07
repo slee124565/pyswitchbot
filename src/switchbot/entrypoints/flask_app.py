@@ -416,7 +416,7 @@ def register():
 
 def main():
     app.run(
-        host="localhost",
+        host="127.0.0.1",
         debug=True,
         threaded=True
     )

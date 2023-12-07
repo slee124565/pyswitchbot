@@ -430,16 +430,27 @@ class SwitchBotUserRepo:
         else:
             raise ValueError(f'device({dev_id}) not exist')
 
+    def request_reload(self):
+        self.events.append(events.RequestReload(uid=self.uid))
+
+    def set_webhook_uri(self, uri):
+        self.webhooks = [uri]
+        self.events.append(events.UserDevMerged(uid=self.uid))
+
 
 class SwitchBotUserFactory:
     @classmethod
     def create_user(cls,
                     secret: str, token: str, uid: str = None) -> SwitchBotUserRepo:
         uid = str(uuid.uuid4()) if uid is None else uid
-        return SwitchBotUserRepo(
+        u = SwitchBotUserRepo(
             uid=uid, secret=secret, token=token,
             devices=[], changes=[], states=[], scenes=[], webhooks=[], subscribers=set()
         )
+        u.events.append(events.UserRegistered(
+            uid=u.uid
+        ))
+        return u
 
 
 class SwitchBotSceneSchema(Schema):

@@ -67,6 +67,7 @@ def test_user_iot_service():
     else:
         assert len(data.get("devices")) > 0
 
+    input("press any key to continue ...")
     # 第三方服務 aog 訂閱用戶 iot 服務
     logger.info(f"testing post_to_subscribe ...")
     subscriber_id = 'aog'

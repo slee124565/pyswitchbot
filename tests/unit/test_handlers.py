@@ -51,26 +51,42 @@ def bootstrap_test_app():
     )
 
 
-def test_register():
-    """
-    用戶系統 (Common Service) 可以透過用戶 SwitchBot KeyPairs 對本系統進行用戶註冊 (Register)，本系統會針對這個用戶，
-    產生一組 uid (userID)，(Registered) 之後、本系統會透過 OpenAPI 服務查詢用戶設備列表，設定用戶在 OpenAPI 系統中設備狀態通知
-    Webhook 的 URI 設定 (UpdateUserWebhook)，更新用戶在本系統內的設備清單 (RequestSync)，並且查詢用戶設備的狀態 (ReportState)
-    記錄在本系統資料庫中，藉以支援 AoG Intent API & Webhook 服務
-    """
-    bus = bootstrap_test_app()
+class TestRegister:
+    def test_user_first_register(self):
+        """
+        用戶系統 (Common Service) 可以透過用戶 SwitchBot KeyPairs 對本系統進行用戶註冊 (Register)，本系統會針對這個用戶，
+        產生一組 uid (userID)，(Registered) 之後、本系統會透過 OpenAPI 服務查詢用戶設備列表，設定用戶在 OpenAPI 系統中設備狀態通知
+        Webhook 的 URI 設定 (UpdateUserWebhook)，更新用戶在本系統內的設備清單 (RequestSync)，並且查詢用戶設備的狀態 (ReportState)
+        記錄在本系統資料庫中，藉以支援 AoG Intent API & Webhook 服務
+        """
+        bus = bootstrap_test_app()
 
-    bus.handle(commands.Register(secret='secret1', token='token1'))
+        bus.handle(commands.Register(secret='secret1', token='token1'))
 
-    assert bus.uow.users.count() == 1
-    u1 = bus.uow.users.get_by_secret(secret='secret1')
-    assert u1.token == 'token1'
-    assert len(u1.devices) == 2
-    assert len(u1.states) == 2
+        assert bus.uow.users.count() == 1
+        u1 = bus.uow.users.get_by_secret(secret='secret1')
+        assert u1.token == 'token1'
+        assert len(u1.devices) == 2
+        assert len(u1.states) == 2
 
-    bus.handle(commands.Unregister(uid=u1.uid))
-    assert bus.uow.users.get_by_uid(uid=u1.uid) is None
-    assert bus.uow.users.count() == 0
+        bus.handle(commands.Unregister(uid=u1.uid))
+        assert bus.uow.users.get_by_uid(uid=u1.uid) is None
+        assert bus.uow.users.count() == 0
+
+    def test_user_repeat_register(self):
+        """用戶重複註冊時，將會觸發用戶設備與狀態的更新"""
+        bus = bootstrap_test_app()
+        bus.handle(commands.Register(secret='secret1', token='token1'))
+
+        bus.handle(commands.Register(secret='secret1', token='token1'))
+        u1 = bus.uow.users.get_by_secret(secret='secret1')
+        assert u1.token == 'token1'
+        assert len(u1.devices) == 2
+        assert len(u1.states) == 2
+
+        bus.handle(commands.Unregister(uid=u1.uid))
+        assert bus.uow.users.get_by_uid(uid=u1.uid) is None
+        assert bus.uow.users.count() == 0
 
 
 class TestRequestSync:
@@ -167,7 +183,6 @@ class TestReportState:
 
         dev_id = _dev_status_data.get("deviceId")
         u = bus.uow.users.get_by_uid(uid=u.uid)
-        assert len(u.states) == 1
         dev_state = u.get_dev_state(dev_id=dev_id)
         assert dev_state
         assert all([

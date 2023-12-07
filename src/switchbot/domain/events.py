@@ -40,7 +40,12 @@ class UserDevStatesAllFetched(Event):
 
 
 @dataclass
-class IotStateChanged(Event):
-    """表示IoT系統通知有設備狀態變更（webhook）"""
-    change: dict
+class RequestReload(Event):
+    """表示要求已註冊用戶的資料重新下載更新"""
+    uid: str
 
+
+@dataclass
+class UserDevMerged(Event):
+    """表示已註冊用戶的webhook已經設定完成，用戶資料與來源端同步機制建立"""
+    uid: str

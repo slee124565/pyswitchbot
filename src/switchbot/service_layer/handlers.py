@@ -187,13 +187,13 @@ def register_user(
         if u:
             logger.warning(f"register secret already been used by user {u.uid}")
             # raise SwBotIotError(f'register secret already been used by user {u.uid}')
+            u.request_reload()
         else:
             u = model.SwitchBotUserFactory.create_user(
                 secret=cmd.secret,
                 token=cmd.token
             )
-        u.events.append(events.UserRegistered(uid=u.uid))
-        uow.users.add(u=u)
+            uow.users.add(u=u)
         uow.commit()
 
 
@@ -244,14 +244,14 @@ def setup_user_switchbot_webhook(
 ):
     with uow:
         u = uow.users.get_by_uid(uid=event.uid)
+        webhook_uri = config.get_webhook_uri()
         iot.update_webhook_config(
             secret=u.secret,
             token=u.token,
-            url=config.get_webhook_uri(),
+            url=webhook_uri,
             enable=True
         )
-        u.webhooks = [config.get_webhook_uri()]
-        # u.events.append(events.UserWebhookConfigured(uid=u.uid))
+        u.set_webhook_uri(uri=webhook_uri)
         uow.commit()
 
 
@@ -261,14 +261,23 @@ def update_dev_state(
         iot: iot_api_server.AbstractIotApiServer
 ):
     """todo: """
-    with uow:
-        raise NotImplementedError
+    pass
+
+
+def notify_user_dev_merged(
+        event: events.UserDevMerged,
+        uow: unit_of_work.AbstractUnitOfWork,
+):
+    """todo:"""
+    pass
 
 
 EVENT_HANDLERS = {
     events.UserRegistered: [fetch_user_dev_list],
+    events.RequestReload: [fetch_user_dev_list],
     events.UserDevListFetched: [fetch_user_dev_all_states],
     events.UserDevStatesAllFetched: [setup_user_switchbot_webhook],
+    events.UserDevMerged: [notify_user_dev_merged],
     events.DevStateChanged: [update_dev_state]
 }  # type: Dict[Type[events.Event], List[Callable]]
 

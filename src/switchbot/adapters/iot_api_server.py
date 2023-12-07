@@ -343,7 +343,7 @@ class FakeApiServer(AbstractIotApiServer):
         raise NotImplementedError
 
     def update_webhook_config(self, secret: str, token: str, url: str, enable: bool):
-        raise NotImplementedError
+        return {'statusCode': 100, 'body': {}, 'message': 'success'}
 
     def delete_webhook_config(self, secret: str, token: str, url: str):
         raise NotImplementedError
