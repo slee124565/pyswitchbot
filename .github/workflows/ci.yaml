@@ -33,3 +33,4 @@ jobs:
       - name: Run pytest
         run: |
           pytest tests/unit
+          pytest tests/integration --ignore=tests/integration/test_switchbotapi.py
