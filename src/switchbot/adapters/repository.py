@@ -148,8 +148,8 @@ class JsonFileRepository(AbstractRepository):
     def _count(self) -> int:
         return self.session.count()
 
-    def get_by_dev_id(self, dev_id: str) -> model.SwitchBotUserRepo:
-        return self.session.get_by_dev_id(dev_id=dev_id)
+    # def get_by_dev_id(self, dev_id: str) -> model.SwitchBotUserRepo:
+    #     return self.session.get_by_dev_id(dev_id=dev_id)
 
     # _users = []  # type:List['SwitchBotUserRepo']
 

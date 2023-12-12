@@ -264,12 +264,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
 
 class FakeApiServer(AbstractIotApiServer):
     """todo: response by fixed data"""
-
-    def __init__(self):
-        self.dev_ctrl_cmd_sent = False
-
-    def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
-        devices = [
+    jsonDevices = [
             {
                 "deviceId": "6055F92FCFD2",
                 "deviceName": "小風扇開關",
@@ -285,10 +280,7 @@ class FakeApiServer(AbstractIotApiServer):
                 "hubDeviceId": ""
             }
         ]
-        return [model.SwitchBotDevice.load(d) for d in devices]
-
-    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotStatus:
-        scenes = [
+    jsonStates = [
             {
                 "deviceId": "6055F92FCFD2",
                 "deviceType": "Plug Mini (US)",
@@ -311,9 +303,18 @@ class FakeApiServer(AbstractIotApiServer):
                 "electricityOfDay": 184,
                 "electricCurrent": 3.09
             }
-
         ]
-        for d in scenes:
+
+    def __init__(self):
+        self.dev_ctrl_cmd_sent = False
+
+    def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
+        devices = self.jsonDevices
+        return [model.SwitchBotDevice.load(d) for d in devices]
+
+    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotStatus:
+        states = self.jsonStates
+        for d in states:
             if d.get('deviceId') == dev_id:
                 return model.SwitchBotStatus.load(d)
 

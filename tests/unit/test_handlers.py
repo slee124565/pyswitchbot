@@ -1,5 +1,7 @@
 import os
 import logging
+import time
+
 from switchbot import bootstrap
 from switchbot.service_layer import unit_of_work
 from switchbot.adapters import iot_api_server
@@ -52,33 +54,38 @@ def bootstrap_test_app():
 
 
 class TestRegister:
-    def test_user_first_register(self):
-        """
-        用戶系統 (Common Service) 可以透過用戶 SwitchBot KeyPairs 對本系統進行用戶註冊 (Register)，本系統會針對這個用戶，
-        產生一組 uid (userID)，(Registered) 之後、本系統會透過 OpenAPI 服務查詢用戶設備列表，設定用戶在 OpenAPI 系統中設備狀態通知
-        Webhook 的 URI 設定 (UpdateUserWebhook)，更新用戶在本系統內的設備清單 (RequestSync)，並且查詢用戶設備的狀態 (ReportState)
-        記錄在本系統資料庫中，藉以支援 AoG Intent API & Webhook 服務
-        """
-        bus = bootstrap_test_app()
-
-        bus.handle(commands.Register(secret='secret1', token='token1'))
-
-        assert bus.uow.users.count() == 1
-        u1 = bus.uow.users.get_by_secret(secret='secret1')
-        assert u1.token == 'token1'
-        assert len(u1.devices) == 2
-        assert len(u1.states) == 2
-
-        bus.handle(commands.Unregister(uid=u1.uid))
-        assert bus.uow.users.get_by_uid(uid=u1.uid) is None
-        assert bus.uow.users.count() == 0
+    # def test_user_first_register(self):
+    #     """
+    #     用戶系統 (Common Service) 可以透過用戶 SwitchBot KeyPairs 對本系統進行用戶註冊 (Register)，本系統會針對這個用戶，
+    #     產生一組 uid (userID)，(Registered) 之後、本系統會透過 OpenAPI 服務查詢用戶設備列表，設定用戶在 OpenAPI 系統中設備狀態通知
+    #     Webhook 的 URI 設定 (UpdateUserWebhook)，更新用戶在本系統內的設備清單 (RequestSync)，並且查詢用戶設備的狀態 (ReportState)
+    #     記錄在本系統資料庫中，藉以支援 AoG Intent API & Webhook 服務
+    #     """
+    #     bus = bootstrap_test_app()
+    #
+    #     bus.handle(commands.Register(secret='secret1', token='token1'))
+    #
+    #     assert bus.uow.users.count() == 1
+    #     u1 = bus.uow.users.get_by_secret(secret='secret1')
+    #     assert u1.token == 'token1'
+    #     assert len(u1.devices) == 2
+    #     assert len(u1.states) == 2
+    #
+    #     bus.handle(commands.Unregister(uid=u1.uid))
+    #     assert bus.uow.users.get_by_uid(uid=u1.uid) is None
+    #     assert bus.uow.users.count() == 0
 
     def test_user_repeat_register(self):
         """用戶重複註冊時，將會觸發用戶設備與狀態的更新"""
         bus = bootstrap_test_app()
+
+        # test user first register
         bus.handle(commands.Register(secret='secret1', token='token1'))
 
+        # test user repeat register
         bus.handle(commands.Register(secret='secret1', token='token1'))
+
+        assert bus.uow.users.count() == 1
         u1 = bus.uow.users.get_by_secret(secret='secret1')
         assert u1.token == 'token1'
         assert len(u1.devices) == 2
@@ -148,11 +155,48 @@ class TestRequestSync:
 
 
 class TestReportChange:
+    _iot = iot_api_server.FakeApiServer()
+    _uow = unit_of_work.JsonFileUnitOfWork(json_file=JSON_FILE)
+
+    def _bootstrap_test_app(self):
+        if os.path.exists(JSON_FILE):
+            os.remove(JSON_FILE)
+        return bootstrap.bootstrap(
+            uow=self._uow,
+            # uow=unit_of_work.MemoryUnitOfWork(),
+            start_orm=False,
+            iot=self._iot
+        )
+
     def test_report_change(self):
-        bus = bootstrap_test_app()
+        bus = self._bootstrap_test_app()
         bus.handle(commands.Register(secret='secret1', token='token1'))
         u = bus.uow.users.get_by_secret('secret1')
-        bus.handle(commands.RequestSync(uid=u.uid, devices=_init_dev_data_list))
+        bus.handle(commands.Subscribe(uid=u.uid, subscriber_id='aog'))
+        self._iot.jsonStates = [
+            {
+                "deviceId": "6055F92FCFD2",
+                "deviceType": "Plug Mini (US)",
+                "hubDeviceId": "6055F92FCFD2",
+                "power": "off",
+                "version": "V1.4-1.4",
+                "voltage": 112.2,
+                "weight": 0.0,
+                "electricityOfDay": 44,
+                "electricCurrent": 0.0
+            },
+            {
+                "deviceId": "6055F930FF22",
+                "deviceType": "Plug Mini (US)",
+                "hubDeviceId": "6055F930FF22",
+                "power": "on",
+                "version": "V1.4-1.4",
+                "voltage": 112.2,
+                "weight": 35.0,
+                "electricityOfDay": 185,
+                "electricCurrent": 3.09
+            }
+        ]
 
         _dev_change_data = {
             "eventType": "changeReport",
@@ -161,7 +205,7 @@ class TestReportChange:
                 "deviceType": "WoPlugUS",
                 "deviceMac": "6055F92FCFD2",
                 "powerState": "ON",
-                "timeOfSample": 1698720698088
+                "timeOfSample": int(time.time() * 1000)
             }
         }
         bus.handle(commands.ReportChange(change=_dev_change_data))
@@ -170,6 +214,8 @@ class TestReportChange:
         u = bus.uow.users.get_by_dev_id(dev_id=dev_id)
         c = u.get_dev_last_change_report(dev_id=dev_id)
         assert c.context.get("timeOfSample") == _dev_change_data.get("context").get("timeOfSample")
+        s = u.get_dev_state(dev_id=dev_id)
+        assert s.electricity_of_day == 44
 
 
 class TestReportState:
@@ -223,7 +269,6 @@ class TestSubscription:
         bus = bootstrap_test_app()
         bus.handle(commands.Register(secret='secret1', token='token1'))
         u = bus.uow.users.get_by_secret('secret1')
-        bus.handle(commands.RequestSync(uid=u.uid, devices=_init_dev_data_list))
         uid = u.uid
         subscriber_id = 'aog'
         bus.handle(commands.Subscribe(uid=uid, subscriber_id=subscriber_id))

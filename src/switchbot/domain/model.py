@@ -389,14 +389,25 @@ class SwitchBotUserRepo:
         return next((s for s in self.states if s.device_id == dev_id), None)
 
     def update_dev_state(self, state: SwitchBotStatus):
-        n = next((n for n, s in enumerate(self.states)
-                  if s.device_id == state.device_id), None)
-        if n is not None:
-            del self.states[n]
-        self.states.append(state)
+        n, s = next(((n, s) for n, s in enumerate(self.states)
+                     if s.device_id == state.device_id), (None, None))
+        if s is None:
+            self.states.append(state)
+        else:
+            if s != state:
+                self.events.append(events.UserDevStateChanged(uid=self.uid, dev_id=state.device_id))
+                del self.states[n]
+                self.states.append(state)
+            else:  # dev status report repeatedly
+                logger.debug(f"update dev state with same status, skip")
+                pass
 
     def add_change_report(self, change: SwitchBotChangeReport):
         self.changes.append(change)
+        self.events.append(
+            events.UserDevReportChanged(dev_id=change.context.get("deviceMac"),
+                                        change=change.dump())
+        )
 
     def get_dev_last_change_report(self, dev_id: str) -> SwitchBotChangeReport:
         dev_c_report = [c for c in self.changes if c.context.get('deviceMac') == dev_id]
@@ -435,7 +446,7 @@ class SwitchBotUserRepo:
 
     def set_webhook_uri(self, uri):
         self.webhooks = [uri]
-        self.events.append(events.UserDevMerged(uid=self.uid))
+        self.events.append(events.UserWebhookUpdated(uid=self.uid))
 
 
 class SwitchBotUserFactory:

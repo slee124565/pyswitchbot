@@ -9,7 +9,6 @@ import logging.config as logging_config
 from switchbot.domain import commands
 from switchbot.service_layer import unit_of_work
 from switchbot.adapters import iot_api_server
-from switchbot.service_layer.handlers import InvalidSrcServer
 from switchbot import bootstrap, views, config, gh_intent
 
 logging_config.dictConfig(config.logging_config)
@@ -20,123 +19,10 @@ bus = bootstrap.bootstrap(
     start_orm=False,
     iot=iot_api_server.SwitchBotApiServer()
 )
-seudo_sync_payload = {
-    "agentUserId": "1836.15267389",
-    "devices": [
-        {
-            "id": "123",
-            "type": "action.devices.types.OUTLET",
-            "traits": [
-                "action.devices.traits.OnOff"
-            ],
-            "name": {
-                "defaultNames": [
-                    "My Outlet 1234"
-                ],
-                "name": "Night light",
-                "nicknames": [
-                    "wall plug"
-                ]
-            },
-            "willReportState": False,
-            "roomHint": "kitchen",
-            "deviceInfo": {
-                "manufacturer": "lights-out-inc",
-                "model": "hs1234",
-                "hwVersion": "3.2",
-                "swVersion": "11.4"
-            },
-            "otherDeviceIds": [
-                {
-                    "deviceId": "local-device-id"
-                }
-            ],
-            "customData": {
-                "fooValue": 74,
-                "barValue": True,
-                "bazValue": "foo"
-            }
-        },
-        {
-            "id": "456",
-            "type": "action.devices.types.LIGHT",
-            "traits": [
-                "action.devices.traits.OnOff",
-                "action.devices.traits.Brightness",
-                "action.devices.traits.ColorSetting"
-            ],
-            "name": {
-                "defaultNames": [
-                    "lights out inc. bulb A19 color hyperglow"
-                ],
-                "name": "lamp1",
-                "nicknames": [
-                    "reading lamp"
-                ]
-            },
-            "willReportState": False,
-            "roomHint": "office",
-            "attributes": {
-                "colorModel": "rgb",
-                "colorTemperatureRange": {
-                    "temperatureMinK": 2000,
-                    "temperatureMaxK": 9000
-                },
-                "commandOnlyColorSetting": False
-            },
-            "deviceInfo": {
-                "manufacturer": "lights out inc.",
-                "model": "hg11",
-                "hwVersion": "1.2",
-                "swVersion": "5.4"
-            },
-            "customData": {
-                "fooValue": 12,
-                "barValue": False,
-                "bazValue": "bar"
-            }
-        }
-    ]
-}
-seudo_query_payload = {
-    "devices": {
-        "123": {
-            "on": True,
-            "online": True,
-            "status": "SUCCESS"
-        },
-        "456": {
-            "on": True,
-            "online": True,
-            "status": "SUCCESS",
-            "brightness": 80,
-            "color": {
-                "spectrumRgb": 16711935
-            }
-        }
-    }
-}
-seudo_execute_payload = {
-    "commands": [
-        {
-            "ids": [
-                "123"
-            ],
-            "status": "SUCCESS",
-            "states": {
-                "on": True,
-                "online": True
-            }
-        },
-        {
-            "ids": [
-                "456"
-            ],
-            "status": "ERROR",
-            "errorCode": "deviceTurnedOff"
-        }
-    ]
-}
+
+
+class InvalidSrcServer(Exception):
+    pass
 
 
 class ApiAccessTokenError(Exception):

@@ -10,20 +10,11 @@ from . import unit_of_work
 logger = logging.getLogger(__name__)
 
 
-class InvalidSrcServer(Exception):
-    pass
-
-
-class SwBotIotError(Exception):
-    pass
-
-
 def send_dev_ctrl_cmd(
         cmd: commands.SendDevCtrlCmd,
         uow: unit_of_work.AbstractUnitOfWork,
         iot: iot_api_server.AbstractIotApiServer
 ):
-    logger.debug(f'cmd: {cmd}')
     with uow:
         u = uow.users.get_by_uid(uid=cmd.uid)
         if u is None:
@@ -66,7 +57,6 @@ def report_state(
         "electricCurrent": 0.0
     }
     """
-    logger.debug(f'cmd: {cmd}')
     with uow:
         state = model.SwitchBotStatus(
             device_id=cmd.state.get("deviceId"),
@@ -88,7 +78,6 @@ def report_change(
         cmd: commands.ReportChange,
         uow: unit_of_work.AbstractUnitOfWork
 ):
-    logger.debug(f'cmd: {cmd}')
     with uow:
         dev_id = cmd.change.get("context", {}).get("deviceMac", None)
         if dev_id is None:
@@ -109,7 +98,6 @@ def request_sync(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     """sync with user devices data"""
-    logger.debug(f'cmd: {cmd}')
     with uow:
         user = uow.users.get_by_uid(uid=cmd.uid)
         if user is None:
@@ -130,7 +118,6 @@ def unlink_user(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     """unlink user from service"""
-    logger.debug(f'cmd: {cmd}')
     with uow:
         u = uow.users.get_by_uid(uid=cmd.user_id)
         if u:
@@ -143,7 +130,6 @@ def subscribe_user_iot(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     """3rd party service (aog) subscribe user iot service"""
-    logger.debug(f'cmd: {cmd}')
     with uow:
         u = uow.users.get_by_uid(uid=cmd.uid)
         u.subscribe(subscriber_id=cmd.subscriber_id)
@@ -155,7 +141,6 @@ def unsubscribe_user_iot(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     """3rd party service (aog) subscribe user iot service"""
-    logger.debug(f'cmd: {cmd}')
     with uow:
         u = uow.users.get_by_uid(uid=cmd.uid)
         u.unsubscribe(subscriber_id=cmd.subscriber_id)
@@ -167,11 +152,10 @@ def unregister_user(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     """register user iot service w/key-pair"""
-    logger.debug(f'cmd: {cmd}')
     with uow:
         u = uow.users.get_by_uid(uid=cmd.uid)
         if not u:
-            raise SwBotIotError(f'user {cmd.uid} is not exist')
+            raise ValueError(f"user {cmd.uid} not exist")
         uow.users.delete(uid=cmd.uid)
         uow.commit()
 
@@ -181,12 +165,11 @@ def register_user(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     """register user iot service w/key-pair"""
-    logger.debug(f'cmd: {cmd}')
     with uow:
         u = uow.users.get_by_secret(secret=cmd.secret)
         if u:
-            logger.warning(f"register secret already been used by user {u.uid}")
-            # raise SwBotIotError(f'register secret already been used by user {u.uid}')
+            logger.warning(f"register secret already exist with user {u.uid}, trigger user dev reload ...")
+            # raise SwBotIotError(f' register secret already been used by user {u.uid}')
             u.request_reload()
         else:
             u = model.SwitchBotUserFactory.create_user(
@@ -224,21 +207,12 @@ def fetch_user_dev_all_states(
                 state=iot.get_dev_status(
                     secret=u.secret, token=u.token, dev_id=d.device_id)
             )
-        u.events.append(events.UserDevStatesAllFetched(uid=u.uid))
+        # u.events.append(events.UserDevStatesAllFetched(uid=u.uid))
         uow.commit()
 
 
-def pub_request_sync_if_user_updated(
-        event: events.UserDevStatesAllFetched,
-        # publish: Callable
-):
-    """todo: publish user devices synced event for other system"""
-    logger.warning('todo: pub_request_sync_if_user_updated')
-    pass
-
-
 def setup_user_switchbot_webhook(
-        event: events.UserDevStatesAllFetched,
+        event: events.UserDevListFetched,
         uow: unit_of_work.AbstractUnitOfWork,
         iot: iot_api_server.AbstractIotApiServer
 ):
@@ -255,30 +229,39 @@ def setup_user_switchbot_webhook(
         uow.commit()
 
 
-def update_dev_state(
-        event: events.DevStateChanged,
+def fetch_user_dev_state(
+        event: events.UserDevReportChanged,
         uow: unit_of_work.AbstractUnitOfWork,
         iot: iot_api_server.AbstractIotApiServer
 ):
-    """todo: """
-    pass
+    with uow:
+        u = uow.users.get_by_dev_id(dev_id=event.dev_id)
+        u.update_dev_state(
+            state=iot.get_dev_status(
+                secret=u.secret, token=u.token, dev_id=event.dev_id)
+        )
+        uow.commit()
 
 
-def notify_user_dev_merged(
-        event: events.UserDevMerged,
+def notify_subscriber_user_dev_changed(
+        event: events.UserDevStateChanged,
         uow: unit_of_work.AbstractUnitOfWork,
 ):
     """todo:"""
-    pass
+    with uow:
+        u = uow.users.get_by_uid(uid=event.uid)
+        for s in u.subscribers:
+            logger.warning(f"notify subscriber {s} for dev {event.dev_id} changed")
+        uow.commit()
 
 
 EVENT_HANDLERS = {
     events.UserRegistered: [fetch_user_dev_list],
     events.RequestReload: [fetch_user_dev_list],
-    events.UserDevListFetched: [fetch_user_dev_all_states],
-    events.UserDevStatesAllFetched: [setup_user_switchbot_webhook],
-    events.UserDevMerged: [notify_user_dev_merged],
-    events.DevStateChanged: [update_dev_state]
+    events.UserDevListFetched: [setup_user_switchbot_webhook],
+    events.UserWebhookUpdated: [fetch_user_dev_all_states],
+    events.UserDevReportChanged: [fetch_user_dev_state],
+    events.UserDevStateChanged: [notify_subscriber_user_dev_changed],
 }  # type: Dict[Type[events.Event], List[Callable]]
 
 COMMAND_HANDLERS = {
