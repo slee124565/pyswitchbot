@@ -394,9 +394,20 @@ class SwitchBotUserRepo:
         if n is not None:
             del self.states[n]
         self.states.append(state)
+        sid = set()
+        for s in self.states:
+            sid.add(s.device_id)
+        did = set()
+        for d in self.devices:
+            did.add(d.device_id)
+        if sid == did:
+            self.events.append(events.UserDevMerged(uid=self.uid))
 
     def add_change_report(self, change: SwitchBotChangeReport):
         self.changes.append(change)
+        self.events.append(events.UserDevStateChanged(
+            dev_id=change.context.get('deviceMac')
+        ))
 
     def get_dev_last_change_report(self, dev_id: str) -> SwitchBotChangeReport:
         dev_c_report = [c for c in self.changes if c.context.get('deviceMac') == dev_id]
@@ -415,6 +426,13 @@ class SwitchBotUserRepo:
         self.subscribers.remove(subscriber_id)
         logger.debug(f'user remove subscriber {subscriber_id}, {self.subscribers}')
 
+    def unregister(self):
+        """todo: state: Deactivated"""
+        logger.warning("add state attr. value Deactivated")
+        self.events.append(events.UserUnregistered(
+            uid=self.uid
+        ))
+
     def _update_device(self, device: SwitchBotDevice):
         index = next((n for n, origin in enumerate(self.devices) if origin.device_id == device.device_id),
                      None)
@@ -431,7 +449,7 @@ class SwitchBotUserRepo:
             raise ValueError(f'device({dev_id}) not exist')
 
     def request_reload(self):
-        self.events.append(events.RequestReload(uid=self.uid))
+        self.events.append(events.RequestReloadUser(uid=self.uid))
 
     def set_webhook_uri(self, uri):
         self.webhooks = [uri]

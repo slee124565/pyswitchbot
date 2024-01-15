@@ -224,7 +224,7 @@ def fetch_user_dev_all_states(
                 state=iot.get_dev_status(
                     secret=u.secret, token=u.token, dev_id=d.device_id)
             )
-        u.events.append(events.UserDevStatesAllFetched(uid=u.uid))
+        # u.events.append(events.UserDevStatesAllFetched(uid=u.uid))
         uow.commit()
 
 
@@ -255,30 +255,45 @@ def setup_user_switchbot_webhook(
         uow.commit()
 
 
-def update_dev_state(
-        event: events.DevStateChanged,
+def update_user_dev_state(
+        event: events.UserDevStateChanged,
         uow: unit_of_work.AbstractUnitOfWork,
         iot: iot_api_server.AbstractIotApiServer
 ):
-    """todo: """
-    pass
+    with uow:
+        u = uow.users.get_by_dev_id(dev_id=event.dev_id)
+        u.update_dev_state(
+            state=iot.get_dev_status(
+                secret=u.secret, token=u.token, dev_id=event.dev_id)
+        )
+        # u.events.append(events.UserDevStatesAllFetched(uid=u.uid))
+        uow.commit()
 
 
 def notify_user_dev_merged(
         event: events.UserDevMerged,
-        uow: unit_of_work.AbstractUnitOfWork,
+        uow: unit_of_work.AbstractUnitOfWork
 ):
     """todo:"""
-    pass
+    logger.warning("todo: notify_user_dev_merged")
+
+
+def notify_user_unregistered(
+        event: events.UserUnregistered,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    """todo:"""
+    logger.warning(f"todo: notify_user_unregistered")
 
 
 EVENT_HANDLERS = {
     events.UserRegistered: [fetch_user_dev_list],
-    events.RequestReload: [fetch_user_dev_list],
+    events.RequestReloadUser: [fetch_user_dev_list],
     events.UserDevListFetched: [fetch_user_dev_all_states],
     events.UserDevStatesAllFetched: [setup_user_switchbot_webhook],
     events.UserDevMerged: [notify_user_dev_merged],
-    events.DevStateChanged: [update_dev_state]
+    events.UserDevStateChanged: [update_user_dev_state],
+    events.UserUnregistered: [notify_user_unregistered],
 }  # type: Dict[Type[events.Event], List[Callable]]
 
 COMMAND_HANDLERS = {

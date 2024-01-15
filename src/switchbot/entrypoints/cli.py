@@ -22,6 +22,7 @@ env_secret, env_token = config.get_switchbot_key_pair()
 webhook_uri = config.get_webhook_uri()
 open_api = iot_api_server.SwitchBotApiServer()
 
+
 # 主命令
 @click.group()
 def switchbotcli():
