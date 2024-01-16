@@ -61,7 +61,7 @@ class SwitchBotStatus:
             self,
             device_id,
             device_type,
-            hub_device_id,
+            hub_device_id=None,
             power=None,
             battery=None,
             version=None,
@@ -476,7 +476,7 @@ class SwitchBotSceneSchema(Schema):
 class SwitchBotStatusSchema(Schema):
     device_id = fields.String(data_key='deviceId', required=True)
     device_type = fields.String(data_key='deviceType', required=True)
-    hub_device_id = fields.String(data_key='hubDeviceId', required=True)
+    hub_device_id = fields.String(data_key='hubDeviceId')
     power = fields.String(load_default=None)
     battery = fields.Integer(load_default=None)
     version = fields.String(load_default=None)

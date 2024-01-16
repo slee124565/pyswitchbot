@@ -58,10 +58,24 @@ _dev_motion_sensor_CDA5 = {
     'enableCloudService': False,
     'hubDeviceId': ''
 }
+_dev_wo_sweeper_mini = {
+    "deviceId": "360TY420703025288",
+    "deviceName": "小白",
+    "deviceType": "WoSweeperMini",
+    "enableCloudService": True,
+    "hubDeviceId": ""
+}
+_state_dev_wo_sweeper_mini = {
+    "deviceId": "360TY420703025288",
+    "deviceType": "WoSweeperMini",
+    "workingStatus": "ChargeDone",
+    "onlineStatus": "online",
+    "battery": 100
+}
 
 
 def test_switchbot_device_schema():
-    for data in [_dev_plug_mini_CFD2, _dev_motion_sensor_CDA5]:
+    for data in [_dev_plug_mini_CFD2, _dev_motion_sensor_CDA5, _dev_wo_sweeper_mini]:
         obj = model.SwitchBotDevice.load(data)
         assert isinstance(obj, model.SwitchBotDevice)
         assert obj.device_id == data.get('deviceId')
@@ -73,7 +87,7 @@ def test_switchbot_device_schema():
 
 
 def test_switchbot_status_schema():
-    for data in [_state_plug_mini_CFD2, _state_plug_mini_FF22]:
+    for data in [_state_plug_mini_CFD2, _state_plug_mini_FF22, _state_dev_wo_sweeper_mini]:
         obj = model.SwitchBotStatus.load(data)
         assert isinstance(obj, model.SwitchBotStatus)
         assert obj.device_id == data.get('deviceId')
