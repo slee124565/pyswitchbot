@@ -257,7 +257,7 @@ def notify_subscriber_user_dev_changed(
 
 EVENT_HANDLERS = {
     events.UserRegistered: [fetch_user_dev_list],
-    events.RequestReload: [fetch_user_dev_list],
+    events.UserRequestReload: [fetch_user_dev_list],
     events.UserDevListFetched: [setup_user_switchbot_webhook],
     events.UserWebhookUpdated: [fetch_user_dev_all_states],
     events.UserDevReportChanged: [fetch_user_dev_state],

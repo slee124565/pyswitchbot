@@ -442,7 +442,7 @@ class SwitchBotUserRepo:
             raise ValueError(f'device({dev_id}) not exist')
 
     def request_reload(self):
-        self.events.append(events.RequestReload(uid=self.uid))
+        self.events.append(events.UserRequestReload(uid=self.uid))
 
     def set_webhook_uri(self, uri):
         self.webhooks = [uri]

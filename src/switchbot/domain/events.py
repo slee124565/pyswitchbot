@@ -1,5 +1,4 @@
 # pylint: disable=too-few-public-methods
-from typing import List
 from dataclasses import dataclass
 
 
@@ -14,7 +13,7 @@ class UserRegistered(Event):
 
 
 @dataclass
-class RequestReload(Event):
+class UserRequestReload(Event):
     """表示要求已註冊用戶的資料重新下載更新"""
     uid: str
 
@@ -31,11 +30,11 @@ class UserWebhookUpdated(Event):
     uid: str
 
 
-@dataclass
-class UserDevStateFetched(Event):
-    """表示新訂閱用戶的設備狀態是第一次更新，不需要 pub ReportSubscriberDevState"""
-    dev_id: str
-    state: dict
+# @dataclass
+# class UserDevStateFetched(Event):
+#     """表示新訂閱用戶的設備狀態是第一次更新，不需要 pub ReportSubscriberDevState"""
+#     dev_id: str
+#     state: dict
 
 
 @dataclass
@@ -51,10 +50,10 @@ class UserDevReportChanged(Event):
 #     uid: str
 
 
-@dataclass
-class UserDevMerged(Event):
-    """表示已註冊用戶的webhook已經設定完成，用戶資料與來源端同步機制建立"""
-    uid: str
+# @dataclass
+# class UserDevMerged(Event):
+#     """表示已註冊用戶的webhook已經設定完成，用戶資料與來源端同步機制建立"""
+#     uid: str
 
 
 @dataclass
