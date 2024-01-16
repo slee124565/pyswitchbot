@@ -1,11 +1,15 @@
 import os
 import dotenv
+from switchbot.adapters import ngrok
 
 dotenv.load_dotenv()
 
 
 def get_api_uri():
-    return os.getenv("API_HOST_URI", "http://127.0.0.1:5000")
+    if ngrok.get_ngrok_public_url():
+        return ngrok.get_ngrok_public_url()
+    else:
+        return os.getenv("API_HOST_URI", "http://127.0.0.1:5000")
 
 
 def get_switchbot_key_pair():
