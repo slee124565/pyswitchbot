@@ -83,7 +83,8 @@ class SwitchBotStatus:
             voltage=None,
             weight=None,
             electricity_of_day=None,
-            electric_current=None
+            electric_current=None,
+            light_level=None
     ):
         self.device_id = device_id
         self.device_type = device_type
@@ -110,6 +111,7 @@ class SwitchBotStatus:
         self.weight = weight
         self.electricity_of_day = electricity_of_day
         self.electric_current = electric_current
+        self.light_level = light_level
 
     def __eq__(self, other):
         if not isinstance(other, SwitchBotStatus):
@@ -499,6 +501,7 @@ class SwitchBotStatusSchema(Schema):
     weight = fields.Float(load_default=None)
     electricity_of_day = fields.Integer(data_key='electricityOfDay', load_default=None)
     electric_current = fields.Float(data_key='electricCurrent', load_default=None)
+    light_level = fields.Integer(data_key='lightLevel', load_default=None)
 
     @post_load
     def make_status(self, data, **kwargs):
