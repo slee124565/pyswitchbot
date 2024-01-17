@@ -40,6 +40,7 @@ setup(
     entry_points={
         "console_scripts": [
             "switchbot=switchbot.entrypoints.cli:switchbotcli",
+            "run=switchbot.entrypoints.flask_app:main"
         ],
     },
 )

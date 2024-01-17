@@ -3,20 +3,24 @@ import logging
 import logging.config as logging_config
 import os
 import json
-
-from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
-from switchbot import bootstrap
+# from switchbot import bootstrap
 from switchbot import config
+from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
+from switchbot.adapters import iot_api_server
 from switchbot.adapters.iot_api_server import SwitchBotAPIServerError
-from switchbot.service_layer import unit_of_work
+
+# from switchbot.service_layer import unit_of_work
 
 logging_config.dictConfig(config.logging_config)
 logger = logging.getLogger(__name__)
-# logger.info('switchbot cli process')
-bus = bootstrap.bootstrap(uow=unit_of_work.CliUnitOfWork())
-# bus = bootstrap.bootstrap(uow=unit_of_work.FakeFileUnitOfWork())
+# bus = bootstrap.bootstrap(
+#     uow=unit_of_work.JsonFileUnitOfWork(),
+#     start_orm=False,
+#     iot=iot_api_server.SwitchBotApiServer()
+# )
 env_secret, env_token = config.get_switchbot_key_pair()
-
+webhook_uri = config.get_webhook_uri()
+open_api = iot_api_server.SwitchBotApiServer()
 
 # 主命令
 @click.group()
@@ -68,12 +72,19 @@ def listall(envfile):
 def check(secret, token):
     """Check authentication status."""
     try:
-        with bus.uow:
-            bus.uow.api_server.get_scene_list(
-                secret=secret,
-                token=token,
-            )
-        click.echo('OK')
+        # r = open_api.get_scene_list(
+        #     secret=secret,
+        #     token=token
+        # )
+        assert isinstance(open_api, iot_api_server.AbstractIotApiServer)
+        r = open_api.get_scene_list(
+            secret=secret,
+            token=token
+        )
+        if not r:
+            click.echo('Fail')
+        else:
+            click.echo('OK')
     except SwitchBotAPIServerError:
         click.echo(f'Fail')
 
@@ -92,14 +103,13 @@ def listall(save):
     click.echo(f"Listing all devices. Save: {save}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    # cmd = commands.GetDeviceList(secret=secret, token=token)
-    with bus.uow:
-        dev_list = bus.uow.api_server.get_dev_list(secret=secret, token=token)
-        click.echo(
-            json.dumps(
-                [SwitchBotDevice.dump(dev) for dev in dev_list], indent=2, ensure_ascii=False
-            )
+    devices = open_api.get_dev_list(secret=secret, token=token)
+    click.echo(
+        json.dumps(
+            [SwitchBotDevice.dump(dev) for dev in devices],
+            indent=2, ensure_ascii=False
         )
+    )
 
 
 @device.command()
@@ -109,16 +119,17 @@ def query(dev_id):
     click.echo(f"Querying device status {dev_id}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    with bus.uow:
-        dev_status = bus.uow.api_server.get_dev_status(secret=secret,
-                                                       token=token,
-                                                       dev_id=dev_id)
-        bus.uow.devices.update(dev_status)
-        click.echo(
-            json.dumps(
-                SwitchBotStatus.dump(dev_status), indent=2, ensure_ascii=False
-            )
+    dev_status = open_api.get_dev_status(
+        secret=secret,
+        token=token,
+        dev_id=dev_id
+    )
+    click.echo(
+        json.dumps(
+            SwitchBotStatus.dump(dev_status),
+            indent=2, ensure_ascii=False
         )
+    )
 
 
 @device.command()
@@ -132,16 +143,14 @@ def cmd(command, dev_id, cmd_type, cmd_param):
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     try:
-        with bus.uow:
-            # dev = bus.uow.devices.get(dev_id=dev_id)
-            bus.uow.api_server.send_dev_ctrl_cmd(
-                secret=secret,
-                token=token,
-                dev_id=dev_id,
-                cmd_type=cmd_type,
-                cmd_value=command,
-                cmd_param=cmd_param
-            )
+        open_api.send_dev_ctrl_cmd(
+            secret=secret,
+            token=token,
+            dev_id=dev_id,
+            cmd_type=cmd_type,
+            cmd_value=command,
+            cmd_param=cmd_param
+        )
         click.echo(f'OK')
     except ValueError as err:
         click.echo(f'{err}')
@@ -164,14 +173,16 @@ def listall(save):
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     try:
-        with bus.uow:
-            _list = bus.uow.api_server.get_scene_list(
-                secret=secret,
-                token=token,
+        scenes = open_api.get_scene_list(
+            secret=secret,
+            token=token,
+        )
+        click.echo(
+            json.dumps(
+                [SwitchBotScene.dump(s) for s in scenes],
+                indent=2, ensure_ascii=False
             )
-            click.echo(
-                json.dumps([SwitchBotScene.dump(s) for s in _list], indent=2, ensure_ascii=False)
-            )
+        )
     except SwitchBotAPIServerError:
         click.echo('Fail')
 
@@ -184,12 +195,11 @@ def start(scene_id):
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     try:
-        with bus.uow:
-            bus.uow.api_server.exec_manual_scene(
-                secret=secret,
-                token=token,
-                scene_id=scene_id
-            )
+        open_api.exec_manual_scene(
+            secret=secret,
+            token=token,
+            scene_id=scene_id
+        )
         click.echo(f'OK')
     except SwitchBotAPIServerError:
         click.echo('Fail nbhggf  ')
@@ -209,12 +219,11 @@ def create(url):
     click.echo(f"Creating webhook {url}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    with bus.uow:
-        bus.uow.api_server.create_webhook_config(
-            secret=secret,
-            token=token,
-            url=url
-        )
+    open_api.create_webhook_config(
+        secret=secret,
+        token=token,
+        url=url
+    )
     click.echo(f'OK')
 
 
@@ -224,12 +233,10 @@ def read():
     click.echo(f"Getting webhook")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    with bus.uow:
-        # todo: webhooks should be List[SwitchBotWebhookConfig]
-        webhooks = bus.uow.api_server.read_webhook_config(
-            secret=secret,
-            token=token,
-        )
+    webhooks = open_api.read_webhook_config(
+        secret=secret,
+        token=token,
+    )
     click.echo(json.dumps(webhooks, indent=2, ensure_ascii=False))
 
 
@@ -240,31 +247,30 @@ def read_detail(url):
     click.echo(f"Getting webhook {url} detail")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    with bus.uow:
-        # todo: data should be SwitchBotWebhookConfigDetail
-        data = bus.uow.api_server.read_webhook_config_list(
-            secret=secret,
-            token=token,
-            url_list=[url]
-        )
+    data = open_api.read_webhook_config_list(
+        secret=secret,
+        token=token,
+        url_list=[url]
+    )
     click.echo(json.dumps(data, indent=2, ensure_ascii=False))
 
 
 @webhook.command()
-@click.argument('url')
-@click.argument('enabled')
+# @click.argument('url')
+# @click.argument('enabled')
+@click.option('--url', default=webhook_uri, help="User webhook uri.")
+@click.option('--enabled', default=True, help="User webhook enable flag.")
 def update(url, enabled):
     """Update a webhook."""
     click.echo(f"Updating webhook {url}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    with bus.uow:
-        bus.uow.api_server.update_webhook_config(
-            secret=secret,
-            token=token,
-            url=url,
-            enable=enabled
-        )
+    open_api.update_webhook_config(
+        secret=secret,
+        token=token,
+        url=url,
+        enable=enabled
+    )
     click.echo('OK')
 
 
@@ -275,12 +281,11 @@ def delete(url):
     click.echo(f"Deleting webhook {url}")
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
-    with bus.uow:
-        bus.uow.api_server.delete_webhook_config(
-            secret=secret,
-            token=token,
-            url=url
-        )
+    open_api.delete_webhook_config(
+        secret=secret,
+        token=token,
+        url=url
+    )
     click.echo(f'OK')
 
 

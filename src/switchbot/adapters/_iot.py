@@ -1,3 +1,12 @@
+"""
+以用戶智慧家庭上帝視角來看，一個完整的iot服務應該具備以下幾個系統能力
+1. sync api, 設備清單
+2. query api, 設備狀態查詢
+3. execute api, 設備控制指令執行
+4. request_sync callback, 設備列表更新通知
+5. report-state callback, 設備狀態更新通知
+以上述幾個iot系統能力，訂定智慧家庭的domain model，統一各家iot服務
+"""
 import abc
 import requests
 import aiohttp

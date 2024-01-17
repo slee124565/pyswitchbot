@@ -1,13 +1,25 @@
 import os
 import dotenv
+from switchbot.adapters import ngrok
 
 dotenv.load_dotenv()
+
+
+def get_api_uri():
+    if ngrok.get_ngrok_public_url():
+        return ngrok.get_ngrok_public_url()
+    else:
+        return os.getenv("API_HOST_URI", "http://127.0.0.1:5000")
 
 
 def get_switchbot_key_pair():
     secret = os.getenv('SWITCHBOTAPI_SECRET_KEY')
     token = os.getenv('SWITCHBOTAPI_TOKEN')
     return secret, token
+
+
+def get_webhook_uri():
+    return f"{get_api_uri()}/change"
 
 
 def get_postgres_uri():
@@ -32,13 +44,15 @@ logging_config = {
         },
         'standard': {
             'format': '[%(levelname)s] %(name)s: %(message)s'
+            # 'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
         },
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "standard",
-            "level": "INFO"
+            "level": "DEBUG",
+            # "stream": "ext://sys.stdout"
         },
         "file": {
             "class": "logging.handlers.RotatingFileHandler",
@@ -51,15 +65,36 @@ logging_config = {
     },
     "root": {
         "handlers": ["console"],
-        "level": "INFO"
     },
     "loggers": {
-        "requests": {
-            "level": "INFO"
+        "urllib3": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False
+        },
+        "werkzeug": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False
         },
         "switchbot.adapters.iot_api_server": {
             "handlers": ["console", "file"],
-            "level": "WARNING",
+            "level": "INFO",
+            "propagate": False
+        },
+        "switchbot.service_layer.handlers": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False
+        },
+        "switchbot": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False
+        },
+        "tests": {
+            "handlers": ["console"],
+            "level": "DEBUG",
             "propagate": False
         }
     }

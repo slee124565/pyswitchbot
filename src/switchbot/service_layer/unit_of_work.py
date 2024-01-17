@@ -1,19 +1,16 @@
 # pylint: disable=attribute-defined-outside-init
 from __future__ import annotations
 import abc
-# from sqlalchemy import create_engine
-# from sqlalchemy.orm import sessionmaker
-# from sqlalchemy.orm.session import Session
-from switchbot.adapters import repository
-from switchbot.adapters.iot_api_server import AbstractIotApiServer, SwitchBotApiServer, FakeApiServer
+import os
+import shutil
+import logging
+from switchbot.adapters import repository, file_datastore
 
-
-# from switchbot import config
+logger = logging.getLogger(__name__)
 
 
 class AbstractUnitOfWork(abc.ABC):
-    devices: repository.AbstractRepository
-    api_server: AbstractIotApiServer
+    users: repository.AbstractRepository
 
     def __enter__(self) -> AbstractUnitOfWork:
         return self
@@ -25,9 +22,10 @@ class AbstractUnitOfWork(abc.ABC):
         self._commit()
 
     def collect_new_events(self):
-        for dev in self.devices.seen:
-            while dev.events:
-                yield dev.events.pop(0)
+        for u in self.users.seen:
+            logger.debug(f"current existing unhandled events {u.events} ")
+            while u.events:
+                yield u.events.pop(0)
 
     @abc.abstractmethod
     def _commit(self):
@@ -38,36 +36,68 @@ class AbstractUnitOfWork(abc.ABC):
         raise NotImplementedError
 
 
-class FakeFileUnitOfWork(AbstractUnitOfWork):
+class JsonFileUnitOfWork(AbstractUnitOfWork):
+    def __init__(self, json_file='.datastore'):
+        super().__init__()
+        self._json_file = json_file
+        self._origin = f'{json_file}.swap'
+        self.session_factory = file_datastore.session_factory
+
     def __enter__(self):
-        self.devices = repository.FileRepository()
-        self.api_server = FakeApiServer()
+        if os.path.exists(self._json_file):
+            shutil.copyfile(self._json_file, self._origin)
+        self.session = self.session_factory(self._json_file)
+        self.users = repository.JsonFileRepository(self.session)
+        # self.api_server = FakeApiServer()
         return super().__enter__()
 
     def __exit__(self, *args):
+        if os.path.exists(self._origin):
+            os.remove(self._origin)
         super().__exit__(*args)
 
     def _commit(self):
-        pass
+        self.session.commit()
+
+    def rollback(self):
+        if os.path.exists(self._origin):
+            shutil.copyfile(self._origin, self._json_file)
+
+
+class MemoryUnitOfWork(AbstractUnitOfWork):
+    def __init__(self):
+        self.users = repository.MemoryRepository()
+        self.committed = False
+
+    def _commit(self):
+        self.committed = True
 
     def rollback(self):
         pass
 
-
-class CliUnitOfWork(AbstractUnitOfWork):
-    def __enter__(self):
-        self.devices = repository.FileRepository()
-        self.api_server = SwitchBotApiServer()
-        return super().__enter__()
-
-    def __exit__(self, *args):
-        super().__exit__(*args)
-
-    def _commit(self):
-        pass
-
-    def rollback(self):
-        pass
+# class CliUnitOfWork(AbstractUnitOfWork):
+#     def __init__(self, file: str):
+#         self._file = file
+#         self._origin = f'{self._file}.swap'
+#
+#     def __enter__(self):
+#         # todo: 如何整合 file repository
+#         if os.path.exists(self._file):
+#             shutil.copyfile(self._file, self._origin)
+#         self.users = repository.JsonFileRepository(file=self._file)
+#         self.api_server = SwitchBotApiServer()
+#         return super().__enter__()
+#
+#     def __exit__(self, *args):
+#         super().__exit__(*args)
+#
+#     def _commit(self):
+#         if os.path.exists(self._origin):
+#             os.remove(self._origin)
+#
+#     def rollback(self):
+#         if os.path.exists(self._origin):
+#             shutil.copyfile(self._origin, self._file)
 
 # DEFAULT_SESSION_FACTORY = sessionmaker(
 #     bind=create_engine(

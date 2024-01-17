@@ -161,4 +161,6 @@ cython_debug/
 
 # project
 .repository
-
+.datastore
+.teststore
+.DS_Store

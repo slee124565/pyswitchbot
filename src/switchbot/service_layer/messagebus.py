@@ -12,7 +12,7 @@ Message = Union[commands.Command, events.Event]
 
 
 class MessageBus:
-    queue: list
+    queue: List[Message]
 
     def __init__(
             self,
@@ -25,9 +25,10 @@ class MessageBus:
         self.command_handlers = command_handlers
 
     def handle(self, message: Message):
-        self.queue = [message]
+        self.queue = [message]  # type:List[Message]
         while self.queue:
             message = self.queue.pop(0)
+            logger.info(f"handling msg {message} ...")
             if isinstance(message, events.Event):
                 self.handle_event(message)
             elif isinstance(message, commands.Command):
@@ -38,7 +39,6 @@ class MessageBus:
     def handle_event(self, event: events.Event):
         for handler in self.event_handlers[type(event)]:
             try:
-                logger.debug("handling event %s with handler %s", event, handler)
                 handler(event)
                 self.queue.extend(self.uow.collect_new_events())
             except Exception:
@@ -46,7 +46,6 @@ class MessageBus:
                 continue
 
     def handle_command(self, command: commands.Command):
-        logger.debug("handling command %s", command)
         try:
             handler = self.command_handlers[type(command)]
             handler(command)

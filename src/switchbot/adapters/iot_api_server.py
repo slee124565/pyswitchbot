@@ -10,9 +10,9 @@ import logging
 import requests
 from typing import List, Set, Union
 from http import HTTPStatus
-from dataclasses import asdict
-from switchbot.domain import model, commands
-from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
+from switchbot.domain import model
+
+# from switchbot.domain.model import SwitchBotDevice, SwitchBotStatus, SwitchBotScene
 
 logger = logging.getLogger(__name__)
 SWITCHBOT_API_URI = os.getenv('SWITCHBOT_API_URI', 'https://api.switch-bot.com')
@@ -27,10 +27,6 @@ class SwitchBotAPIResponseError(Exception):
 
 
 class AbstractIotApiServer(abc.ABC):
-    def __init__(self):
-        self.api_uri = SWITCHBOT_API_URI
-        self.seen = set()  # type:Set[model.SwitchBotDevice]
-
     def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
         raise NotImplementedError
 
@@ -67,6 +63,9 @@ class AbstractIotApiServer(abc.ABC):
 
 
 class SwitchBotApiServer(AbstractIotApiServer):
+    def __init__(self):
+        self.api_uri = SWITCHBOT_API_URI
+
     @staticmethod
     def _get_auth_headers(secret: str, token: str, nonce=None):
         # Declare empty header dictionary
@@ -96,7 +95,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
         headers['t'] = str(t)
         headers['sign'] = str(sign, 'utf-8')
         headers['nonce'] = str(nonce)
-        logger.debug(f'API headers {json.dumps(headers)}')
+        logger.debug(f'http headers {json.dumps(headers)}')
         return headers
 
     def _get(self, endpoint: str, secret: str, token: str, params: dict = None):
@@ -111,13 +110,12 @@ class SwitchBotApiServer(AbstractIotApiServer):
             else:
                 resp = requests.get(
                     url=f'{self.api_uri}{endpoint}',
-                    headers=headers,
+                    headers=headers
                 )
 
             if resp.status_code != HTTPStatus.OK:
                 resp.raise_for_status()
 
-            logger.debug(f'{resp.status_code}, {resp.json()}')
             logger.info(f'GET,{endpoint},{params},{resp.json()}')
             return resp.json().get('body')
         except Exception:
@@ -126,13 +124,12 @@ class SwitchBotApiServer(AbstractIotApiServer):
     def _post(self, secret: str, token: str, endpoint: str, data: dict):
         try:
             headers = self._get_auth_headers(secret, token)
-            logger.debug(f'API payload: {data}')
+            # logger.debug(f'POST request {data}')
             resp = requests.post(
                 url=f'{self.api_uri}{endpoint}',
                 headers=headers,
                 json=data
             )
-            logger.debug(f'POST response {resp.status_code}, {resp.content}')
 
             if resp.status_code != HTTPStatus.OK:
                 resp.raise_for_status()
@@ -150,7 +147,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
         )
         _dev_list = []
         for _data in resp_body.get('deviceList'):
-            _dev_list.append(SwitchBotDevice.load(_data))
+            _dev_list.append(model.SwitchBotDevice.load(_data))
         for _data in resp_body.get('infraredRemoteList'):
             # assert isinstance(_data, dict)
             # _dev_list.append(model.SwitchBotDevice(**_data))
@@ -159,12 +156,15 @@ class SwitchBotApiServer(AbstractIotApiServer):
 
     def send_dev_ctrl_cmd(self, secret: str, token: str, dev_id: str, cmd_type: str, cmd_value: str,
                           cmd_param: Union[str, dict]):
-        _cmd = commands.SwitchBotDevCommand(cmd_type, cmd_value, cmd_param)
         resp_body = self._post(
             secret=secret,
             token=token,
             endpoint=f'/v1.1/devices/{dev_id}/commands',
-            data=asdict(_cmd)
+            data={
+                "commandType": cmd_type,
+                "command": cmd_value,
+                "parameter": cmd_param
+            }
         )
         return resp_body.values() if isinstance(resp_body, dict) else resp_body
 
@@ -174,7 +174,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
             secret=secret,
             token=token
         )
-        return SwitchBotStatus.load(resp_body)
+        return model.SwitchBotStatus.load(resp_body)
 
     def get_scene_list(self, secret: str, token: str) -> List[model.SwitchBotScene]:
         resp_body = self._get(
@@ -184,7 +184,7 @@ class SwitchBotApiServer(AbstractIotApiServer):
         )
         if not isinstance(resp_body, list):
             raise SwitchBotAPIResponseError
-        return [SwitchBotScene.load(data) for data in resp_body]
+        return [model.SwitchBotScene.load(data) for data in resp_body]
 
     def exec_manual_scene(self, secret: str, token: str, scene_id: str):
         resp_body = self._post(
@@ -263,8 +263,8 @@ class SwitchBotApiServer(AbstractIotApiServer):
 
 
 class FakeApiServer(AbstractIotApiServer):
-    def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
-        devices = [
+    """todo: response by fixed data"""
+    jsonDevices = [
             {
                 "deviceId": "6055F92FCFD2",
                 "deviceName": "小風扇開關",
@@ -280,10 +280,7 @@ class FakeApiServer(AbstractIotApiServer):
                 "hubDeviceId": ""
             }
         ]
-        return [SwitchBotDevice.load(d) for d in devices]
-
-    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotStatus:
-        scenes = [
+    jsonStates = [
             {
                 "deviceId": "6055F92FCFD2",
                 "deviceType": "Plug Mini (US)",
@@ -306,15 +303,24 @@ class FakeApiServer(AbstractIotApiServer):
                 "electricityOfDay": 184,
                 "electricCurrent": 3.09
             }
-
         ]
-        for d in scenes:
+
+    def __init__(self):
+        self.dev_ctrl_cmd_sent = False
+
+    def get_dev_list(self, secret: str, token: str) -> List[model.SwitchBotDevice]:
+        devices = self.jsonDevices
+        return [model.SwitchBotDevice.load(d) for d in devices]
+
+    def get_dev_status(self, secret: str, token: str, dev_id: str) -> model.SwitchBotStatus:
+        states = self.jsonStates
+        for d in states:
             if d.get('deviceId') == dev_id:
-                return SwitchBotStatus.load(d)
+                return model.SwitchBotStatus.load(d)
 
     def send_dev_ctrl_cmd(self, secret: str, token: str, dev_id: str, cmd_type: str, cmd_value: str,
                           cmd_param: Union[str, dict]):
-        raise NotImplementedError
+        self.dev_ctrl_cmd_sent = True
 
     def get_scene_list(self, secret: str, token: str) -> List[model.SwitchBotScene]:
         scenes = [
@@ -323,7 +329,7 @@ class FakeApiServer(AbstractIotApiServer):
                 "sceneName": "allOff"
             }
         ]
-        return [SwitchBotScene.load(d) for d in scenes]
+        return [model.SwitchBotScene.load(d) for d in scenes]
 
     def exec_manual_scene(self, secret: str, token: str, scene_id: str):
         raise NotImplementedError
@@ -338,7 +344,7 @@ class FakeApiServer(AbstractIotApiServer):
         raise NotImplementedError
 
     def update_webhook_config(self, secret: str, token: str, url: str, enable: bool):
-        raise NotImplementedError
+        return {'statusCode': 100, 'body': {}, 'message': 'success'}
 
     def delete_webhook_config(self, secret: str, token: str, url: str):
         raise NotImplementedError
