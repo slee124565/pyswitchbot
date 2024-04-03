@@ -70,12 +70,13 @@ def test_user_iot_service():
     resp = r.json()
     logger.info(f'sync fulfillment: {resp}')
     assert isinstance(resp.get("payload").get("devices"), list)
-    assert len(resp.get("payload").get("devices")) == data.get("devices")
+    assert 0 < len(resp.get("payload").get("devices")) <= data.get("devices")
 
-    # 模擬 AoG 查詢用戶設備列表中的第一個設備狀態 query intent
-    dev = resp.get("payload").get("devices")[-1]
-    assert isinstance(dev, dict)
-    dev_id = dev.get("id")
+    # 模擬 AoG 查詢用戶設備列表中的第一個 action.devices.types.OUTLET 設備狀態 query intent
+    _outlet_dto = next((_dto for _dto in resp.get("payload").get("devices")
+                        if _dto.get("type") == "action.devices.types.OUTLET"), None)
+    assert isinstance(_outlet_dto, dict), f"no outlet device found, _outlet_dto: {_outlet_dto}"
+    dev_id = _outlet_dto.get("id")
     logger.info(f"testing post_to_query_user_dev_state {dev_id} ...")
     r = api_client.post_to_query_user_dev_state(uid=uid, subscriber_id=subscriber_id, dev_id=dev_id)
     resp = r.json()

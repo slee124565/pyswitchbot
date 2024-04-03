@@ -1,4 +1,6 @@
 import logging
+from typing import Optional
+
 from switchbot.service_layer import unit_of_work
 from switchbot.domain import model
 from switchbot import gh_intent
@@ -34,7 +36,7 @@ def user_profile_by_secret(secret: str, uow: unit_of_work.AbstractUnitOfWork) ->
         return data
 
 
-def _convert_dev_to_aog_sync_dto(dev: model.SwitchBotDevice) -> gh_intent.SyncDevice:
+def _convert_dev_to_aog_sync_dto(dev: model.SwitchBotDevice) -> Optional[gh_intent.SyncDevice]:
     if dev.device_type in ['Plug Mini (US)']:
         _dev_id = dev.device_id
         _dev_type = "action.devices.types.OUTLET"
@@ -48,11 +50,11 @@ def _convert_dev_to_aog_sync_dto(dev: model.SwitchBotDevice) -> gh_intent.SyncDe
             traits=_dev_traits,
             will_report_state=_will_report_state
         )
+        return sync_dev
     else:
-        logger.warning(f'device object: {dev.dump()}')
-        raise NotImplementedError
-
-    return sync_dev
+        logger.warning(f'DEVICE {dev.device_type} NOT SUPPORTED, {dev.dump()}')
+        # raise NotImplementedError
+        return None
 
 
 def user_sync_intent_fulfillment(
@@ -71,7 +73,8 @@ def user_sync_intent_fulfillment(
             requestId=request_id,
             payload=gh_intent.SyncResponsePayload(
                 agentUserId=f"{u.uid}",
-                devices=[_convert_dev_to_aog_sync_dto(dev) for dev in u.devices]
+                devices=[_convert_dev_to_aog_sync_dto(dev) for dev in u.devices
+                         if _convert_dev_to_aog_sync_dto(dev) is not None]
             )
         )
     return sync_dto.dump()
