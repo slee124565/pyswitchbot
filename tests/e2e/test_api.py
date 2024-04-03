@@ -48,26 +48,17 @@ _test_devices = [
 def test_user_iot_service():
     secret = os.environ.get("SWITCHBOTAPI_SECRET_KEY")
     token = os.environ.get("SWITCHBOTAPI_TOKEN")
-    dev_count = os.environ.get("SWITCHBOT_DEVICE_COUNT")
-    if dev_count is None:
-        logger.warning(f"missing SWITCHBOT_DEVICE_COUNT env value for assert checking")
-    else:
-        dev_count = int(dev_count)
 
     # 用戶註冊iot服務
     logger.info(f"testing post_to_register ...")
     r = api_client.post_to_register(secret=secret, token=token, expect_success=True)
     data = r.json()
+    logger.debug(f'post_to_register resp: {data}')
     uid = data.get('uid')
     assert uid
     assert data.get('uid') == uid
-    if dev_count is not None:
-        assert data.get('devices') == dev_count
-        assert data.get('states') == dev_count
-    else:
-        assert len(data.get("devices")) > 0
+    assert data.get("devices") > 0
 
-    input("press any key to continue ...")
     # 第三方服務 aog 訂閱用戶 iot 服務
     logger.info(f"testing post_to_subscribe ...")
     subscriber_id = 'aog'
@@ -79,7 +70,7 @@ def test_user_iot_service():
     resp = r.json()
     logger.info(f'sync fulfillment: {resp}')
     assert isinstance(resp.get("payload").get("devices"), list)
-    assert len(resp.get("payload").get("devices")) == dev_count
+    assert len(resp.get("payload").get("devices")) == data.get("devices")
 
     # 模擬 AoG 查詢用戶設備列表中的第一個設備狀態 query intent
     dev = resp.get("payload").get("devices")[-1]

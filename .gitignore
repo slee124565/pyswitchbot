@@ -164,3 +164,4 @@ cython_debug/
 .datastore
 .teststore
 .DS_Store
+.gitdiff/
