@@ -251,7 +251,19 @@ def notify_subscriber_user_dev_changed(
     with uow:
         u = uow.users.get_by_uid(uid=event.uid)
         for s in u.subscribers:
-            logger.warning(f"notify subscriber {s} for dev {event.dev_id} changed")
+            logger.warning(f"TODO: NOTIFY SUBSCRIBER {s} FOR USER {event.uid} DEVICE {event.dev_id} STATE CHANGED")
+        uow.commit()
+
+
+def notify_subscriber_user_dev_list_changed(
+        event: events.UserDevListChanged,
+        uow: unit_of_work.AbstractUnitOfWork,
+):
+    """todo:"""
+    with uow:
+        u = uow.users.get_by_uid(uid=event.uid)
+        for s in u.subscribers:
+            logger.warning(f"TODO: NOTIFY SUBSCRIBER {s} FOR USER {event.uid} DEVICE LIST CHANGED")
         uow.commit()
 
 

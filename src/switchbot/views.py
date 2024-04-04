@@ -52,6 +52,7 @@ def _convert_dev_to_aog_sync_dto(dev: model.SwitchBotDevice) -> Optional[gh_inte
         )
         return sync_dev
     else:
+        # todo : device_type 'K10+' and 'Hub 2'
         logger.warning(f'DEVICE {dev.device_type} NOT SUPPORTED, {dev.dump()}')
         # raise NotImplementedError
         return None
@@ -90,6 +91,7 @@ def _convert_dev_state_to_dev_state_dto(dev_state: model.SwitchBotStatus) -> gh_
             }
         )
     else:
+        # todo: device type 'K10+' and 'Hub 2'
         logger.warning(f'device status object: {dev_state.dump()}')
         raise NotImplementedError
 
