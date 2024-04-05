@@ -43,8 +43,8 @@ logging_config = {
             "style": "{",
         },
         'standard': {
-            'format': '[%(levelname)s] %(name)s: %(message)s'
-            # 'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+            'format': '{asctime} [{levelname}] {name}: {message}',
+            'style': '{',
         },
     },
     "handlers": {
@@ -57,11 +57,19 @@ logging_config = {
         "file": {
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "simple",
-            "filename": "switchbotapi.log",
+            "filename": "api.log",
             "maxBytes": 5 * 1024 * 1024,  # 5 MB
             "backupCount": 3,
             "level": "INFO"
-        }
+        },
+        "default": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "standard",
+            "filename": "switchbot.log",
+            "maxBytes": 5 * 1024 * 1024,  # 5 MB
+            "backupCount": 5,
+            "level": "INFO"
+        },
     },
     "root": {
         "handlers": ["console"],
@@ -88,7 +96,7 @@ logging_config = {
             "propagate": False
         },
         "switchbot": {
-            "handlers": ["console"],
+            "handlers": ["console", "default"],
             "level": "INFO",
             "propagate": False
         },

@@ -243,7 +243,7 @@ def fetch_user_dev_state(
         uow.commit()
 
 
-def notify_subscriber_user_dev_changed(
+def notify_subscriber_user_dev_state_changed(
         event: events.UserDevStateChanged,
         uow: unit_of_work.AbstractUnitOfWork,
 ):
@@ -273,7 +273,8 @@ EVENT_HANDLERS = {
     events.UserDevListFetched: [setup_user_switchbot_webhook],
     events.UserWebhookUpdated: [fetch_user_dev_all_states],
     events.UserDevReportChanged: [fetch_user_dev_state],
-    events.UserDevStateChanged: [notify_subscriber_user_dev_changed],
+    events.UserDevStateChanged: [notify_subscriber_user_dev_state_changed],
+    events.UserDevListChanged: [notify_subscriber_user_dev_list_changed],
 }  # type: Dict[Type[events.Event], List[Callable]]
 
 COMMAND_HANDLERS = {

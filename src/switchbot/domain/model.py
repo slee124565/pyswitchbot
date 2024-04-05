@@ -368,21 +368,27 @@ class SwitchBotUserRepo:
     def request_sync(self, devices: List[SwitchBotDevice]):
         sync_dev_id_list = [dev.device_id for dev in devices]
         user_dev_id_list = [dev.device_id for dev in self.devices]
+        _is_user_dev_list_changed = False
         for sync_dev_id in sync_dev_id_list:
             if sync_dev_id in user_dev_id_list:
                 sync_dev = next((dev for dev in devices if dev.device_id == sync_dev_id), None)
                 user_dev = next((dev for dev in self.devices if dev.device_id == sync_dev_id), None)
                 if sync_dev != user_dev:  # device modified
                     self._update_device(device=sync_dev)
+                    _is_user_dev_list_changed = True
                 else:  # device already exist
                     pass
             else:  # device new added
                 sync_dev = next((dev for dev in devices if dev.device_id == sync_dev_id), None)
                 self.devices.append(sync_dev)
+                _is_user_dev_list_changed = True
         for user_dev_id in user_dev_id_list:
             if user_dev_id not in sync_dev_id_list:
                 self._remove_device(dev_id=user_dev_id)
+                _is_user_dev_list_changed = True
         self.events.append(events.UserDevListFetched(uid=self.uid))
+        if _is_user_dev_list_changed:
+            self.events.append(events.UserDevListChanged(uid=self.uid))
 
     def get_dev_by_id(self, dev_id) -> SwitchBotDevice:
         return next((d for d in self.devices if d.device_id == dev_id), None)

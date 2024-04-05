@@ -67,5 +67,5 @@ class UserDevStateChanged(Event):
 class UserDevListChanged(Event):
     """表示用戶設備清單有變更，若是有訂閱第三方服務的情況下，需要被通知"""
     uid: str
-    dev_id: str
+    # dev_id: str
     # change: dict
