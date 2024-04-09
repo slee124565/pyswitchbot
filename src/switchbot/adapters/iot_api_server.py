@@ -151,7 +151,8 @@ class SwitchBotApiServer(AbstractIotApiServer):
         for _data in resp_body.get('infraredRemoteList'):
             # assert isinstance(_data, dict)
             # _dev_list.append(model.SwitchBotDevice(**_data))
-            raise NotImplementedError
+            logger.warning(f'INFRARED REMOTE DEVICE NOT SUPPORTED YET: {_data}')
+            # raise NotImplementedError
         return _dev_list
 
     def send_dev_ctrl_cmd(self, secret: str, token: str, dev_id: str, cmd_type: str, cmd_value: str,
