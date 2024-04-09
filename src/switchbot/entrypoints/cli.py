@@ -81,10 +81,7 @@ def check(secret, token):
             secret=secret,
             token=token
         )
-        if not r:
-            click.echo('Fail')
-        else:
-            click.echo('OK')
+        click.echo('OK')
     except SwitchBotAPIServerError:
         click.echo(f'Fail')
 

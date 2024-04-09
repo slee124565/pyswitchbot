@@ -542,7 +542,7 @@ class SwitchBotDeviceSchema(Schema):
     device_id = fields.String(data_key="deviceId")
     device_name = fields.String(data_key="deviceName")
     device_type = fields.String(data_key="deviceType")
-    enable_cloud_service = fields.Boolean(data_key="enableCloudService")
+    enable_cloud_service = fields.Boolean(data_key="enableCloudService", load_default=False)
     hub_device_id = fields.String(data_key="hubDeviceId")
     curtain_devices_ids = fields.List(fields.String(), data_key="curtainDevicesIds", load_default=None)
     calibrate = fields.Boolean(load_default=None)
