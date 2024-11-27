@@ -6,3 +6,6 @@ marshmallow
 aiohttp
 sqlalchemy
 orm
+firebase-admin
+pydantic
+pydantic[email]

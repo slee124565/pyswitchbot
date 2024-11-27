@@ -22,9 +22,9 @@ class SwitchBotChangeReport:
 
     def __init__(
             self,
-            event_type,
-            event_version,
-            context,
+            event_type: str,
+            event_version: str,
+            context: dict,
     ):
         self.event_type = event_type
         self.event_version = event_version
@@ -57,61 +57,73 @@ class SwitchBotStatus:
     def __repr__(self):
         return f'{self.__class__.__name__}({self.device_id},{self.device_type})'
 
-    def __init__(
-            self,
-            device_id,
-            device_type,
-            hub_device_id=None,
-            power=None,
-            battery=None,
-            version=None,
-            device_mode=None,
-            calibrate=None,
-            group=None,
-            moving=None,
-            slide_position=None,
-            temperature=None,
-            humidity=None,
-            lock_state=None,
-            door_state=None,
-            working_status=None,
-            online_status=None,
-            move_detected=None,
-            brightness=None,
-            color=None,
-            color_temperature=None,
-            voltage=None,
-            weight=None,
-            electricity_of_day=None,
-            electric_current=None,
-            light_level=None
-    ):
-        self.device_id = device_id
-        self.device_type = device_type
-        self.hub_device_id = hub_device_id
-        self.power = power
-        self.battery = battery
-        self.version = version
-        self.device_mode = device_mode
-        self.calibrate = calibrate
-        self.group = group
-        self.moving = moving
-        self.slide_position = slide_position
-        self.temperature = temperature
-        self.humidity = humidity
-        self.lock_state = lock_state
-        self.door_state = door_state
-        self.working_status = working_status
-        self.online_status = online_status
-        self.move_detected = move_detected
-        self.brightness = brightness
-        self.color = color
-        self.color_temperature = color_temperature
-        self.voltage = voltage
-        self.weight = weight
-        self.electricity_of_day = electricity_of_day
-        self.electric_current = electric_current
-        self.light_level = light_level
+    device_id: str  # 設備唯一識別碼
+    device_type: str  # 設備類型 (例如 "Bot", "Curtain")
+    hub_device_id: Optional[str]  # Hub 設備唯一識別碼，可能為 None
+    power: Optional[str]  # 電源狀態 ("ON"/"OFF")
+    battery: Optional[int]  # 電池電量，百分比 (0-100)
+    version: Optional[str]  # 韌體版本 (例如 "V6.3")
+    device_mode: Optional[str]  # 設備模式 (例如 "pressMode", "switchMode", "customizeMode")
+    calibrate: Optional[bool]  # 是否已校準 (適用於 Curtain 類型)
+    group: Optional[bool]  # 是否屬於群組 (適用於 Curtain 和 Blind Tilt 類型)
+    moving: Optional[bool]  # 是否正在移動 (適用於 Curtain 類型)
+    slide_position: Optional[int]  # 滑動位置 (0-100，適用於 Curtain 類型)
+    temperature: Optional[float]  # 溫度 (適用於 Meter 類型)
+    humidity: Optional[int]  # 濕度 (0-100，適用於 Meter 類型)
+    lock_state: Optional[str]  # 鎖狀態 ("locked"/"unlocked"，適用於 Lock 類型)
+    door_state: Optional[str]  # 門狀態 ("open"/"closed"，適用於 Contact Sensor)
+    working_status: Optional[str]  # 工作狀態 (例如 "cleaning", "paused"，適用於 Robot Vacuum Cleaner)
+    online_status: Optional[str]  # 在線狀態 ("online"/"offline")
+    move_detected: Optional[bool]  # 是否檢測到移動 (適用於 Motion Sensor)
+    brightness: Optional[int]  # 光亮度數值 (適用於 Color Bulb 或 Strip Light)
+    color: Optional[str]  # 顏色值 (例如 "#FFFFFF"，適用於 Color Bulb)
+    color_temperature: Optional[int]  # 色溫 (適用於 Color Bulb)
+    voltage: Optional[float]  # 電壓 (適用於電力設備)
+    weight: Optional[float]  # 重量 (適用於特定感測設備)
+    electricity_of_day: Optional[int]  # 當日用電量 (kWh，適用於電力設備)
+    electric_current: Optional[float]  # 電流 (A，適用於電力設備)
+    light_level: Optional[int]  # 光線等級 (適用於光感測設備)
+
+    def __init__(self, **kwargs):
+        # 初始化屬性
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    @classmethod
+    def from_api_response(cls, response: Dict) -> "SwitchBotStatus":
+        """從 API 回應初始化 SwitchBotStatus"""
+        return cls(
+            device_id=response.get("deviceId"),
+            device_type=response.get("deviceType"),
+            hub_device_id=response.get("hubDeviceId"),
+            power=response.get("power"),
+            battery=response.get("battery"),
+            version=response.get("version"),
+            device_mode=response.get("deviceMode"),
+            calibrate=response.get("calibrate"),
+            group=response.get("group"),
+            moving=response.get("moving"),
+            slide_position=response.get("slidePosition"),
+            temperature=response.get("temperature"),
+            humidity=response.get("humidity"),
+            lock_state=response.get("lockState"),
+            door_state=response.get("doorState"),
+            working_status=response.get("workingStatus"),
+            online_status=response.get("onlineStatus"),
+            move_detected=response.get("moveDetected"),
+            brightness=response.get("brightness"),
+            color=response.get("color"),
+            color_temperature=response.get("colorTemperature"),
+            voltage=response.get("voltage"),
+            weight=response.get("weight"),
+            electricity_of_day=response.get("electricityOfDay"),
+            electric_current=response.get("electricCurrent"),
+            light_level=response.get("lightLevel"),
+        )
+
+    def to_dict(self) -> Dict:
+        """將狀態轉換為字典格式"""
+        return self.__dict__
 
     def __eq__(self, other):
         if not isinstance(other, SwitchBotStatus):
@@ -144,45 +156,29 @@ class SwitchBotDevice:
     """
     state: SwitchBotStatus
 
-    def __init__(
-            self,
-            device_id: str,
-            device_name: str,
-            device_type: str,
-            enable_cloud_service: bool,
-            hub_device_id: str,
-            curtain_devices_ids: list = None,
-            calibrate: bool = None,
-            group: bool = None,
-            master: bool = None,
-            open_direction: str = None,
-            lock_devices_ids: list = None,
-            group_name: str = None,
-            lock_device_id: str = None,
-            key_list: dict = None,
-            version: int = None,
-            blind_tilt_devices_ids: list = None,
-            direction: str = None,
-            slide_position: int = None,
-    ):
-        self.device_id = device_id
-        self.device_name = device_name
-        self.device_type = device_type
-        self.enable_cloud_service = enable_cloud_service
-        self.hub_device_id = hub_device_id
-        self.curtain_devices_ids = curtain_devices_ids
-        self.calibrate = calibrate
-        self.group = group
-        self.master = master
-        self.open_direction = open_direction
-        self.lock_devices_ids = lock_devices_ids
-        self.group_name = group_name
-        self.lock_device_id = lock_device_id
-        self.key_list = key_list
-        self.version = version
-        self.blind_tilt_devices_ids = blind_tilt_devices_ids
-        self.direction = direction
-        self.slide_position = slide_position
+    device_id: str  # 設備唯一識別碼，必填
+    device_name: str  # 設備名稱，必填
+    device_type: str  # 設備類型（例如 "Bot", "Curtain", "Lock"），必填
+    enable_cloud_service: bool  # 是否啟用雲端服務，必填
+    hub_device_id: Optional[str]  # Hub 的唯一識別碼，可能為 None
+    curtain_devices_ids: Optional[List[str]] = None  # 窗簾設備的 ID 列表，適用於 Curtain 類型
+    calibrate: Optional[bool] = None  # 是否已校準，適用於需要校準的設備（例如 Curtain）
+    group: Optional[bool] = None  # 是否屬於群組，適用於 Curtain 或 Blind Tilt
+    master: Optional[bool] = None  # 是否為主設備，適用於群組中的設備
+    open_direction: Optional[str] = None  # 窗簾的開啟方向，可能的值為 "left", "right", 或 "both"
+    lock_devices_ids: Optional[List[str]] = None  # 鎖設備的 ID 列表，適用於 Lock 類型
+    group_name: Optional[str] = None  # 群組名稱，適用於屬於群組的設備
+    lock_device_id: Optional[str] = None  # 鎖設備的 ID，適用於 Lock 類型
+    key_list: Optional[Dict[str, str]] = None  # 設備密鑰的字典，例如 {"keyName": "keyValue"}
+    version: Optional[int] = None  # 設備版本，通常為整數型號編號
+    blind_tilt_devices_ids: Optional[List[str]] = None  # 百葉窗傾斜設備的 ID 列表，適用於 Blind Tilt 類型
+    direction: Optional[str] = None  # 設備的方向，例如 "up", "down", 或 "horizontal"
+    slide_position: Optional[int] = None  # 滑動位置，適用於 Curtain 類型，範圍為 0-100
+
+    def __init__(self, **kwargs):
+        # 初始化時動態設置屬性
+        for key, value in kwargs.items():
+            setattr(self, key, value)
         self.target_state = {}
         # self.events = []
 
@@ -234,8 +230,8 @@ class SwitchBotScene:
 
     def __init__(
             self,
-            scene_id,
-            scene_name
+            scene_id: str,
+            scene_name: str
     ):
         self.scene_id = scene_id
         self.scene_name = scene_name
@@ -314,6 +310,7 @@ class SwitchBotUserRepo:
         self.webhooks = webhooks  # type: List[SwitchBotWebhook]
         self.subscribers = subscribers  # type: Set
         self.events = []  # type: List[events.Event]
+        self.dirty_flag = False  # type: bool
 
     def set_dev_ctrl_cmd_sent(self, dev_id: str, cmd: SwitchBotCommand):
         logger.debug(f"dev {dev_id}, cmd {cmd}")

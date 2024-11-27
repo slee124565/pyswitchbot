@@ -12,7 +12,8 @@ def bootstrap(
     """todo: Register >> inject iot_api_server"""
 
     if start_orm:
-        orm.start_mappers()
+        # orm.start_mappers()
+        pass
 
     dependencies = {'uow': uow, 'iot': iot}
     injected_event_handlers = {

@@ -1,6 +1,8 @@
 import abc
 import logging
-from typing import Set, List
+from typing import Set, List, Optional
+
+from switchbot.adapters import orm
 from switchbot.domain import model
 
 logger = logging.getLogger(__name__)
@@ -127,6 +129,30 @@ class MemoryRepository(AbstractRepository):
     def __init__(self):
         super().__init__()
         self._users = []  # type: List[model.SwitchBotUserRepo]
+
+
+class RTDBRepository(AbstractRepository):
+    def _delete(self, uid):
+        self.session.delete(uid)
+
+    def _get_by_uid(self, uid: str) -> Optional[model.SwitchBotUserRepo]:
+        return self.session.get(uid)
+
+    def _get_by_dev_id(self, dev_id: str) -> Optional[model.SwitchBotUserRepo]:
+        return self.session.get_by_dev_id(dev_id)
+
+    def _get_by_secret(self, secret: str) -> Optional[model.SwitchBotUserRepo]:
+        return self.session.get_by_secret(secret)
+
+    def _count(self) -> int:
+        return self.session.count()
+
+    def _add(self, user: model.SwitchBotUserRepo):
+        return self.session.add(user)
+
+    def __init__(self, session: orm.RTDBSessionFactory):
+        super().__init__()
+        self.session = session  # type: orm.RTDBSessionFactory
 
 
 class JsonFileRepository(AbstractRepository):

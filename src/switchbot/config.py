@@ -5,6 +5,13 @@ from switchbot.adapters import ngrok
 dotenv.load_dotenv()
 
 
+def get_firebase_rtdb_url() -> str:
+    if not os.getenv('FIREBASE_RTDB_URL'):
+        raise Exception('FIREBASE_RTDB_URL is not set')
+
+    return os.getenv('FIREBASE_RTDB_URL')
+
+
 def get_api_uri():
     if ngrok.get_ngrok_public_url():
         return ngrok.get_ngrok_public_url()
